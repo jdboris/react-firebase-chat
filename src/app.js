@@ -1,5 +1,5 @@
 import React from "react";
-import "./app.css";
+import styles from "./css/chat-room.module.css";
 
 import firebase from "firebase/app";
 import "firebase/firestore";
@@ -23,7 +23,7 @@ function App() {
   const [user] = useAuthState(auth);
 
   return (
-    <div className="chat-app">
+    <div className={styles["chat-app"]}>
       <header>{/* <SignOutButton /> */}</header>
       {user ? <ChatRoom /> : <SignInForm />}{" "}
     </div>
