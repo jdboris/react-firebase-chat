@@ -35,10 +35,11 @@ export function ChatRoom(props) {
   return (
     <>
       <div className="chat-room">
-        {messages &&
-          messages.map((msg) => <ChatMessage key={msg.id} message={msg} />)}
-
         <span ref={dummy}></span>
+        {messages &&
+          messages
+            .reverse()
+            .map((msg) => <ChatMessage key={msg.id} message={msg} />)}
       </div>
 
       <form onSubmit={sendMessage}>
