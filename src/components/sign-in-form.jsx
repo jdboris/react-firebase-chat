@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "../app.css";
+import styles from "../css/chat-room.module.css";
 
 import firebase from "firebase/app";
 
@@ -43,11 +43,11 @@ export function SignInForm() {
         placeholder="Password"
       />
 
-      <button className="sign-in" onClick={signInWithEmail}>
+      <button className={styles["sign-in"]} onClick={signInWithEmail}>
         Sign In
       </button>
 
-      <button className="sign-in" onClick={signInAnonymously}>
+      <button className={styles["sign-in"]} onClick={signInAnonymously}>
         Sign In Anonymously
       </button>
       <p>

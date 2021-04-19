@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import "../app.css";
+import styles from "../css/chat-room.module.css";
 
 import firebase from "firebase/app";
 
@@ -34,7 +34,7 @@ export function ChatRoom(props) {
 
   return (
     <>
-      <div className="chat-room">
+      <div className={styles["chat-room"]}>
         <span ref={dummy}></span>
         {messages &&
           messages
@@ -68,7 +68,7 @@ function ChatMessage(props) {
 
   return (
     <>
-      <div className={`message ${messageClass}`}>
+      <div className={styles["message"] + " " + styles[messageClass]}>
         <img src={photoURL || "https://i.imgur.com/h2yCi23.jpg"} />
         <p>{text}</p>
       </div>

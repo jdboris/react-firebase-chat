@@ -1,17 +1,3 @@
-* {
-  box-sizing: border-box;
-}
-
-html,
-body {
-  background-color: #282c34;
-  height: 100%;
-}
-
-#root {
-  height: 100%;
-}
-
 .chat-app {
   height: 100%;
   max-width: 728px;
