@@ -14,7 +14,6 @@ body {
 
 .chat-app {
   height: 100%;
-  text-align: center;
   max-width: 728px;
   margin: 0 auto;
   background-color: black;
@@ -36,7 +35,7 @@ body {
 .chat-room {
   overflow-y: scroll;
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   margin-bottom: 5px;
 }
 
@@ -109,7 +108,7 @@ li {
   display: flex;
   align-items: center;
   background: white;
-  border-bottom: 1px solid;
+  border-top: 1px solid;
 }
 
 .sent {
