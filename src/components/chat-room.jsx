@@ -50,7 +50,11 @@ export function ChatRoom(props) {
           onKeyPress={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.target.form.dispatchEvent(
-                new Event("submit", { cancelable: true })
+                new Event("submit", {
+                  cancelable: true,
+                  // BUGFIX: https://github.com/final-form/react-final-form/issues/878#issuecomment-745364350
+                  bubbles: true,
+                })
               );
               e.preventDefault();
             }
