@@ -5,6 +5,7 @@ import firebase from "firebase/app";
 import "firebase/firestore";
 import "firebase/auth";
 import "firebase/analytics";
+import "firebase/functions";
 
 import { useAuthState } from "react-firebase-hooks/auth";
 import { config } from "./firestore-config";
@@ -17,7 +18,16 @@ firebase.initializeApp(config);
 
 export const firestore = firebase.firestore();
 export const analytics = firebase.analytics();
+export const functions = firebase.functions();
 export const auth = firebase.auth();
+
+if (window.location.hostname == "localhost") {
+  auth.useEmulator("http://localhost:9099");
+  firestore.useEmulator("localhost", 8080);
+  // firestore.settings({ host: "localhost:8080", ssl: false });
+  functions.useEmulator("localhost", 5001);
+  // functions.useFunctionsEmulator("http://localhost:5001");
+}
 
 function App() {
   const [user] = useAuthState(auth);
