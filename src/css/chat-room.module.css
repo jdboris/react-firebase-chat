@@ -92,10 +92,19 @@ li {
 }
 
 .message {
+  position: relative;
   display: flex;
   align-items: center;
   background: white;
   border-top: 1px solid;
+  font-size: 14px;
+}
+
+.message-details {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  font-size: 12px;
 }
 
 .sent {

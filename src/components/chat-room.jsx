@@ -18,17 +18,18 @@ export function ChatRoom(props) {
 
   const sendMessage = async (e) => {
     e.preventDefault();
+    const text = formValue;
+    setFormValue("");
 
     const { uid, photoURL } = auth.currentUser;
 
     await messagesRef.add({
-      text: formValue,
+      text: text,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       uid,
       photoURL,
     });
 
-    setFormValue("");
     dummy.current.scrollIntoView({ behavior: "smooth" });
   };
 
@@ -66,14 +67,18 @@ export function ChatRoom(props) {
 }
 
 function ChatMessage(props) {
-  const { text, uid, photoURL } = props.message;
-
+  const { text, uid, photoURL, createdAt } = props.message;
   const messageClass = uid === auth.currentUser.uid ? "sent" : "received";
 
   return (
     <>
       <div className={styles["message"] + " " + styles[messageClass]}>
         <img src={photoURL || "https://i.imgur.com/h2yCi23.jpg"} />
+        <span className={styles["message-details"]}>
+          <span className={styles["message-timestamp"]}>
+            {createdAt && createdAt.toDate().toLocaleString()}
+          </span>
+        </span>
         <p>{text}</p>
       </div>
     </>
