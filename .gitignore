@@ -28,3 +28,4 @@ firestore-config.js
 
 # logs
 **.log
+functions/credentials.js
