@@ -6,13 +6,10 @@ import firebase from "firebase/app";
 import { auth } from "../app";
 
 export function SignInForm() {
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  const signInWithGoogle = () => {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider);
-  };
+  const [isNewUser, setIsNewUser] = useState(false);
 
   const signInWithEmail = () => {
     auth.signInWithEmailAndPassword(email, password);
@@ -20,6 +17,17 @@ export function SignInForm() {
 
   const signInAnonymously = () => {
     auth.signInAnonymously();
+  };
+
+  const signUp = () => {
+    let signUp = firebase.functions().httpsCallable("signUp");
+    signUp({ email: email, password: password, username: username }).then(
+      (result) => {
+        if (result.data.success) {
+          auth.signInWithEmailAndPassword(email, password);
+        }
+      }
+    );
   };
 
   return (
@@ -33,6 +41,19 @@ export function SignInForm() {
         }}
         placeholder="Email"
       />
+      {isNewUser ? (
+        <input
+          type="text"
+          name="username"
+          value={username}
+          onChange={(e) => {
+            setUsername(e.target.value);
+          }}
+          placeholder="Username"
+        />
+      ) : (
+        ""
+      )}
       <input
         type="password"
         name="password"
@@ -43,13 +64,42 @@ export function SignInForm() {
         placeholder="Password"
       />
 
-      <button className={styles["sign-in"]} onClick={signInWithEmail}>
-        Sign In
-      </button>
+      {isNewUser ? (
+        <>
+          <button className={styles["sign-in"]} onClick={signUp}>
+            Sign Up
+          </button>
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              setIsNewUser(false);
+            }}
+          >
+            Existing user?
+          </a>
+        </>
+      ) : (
+        <>
+          <button className={styles["sign-in"]} onClick={signInWithEmail}>
+            Sign In
+          </button>
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              setIsNewUser(true);
+            }}
+          >
+            New user?
+          </a>
+        </>
+      )}
 
       <button className={styles["sign-in"]} onClick={signInAnonymously}>
         Sign In Anonymously
       </button>
+
       <p>
         Do not violate the community guidelines or you will be banned for life!
       </p>

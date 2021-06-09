@@ -8,13 +8,20 @@ import "firebase/analytics";
 import "firebase/functions";
 
 import { useAuthState } from "react-firebase-hooks/auth";
-import { config } from "./firestore-config";
 
 import { ChatRoom } from "./components/chat-room";
 import { SignInForm } from "./components/sign-in-form";
 import { SignOutButton } from "./components/sign-out-button";
 
-firebase.initializeApp(config);
+firebase.initializeApp({
+  apiKey: process.env.REACT_APP_API_KEY,
+  authDomain: "stream-site-9ebd9.firebaseapp.com",
+  projectId: "stream-site-9ebd9",
+  storageBucket: "stream-site-9ebd9.appspot.com",
+  messagingSenderId: "1008086677721",
+  appId: "1:1008086677721:web:e8ee668830765c3df626c8",
+  measurementId: "G-T9226MT70Q",
+});
 
 export const firestore = firebase.firestore();
 export const analytics = firebase.analytics();
@@ -35,7 +42,7 @@ function App() {
   return (
     <div className={styles["chat-app"]}>
       <header>{/* <SignOutButton /> */}</header>
-      {user ? <ChatRoom /> : <SignInForm />}{" "}
+      {user ? <ChatRoom /> : <SignInForm />}
     </div>
   );
 }

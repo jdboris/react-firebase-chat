@@ -2,7 +2,6 @@ const functions = require("firebase-functions");
 const Filter = require("bad-words");
 const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
-const credentials = require("./credentials");
 
 admin.initializeApp();
 
@@ -33,6 +32,42 @@ exports.detectEvilUsers = functions.firestore
     //   await userRef.set({ msgCount: (userData.msgCount || 0) + 1 });
     // }
   });
+
+exports.signUp = functions.https.onCall((data, context) => {
+  return admin
+    .auth()
+    .createUser({
+      email: data.email,
+      emailVerified: false,
+      password: data.password,
+      displayName: data.username,
+      // photoURL: "http://www.example.com/12345678/photo.png",
+      disabled: false,
+    })
+    .then(function (userRecord) {
+      // See the UserRecord reference doc for the contents of userRecord.
+      console.log("Successfully created new user:", userRecord.uid);
+      return { success: true };
+    })
+    .catch(function (error) {
+      console.log("Error creating new user:", error);
+      return { success: false };
+    });
+
+  // return admin
+  //   .auth()
+  //   .createUserWithEmailAndPassword(data.email, data.password)
+  //   .then((userCredential) => {
+  //     let user = userCredential.user;
+  //     console.log(user);
+  //   })
+  //   .catch((error) => {
+  //     let errorCode = error.code;
+  //     let errorMessage = error.message;
+  //     console.error(errorCode);
+  //     console.error(errorMessage);
+  //   });
+});
 
 exports.sendWelcomeEmail = functions.auth.user().onCreate((user) => {
   // Admin SDK API to generate the email verification link.
@@ -68,58 +103,71 @@ async function sendVerificationEmail(email, username, link) {
       // NOTE: Must set this to false, but TLS will still be used.
       secure: false,
       auth: {
-        user: credentials.supportEmail.username,
-        pass: credentials.supportEmail.password,
+        user: functions.config().accounts.support.username,
+        pass: functions.config().accounts.support.password,
       },
     });
 
     const mailOptions = {
-      from: credentials.supportEmail.username,
+      from: functions.config().accounts.support.username,
       to: email,
-      subject: "Welcome to Chat App!",
+      subject: "Welcome to Chatpad!",
       text: `
-        Welcome to Chat App! Please visit ${link} to verify your email address.
-    `,
-      // html: `
-      //   <html>
-      //       <head>
-      //           <style>
-      //               header {
-      //                   background: rgb(36, 36, 179);
-      //                   font-size: 30px;
-      //                   padding: 8px;
-      //                   text-align: center;
-      //               }
+          Welcome to Chatpad! Please visit ${link} to verify your email address.
+      `,
+      html: `
+        <html>
+            <head>
+                <style>
 
-      //               footer {
-      //                   background: gray;
-      //                   font-size: 10px;
-      //                   padding: 8px;
-      //                   color: rgb(29, 29, 29);
-      //                   text-align: center;
-      //               }
+                    header, footer, main {
+                        max-width: 600px;
+                        text-align: center;
+                    }
 
-      //               .button-link {
-      //                   border-radius: 5px;
-      //                   background: rgb(36, 36, 179);
-      //                   color: rgb(196, 196, 196);
-      //                   padding: 8px;
-      //                   text-decoration: none;
-      //               }
-      //           </style>
-      //       </head>
-      //       <body>
-      //           <header>Chat App</header>
-      //           <main>
-      //             Welcome to Chat App! Please verify your email address.
-      //             <a class="button-link" href="${link}">Verify</a>
-      //           </main>
-      //           <footer>
-      //               <a href="http://www.chatapp.com">chatapp.com</a>
-      //           </footer>
-      //       </body>
-      //   </html>
-      // `,
+                    header {
+                        background: rgb(36, 36, 179);
+                        font-size: 30px;
+                        padding: 8px;
+                        text-align: center;
+                    }
+
+                    footer {
+                        background: gray;
+                        font-size: 10px;
+                        padding: 8px;
+                        color: rgb(29, 29, 29);
+                        text-align: center;
+                    }
+
+                    p {
+                        text-align: initial;
+                    }
+
+                    .button-link {
+                        border-radius: 5px;
+                        background: rgb(36, 36, 179);
+                        color: rgb(196, 196, 196);
+                        padding: 10px;
+                        text-decoration: none;
+                        font-size: 1.5em;
+                    }
+                </style>
+            </head>
+            <body>
+                <header>Chatpad</header>
+                <main>
+                  <p>
+                    Welcome to Chatpad! Please verify your email address.
+                  </p>
+                  <a class="button-link" href="${link}">Verify</a>
+                </main>
+                <footer>
+                    <a href="http://www.chatpad.app">chatpad.app</a>
+                </footer>
+            </body>
+        </html>
+      `,
     };
 
     transporter.sendMail(mailOptions, (error, info) => {
