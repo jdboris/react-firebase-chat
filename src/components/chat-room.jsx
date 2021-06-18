@@ -83,9 +83,9 @@ export function ChatRoom(props) {
 function ChatMessage(props) {
   let { text, uid, photoURL, createdAt, username } = props.message;
   const messageClass = uid === auth.currentUser.uid ? "sent" : "received";
+  const claims = auth.currentUser.getIdTokenResult().claims;
   let mouseDownSpot = null;
 
-  console.log(text);
   const doesMentionCurrentUser = text.includes(
     `@${auth.currentUser.displayName} `
   );
