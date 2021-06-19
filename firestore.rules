@@ -6,9 +6,9 @@ service cloud.firestore {
     }
   
     match /messages/{docId} {
-      allow read: if request.auth.uid != null;
+      allow read: if request.auth.uid != null && (resource.data.isDeleted == false || request.auth.token.isModerator == true);
       allow create: if canCreateMessage();
-      allow update: if request.auth.token.moderator == true && 
+      allow update: if request.auth.token.isModerator == true && 
                       // If the request only has the isDeleted field
                       // https://firebase.google.com/docs/firestore/security/rules-fields#allowing_only_certain_fields_to_be_changed
                       (request.resource.data.diff(resource.data).affectedKeys()
@@ -16,7 +16,7 @@ service cloud.firestore {
     }
   
     match /users/{docId} {
-      allow update: if request.auth.token.moderator == true && 
+      allow update: if request.auth.token.isModerator == true && 
                       (request.resource.data.diff(resource.data).affectedKeys()
                       .hasOnly(['isBanned']));
     }

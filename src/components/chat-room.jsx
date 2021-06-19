@@ -10,13 +10,22 @@ import { firestore, auth } from "../app";
 export function ChatRoom(props) {
   const dummy = useRef();
   const messagesRef = firestore.collection("messages");
-  const query = messagesRef.orderBy("createdAt").limit(25);
+  const query = messagesRef
+    .orderBy("createdAt")
+    .limit(25)
+    .where("isDeleted", "==", false);
 
   const [messages] = useCollectionData(query, { idField: "id" });
 
   const [formValue, setFormValue] = useState("");
-
+  const [idToken, setIdToken] = useState("");
   let messageInput = null;
+
+  if (!idToken) {
+    auth.currentUser.getIdTokenResult().then((idTokenResult) => {
+      setIdToken(idTokenResult);
+    });
+  }
 
   const sendMessage = async (e) => {
     e.preventDefault();
@@ -31,6 +40,7 @@ export function ChatRoom(props) {
       username: displayName,
       uid,
       photoURL,
+      isDeleted: false,
     });
 
     dummy.current.scrollIntoView({ behavior: "smooth" });
@@ -49,6 +59,8 @@ export function ChatRoom(props) {
                 setFormValue(formValue + " @" + targetUsername + " ");
                 messageInput.focus();
               }}
+              idToken={idToken}
+              messagesRef={messagesRef}
             />
           ))}
       </div>
@@ -82,8 +94,9 @@ export function ChatRoom(props) {
 
 function ChatMessage(props) {
   let { text, uid, photoURL, createdAt, username } = props.message;
+  let { claims } = props.idToken;
   const messageClass = uid === auth.currentUser.uid ? "sent" : "received";
-  const claims = auth.currentUser.getIdTokenResult().claims;
+
   let mouseDownSpot = null;
 
   const doesMentionCurrentUser = text.includes(
@@ -92,6 +105,10 @@ function ChatMessage(props) {
 
   let parts = text.split(`@${auth.currentUser.displayName} `);
   let message = [parts[0]];
+
+  function deleteMessage() {
+    props.messagesRef.doc(props.message.id).update({ isDeleted: true });
+  }
 
   for (let i = 1; i < parts.length; i++) {
     message.push(<strong>@{auth.currentUser.displayName} </strong>);
@@ -112,7 +129,8 @@ function ChatMessage(props) {
           mouseDownSpot = { x: e.pageX, y: e.pageY };
         }}
         onMouseUp={(e) => {
-          if (mouseDownSpot) {
+          // Left click
+          if (e.button == 0 && mouseDownSpot) {
             let a = mouseDownSpot.x - e.pageX;
             let b = mouseDownSpot.y - e.pageY;
 
@@ -127,6 +145,7 @@ function ChatMessage(props) {
       >
         <img src={photoURL || "https://i.imgur.com/h2yCi23.jpg"} />
         <span className={styles["message-details"]}>
+          {claims.isModerator ? <button onClick={deleteMessage}>X</button> : ""}
           <span className={styles["message-timestamp"]}>
             {createdAt && createdAt.toDate().toLocaleString()}
           </span>
