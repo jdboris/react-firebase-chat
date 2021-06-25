@@ -19,7 +19,7 @@ exports.detectEvilUsers = functions.firestore
         text: `🤐 I got BANNED for life for saying... ${cleaned}`,
       });
 
-      await db.collection("banned").doc(uid).set({});
+      await db.collection("bannedUsers").doc(uid).set({});
     }
 
     // const userRef = db.collection("users").doc(uid);
@@ -27,7 +27,7 @@ exports.detectEvilUsers = functions.firestore
     // const userData = (await userRef.get()).data() || { msgCount: 0 };
 
     // if (userData.msgCount >= 7) {
-    //   await db.collection("banned").doc(uid).set({});
+    //   await db.collection("bannedUsers").doc(uid).set({});
     // } else {
     //   await userRef.set({ msgCount: (userData.msgCount || 0) + 1 });
     // }

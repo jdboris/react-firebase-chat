@@ -15,10 +15,8 @@ service cloud.firestore {
                       .hasOnly(['isDeleted']));
     }
   
-    match /users/{docId} {
-      allow update: if request.auth.token.isModerator == true && 
-                      (request.resource.data.diff(resource.data).affectedKeys()
-                      .hasOnly(['isBanned']));
+    match /bannedUsers/{docId} {
+      allow create: if request.auth.token.isModerator == true;
     }
 
     function canCreateMessage() {
@@ -26,7 +24,7 @@ service cloud.firestore {
       let isOwner = request.auth.uid == request.resource.data.uid;
 
       let isNotBanned = exists(
-        /databases/$(database)/documents/banned/$(request.auth.uid)
+        /databases/$(database)/documents/bannedUsers/$(request.auth.uid)
       ) == false;
 
       return isSignedIn && isOwner && isNotBanned;

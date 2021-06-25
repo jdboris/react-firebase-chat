@@ -7,9 +7,13 @@ import { useCollectionData } from "react-firebase-hooks/firestore";
 
 import { firestore, auth } from "../app";
 
+
 export function ChatRoom(props) {
   const dummy = useRef();
   const messagesRef = firestore.collection("messages");
+  const usersRef = firestore.collection("users");
+  const bannedUsersRef = firestore.collection("bannedUsers");
+
   const query = messagesRef
     .orderBy("createdAt")
     .limit(25)
@@ -61,6 +65,7 @@ export function ChatRoom(props) {
               }}
               idToken={idToken}
               messagesRef={messagesRef}
+              bannedUsersRef={bannedUsersRef}
             />
           ))}
       </div>
@@ -106,6 +111,10 @@ function ChatMessage(props) {
   let parts = text.split(`@${auth.currentUser.displayName} `);
   let message = [parts[0]];
 
+  function banUser() {
+    props.bannedUsersRef.doc(props.message.uid).set({});
+  }
+
   function deleteMessage() {
     props.messagesRef.doc(props.message.id).update({ isDeleted: true });
   }
@@ -145,13 +154,15 @@ function ChatMessage(props) {
       >
         <img src={photoURL || "https://i.imgur.com/h2yCi23.jpg"} />
         <span className={styles["message-details"]}>
+          {claims.isModerator ? <button onClick={banUser}>X</button> : ""}
           {claims.isModerator ? <button onClick={deleteMessage}>X</button> : ""}
           <span className={styles["message-timestamp"]}>
             {createdAt && createdAt.toDate().toLocaleString()}
           </span>
         </span>
         <p>
-          {username}: {message}
+          <span className={styles["message-username"]}>{username}</span>:{" "}
+          {message}
         </p>
       </div>
     </>

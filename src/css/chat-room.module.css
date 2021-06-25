@@ -103,6 +103,10 @@ li {
   padding-left: 0px;
 }
 
+.message-username {
+  font-weight: bold;
+}
+
 .message p {
   margin-left: 5px;
 }
