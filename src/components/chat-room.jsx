@@ -2,13 +2,88 @@ import React, { useRef, useState } from "react";
 import styles from "../css/chat-room.module.css";
 
 import firebase from "firebase/app";
+import "firebase/database";
 
 import { useCollectionData } from "react-firebase-hooks/firestore";
 
 import { firestore, auth } from "../app";
 
-
 export function ChatRoom(props) {
+  // Fetch the current user's ID from Firebase Authentication.
+  let uid = firebase.auth().currentUser.uid;
+  let offlineTimeout = null;
+
+  // Create a reference to this user's specific status node.
+  // This is where we will store data about being online/offline.
+  let userStatusDatabaseRef = firebase.database().ref("/status/" + uid);
+
+  // We'll create two constants which we will write to
+  // the Realtime database when this device is offline
+  // or online.
+  let isOfflineForDatabase = {
+    state: "offline",
+    last_changed: firebase.database.ServerValue.TIMESTAMP,
+  };
+
+  let isOnlineForDatabase = {
+    state: "online",
+    last_changed: firebase.database.ServerValue.TIMESTAMP,
+  };
+
+  userStatusDatabaseRef.set(isOnlineForDatabase);
+
+  let userStatusFirestoreRef = firebase.firestore().doc("/status/" + uid);
+
+  // Firestore uses a different server timestamp value, so we'll
+  // create two more constants for Firestore state.
+  let isOfflineForFirestore = {
+    state: "offline",
+    last_changed: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+
+  let isOnlineForFirestore = {
+    state: "online",
+    last_changed: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+
+  firebase
+    .database()
+    .ref(".info/connected")
+    .on("value", function (snapshot) {
+      if (snapshot.val() == false) {
+        // Instead of simply returning, we'll also set Firestore's state
+        // to 'offline'. This ensures that our Firestore cache is aware
+        // of the switch to 'offline.'
+        userStatusFirestoreRef.set(isOfflineForFirestore);
+        return;
+      }
+
+      userStatusDatabaseRef
+        .onDisconnect()
+        .set(isOfflineForDatabase)
+        .then(function () {
+          userStatusDatabaseRef.set(isOnlineForDatabase);
+
+          // We'll also add Firestore set here for when we come online.
+          userStatusFirestoreRef.set(isOnlineForFirestore);
+        });
+    });
+
+  userStatusFirestoreRef.onSnapshot(function (doc) {
+    let isOnline = doc.data().state == "online";
+    if (isOnline == false) {
+      if (offlineTimeout === null) {
+        // Wait for 3 seconds before telling the user the connection was lost
+        offlineTimeout = setTimeout(() => {
+          setIsOnline(false);
+        }, 3000);
+      }
+    } else if (offlineTimeout !== null) {
+      clearTimeout(offlineTimeout);
+      setIsOnline(true);
+    }
+  });
+
   const dummy = useRef();
   const messagesRef = firestore.collection("messages");
   const usersRef = firestore.collection("users");
@@ -21,6 +96,7 @@ export function ChatRoom(props) {
 
   const [messages] = useCollectionData(query, { idField: "id" });
 
+  const [isOnline, setIsOnline] = useState(true);
   const [formValue, setFormValue] = useState("");
   const [idToken, setIdToken] = useState("");
   let messageInput = null;
@@ -93,6 +169,16 @@ export function ChatRoom(props) {
           }}
         ></textarea>
       </form>
+      {!isOnline ? (
+        <div className={styles["chat-room-overlay"]}>
+          <div className={styles["overlay-message"]}>
+            <div>Connection failed.</div>
+            <div>Reconnecting...</div>
+          </div>
+        </div>
+      ) : (
+        ""
+      )}
     </>
   );
 }

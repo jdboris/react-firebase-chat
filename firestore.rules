@@ -29,5 +29,13 @@ service cloud.firestore {
 
       return isSignedIn && isOwner && isNotBanned;
     }
+    
+  
+    match /status/{docId} {
+      allow create: if true;
+      allow read: if true;
+      allow update: if true;
+      allow delete: if true;
+    }
   }
 }

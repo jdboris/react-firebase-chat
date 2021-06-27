@@ -13,11 +13,19 @@ import { ChatRoom } from "./components/chat-room";
 import { SignInForm } from "./components/sign-in-form";
 import { SignOutButton } from "./components/sign-out-button";
 
+let databaseUrl = "https://stream-site-9ebd9-default-rtdb.firebaseio.com";
+
+if (window.location.hostname == "localhost") {
+  databaseUrl = "http://localhost:9000/?ns=stream-site-9ebd9-default-rtdb";
+}
+
 firebase.initializeApp({
+  name: "stream-site-9ebd9",
   apiKey: process.env.REACT_APP_API_KEY,
   authDomain: "stream-site-9ebd9.firebaseapp.com",
   projectId: "stream-site-9ebd9",
   storageBucket: "stream-site-9ebd9.appspot.com",
+  databaseURL: databaseUrl, // Realtime Database
   messagingSenderId: "1008086677721",
   appId: "1:1008086677721:web:e8ee668830765c3df626c8",
   measurementId: "G-T9226MT70Q",
@@ -27,6 +35,7 @@ export const firestore = firebase.firestore();
 export const analytics = firebase.analytics();
 export const functions = firebase.functions();
 export const auth = firebase.auth();
+const db = firebase.database();
 
 if (window.location.hostname == "localhost") {
   auth.useEmulator("http://localhost:9099");
@@ -34,6 +43,7 @@ if (window.location.hostname == "localhost") {
   // firestore.settings({ host: "localhost:8080", ssl: false });
   functions.useEmulator("localhost", 5001);
   // functions.useFunctionsEmulator("http://localhost:5001");
+  db.useEmulator("localhost", 9000);
 }
 
 function App() {
