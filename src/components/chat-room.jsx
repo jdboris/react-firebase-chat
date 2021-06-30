@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import styles from "../css/chat-room.module.css";
 
 import firebase from "firebase/app";
@@ -8,42 +8,42 @@ import { useCollectionData } from "react-firebase-hooks/firestore";
 
 import { firestore, auth } from "../app";
 
-export function ChatRoom(props) {
-  // Fetch the current user's ID from Firebase Authentication.
-  let uid = firebase.auth().currentUser.uid;
+let uid = null;
+
+function presence(setIsOnline) {
   let offlineTimeout = null;
 
   // Create a reference to this user's specific status node.
   // This is where we will store data about being online/offline.
-  let userStatusDatabaseRef = firebase.database().ref("/status/" + uid);
+  const userPresenceDatabaseRef = firebase
+    .database()
+    .ref("/userPresences/" + uid);
 
   // We'll create two constants which we will write to
   // the Realtime database when this device is offline
   // or online.
   let isOfflineForDatabase = {
-    state: "offline",
-    last_changed: firebase.database.ServerValue.TIMESTAMP,
+    isOnline: false,
+    lastChanged: firebase.database.ServerValue.TIMESTAMP,
   };
 
   let isOnlineForDatabase = {
-    state: "online",
-    last_changed: firebase.database.ServerValue.TIMESTAMP,
+    isOnline: true,
+    lastChanged: firebase.database.ServerValue.TIMESTAMP,
   };
 
-  userStatusDatabaseRef.set(isOnlineForDatabase);
-
-  let userStatusFirestoreRef = firebase.firestore().doc("/status/" + uid);
+  const userPresenceRef = firebase.firestore().doc("/userPresences/" + uid);
 
   // Firestore uses a different server timestamp value, so we'll
   // create two more constants for Firestore state.
   let isOfflineForFirestore = {
-    state: "offline",
-    last_changed: firebase.firestore.FieldValue.serverTimestamp(),
+    isOnline: false,
+    lastChanged: firebase.firestore.FieldValue.serverTimestamp(),
   };
 
   let isOnlineForFirestore = {
-    state: "online",
-    last_changed: firebase.firestore.FieldValue.serverTimestamp(),
+    isOnline: true,
+    lastChanged: firebase.firestore.FieldValue.serverTimestamp(),
   };
 
   firebase
@@ -54,77 +54,144 @@ export function ChatRoom(props) {
         // Instead of simply returning, we'll also set Firestore's state
         // to 'offline'. This ensures that our Firestore cache is aware
         // of the switch to 'offline.'
-        userStatusFirestoreRef.set(isOfflineForFirestore);
+
+        userPresenceRef.set(isOfflineForFirestore);
         return;
       }
 
-      userStatusDatabaseRef
+      userPresenceDatabaseRef
         .onDisconnect()
         .set(isOfflineForDatabase)
         .then(function () {
-          userStatusDatabaseRef.set(isOnlineForDatabase);
+          userPresenceDatabaseRef.set(isOnlineForDatabase);
 
           // We'll also add Firestore set here for when we come online.
-          userStatusFirestoreRef.set(isOnlineForFirestore);
+          userPresenceRef.set(isOnlineForFirestore);
         });
     });
 
-  userStatusFirestoreRef.onSnapshot(function (doc) {
-    let isOnline = doc.data().state == "online";
-    if (isOnline == false) {
-      if (offlineTimeout === null) {
-        // Wait for 3 seconds before telling the user the connection was lost
-        offlineTimeout = setTimeout(() => {
-          setIsOnline(false);
-        }, 3000);
+  userPresenceRef.onSnapshot(function (doc) {
+    if (doc.data()) {
+      let isOnline = doc.data().isOnline;
+
+      if (isOnline) {
+        if (offlineTimeout !== null) {
+          clearTimeout(offlineTimeout);
+          offlineTimeout = null;
+          setIsOnline(true);
+        }
+      } else {
+        if (offlineTimeout === null) {
+          // Wait for 3 seconds before telling the user the connection was lost
+          offlineTimeout = setTimeout(() => {
+            setIsOnline(false);
+          }, 3000);
+        }
       }
-    } else if (offlineTimeout !== null) {
-      clearTimeout(offlineTimeout);
-      setIsOnline(true);
     }
   });
+}
 
+export function ChatRoom(props) {
+  const [isOnline, setIsOnline] = useState(true);
+  const [formValue, setFormValue] = useState("");
+  const [idToken, setIdToken] = useState("");
+  const [onlineUsers, setOnlineUsers] = useState([]);
   const dummy = useRef();
-  const messagesRef = firestore.collection("messages");
-  const usersRef = firestore.collection("users");
-  const bannedUsersRef = firestore.collection("bannedUsers");
 
-  const query = messagesRef
+  let messageInput;
+  let sendMessage;
+
+  const messagesRef = firestore.collection("messages");
+  let bannedUsersRef;
+
+  let query = messagesRef
     .orderBy("createdAt")
     .limit(25)
     .where("isDeleted", "==", false);
 
   const [messages] = useCollectionData(query, { idField: "id" });
 
-  const [isOnline, setIsOnline] = useState(true);
-  const [formValue, setFormValue] = useState("");
-  const [idToken, setIdToken] = useState("");
-  let messageInput = null;
+  console.log("RE-RENDER");
 
-  if (!idToken) {
-    auth.currentUser.getIdTokenResult().then((idTokenResult) => {
-      setIdToken(idTokenResult);
-    });
-  }
+  useEffect(() => {
+    console.log("USE EFFECT");
+    const usersRef = firestore.collection("users");
+    const userPresencesRef = firestore.collection("userPresences");
+    bannedUsersRef = firestore.collection("bannedUsers");
 
-  const sendMessage = async (e) => {
-    e.preventDefault();
-    const text = formValue;
-    setFormValue("");
+    let oldUid = uid;
+    // Fetch the current user's ID from Firebase Authentication.
+    uid = firebase.auth().currentUser.uid;
 
-    const { uid, photoURL, displayName } = auth.currentUser;
+    if (!oldUid && uid) {
+      presence(setIsOnline);
+    }
 
-    await messagesRef.add({
-      text: text,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      username: displayName,
-      uid,
-      photoURL,
-      isDeleted: false,
-    });
+    // query = userPresencesRef
+    //   .where(firebase.firestore.FieldPath.documentId(), "!=", uid)
+    //   .where("isOnline", "==", true);
+    // const [userPresences] = useCollectionData(query, { idField: "uid" });
 
-    dummy.current.scrollIntoView({ behavior: "smooth" });
-  };
+    firebase
+      .firestore()
+      .collection("userPresences")
+      .where(firebase.firestore.FieldPath.documentId(), "!=", uid)
+      .where("isOnline", "==", true)
+      .onSnapshot(function (snapshot) {
+        setOnlineUsers(
+          snapshot.docs.map((doc) => {
+            return doc.data();
+          })
+        );
+
+        // snapshot.docChanges().forEach(function (change) {
+        //   if (change.type === "added") {
+        //     var msg = "User " + change.doc.id + " is online.";
+        //     console.log(msg);
+        //     // ...
+        //   }
+        //   if (change.type === "removed") {
+        //     var msg = "User " + change.doc.id + " is offline.";
+        //     console.log(msg);
+        //     // ...
+        //   }
+        // });
+      });
+
+    // query = messagesRef
+    //   .orderBy("createdAt")
+    //   .limit(25)
+    //   .where("isDeleted", "==", false);
+
+    // const [onlineUsers] = useCollectionData(query, { idField: "id" });
+    messageInput = null;
+
+    if (!idToken) {
+      auth.currentUser.getIdTokenResult().then((idTokenResult) => {
+        setIdToken(idTokenResult);
+      });
+    }
+
+    sendMessage = async (e) => {
+      e.preventDefault();
+      const text = formValue;
+      setFormValue("");
+
+      const { uid, photoURL, displayName } = auth.currentUser;
+
+      await messagesRef.add({
+        text: text,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        username: displayName,
+        uid,
+        photoURL,
+        isDeleted: false,
+      });
+
+      dummy.current.scrollIntoView({ behavior: "smooth" });
+    };
+  }, []);
 
   return (
     <>
@@ -169,6 +236,9 @@ export function ChatRoom(props) {
           }}
         ></textarea>
       </form>
+
+      <span onClick={() => {}}>{onlineUsers ? onlineUsers.length + 1 : 1}</span>
+
       {!isOnline ? (
         <div className={styles["chat-room-overlay"]}>
           <div className={styles["overlay-message"]}>
