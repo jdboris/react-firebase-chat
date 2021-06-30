@@ -11,6 +11,7 @@ import { firestore, auth } from "../app";
 let uid = null;
 
 function presence(setIsOnline) {
+  let { displayName } = auth.currentUser;
   let offlineTimeout = null;
 
   // Create a reference to this user's specific status node.
@@ -25,11 +26,13 @@ function presence(setIsOnline) {
   let isOfflineForDatabase = {
     isOnline: false,
     lastChanged: firebase.database.ServerValue.TIMESTAMP,
+    username: displayName,
   };
 
   let isOnlineForDatabase = {
     isOnline: true,
     lastChanged: firebase.database.ServerValue.TIMESTAMP,
+    username: displayName,
   };
 
   const userPresenceRef = firebase.firestore().doc("/userPresences/" + uid);
@@ -39,11 +42,13 @@ function presence(setIsOnline) {
   let isOfflineForFirestore = {
     isOnline: false,
     lastChanged: firebase.firestore.FieldValue.serverTimestamp(),
+    username: displayName,
   };
 
   let isOnlineForFirestore = {
     isOnline: true,
     lastChanged: firebase.firestore.FieldValue.serverTimestamp(),
+    username: displayName,
   };
 
   firebase
@@ -97,11 +102,29 @@ export function ChatRoom(props) {
   const [formValue, setFormValue] = useState("");
   const [idToken, setIdToken] = useState("");
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [usersVisible, setUsersVisible] = useState(false);
   const dummy = useRef();
 
   let messageInput;
-  let sendMessage;
 
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    const text = formValue;
+    setFormValue("");
+
+    const { uid, photoURL, displayName } = auth.currentUser;
+
+    await messagesRef.add({
+      text: text,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      username: displayName,
+      uid,
+      photoURL,
+      isDeleted: false,
+    });
+
+    dummy.current.scrollIntoView({ behavior: "smooth" });
+  };
   const messagesRef = firestore.collection("messages");
   let bannedUsersRef;
 
@@ -116,8 +139,7 @@ export function ChatRoom(props) {
 
   useEffect(() => {
     console.log("USE EFFECT");
-    const usersRef = firestore.collection("users");
-    const userPresencesRef = firestore.collection("userPresences");
+    // const userPresencesRef = firestore.collection("userPresences");
     bannedUsersRef = firestore.collection("bannedUsers");
 
     let oldUid = uid;
@@ -136,7 +158,7 @@ export function ChatRoom(props) {
     firebase
       .firestore()
       .collection("userPresences")
-      .where(firebase.firestore.FieldPath.documentId(), "!=", uid)
+      // .where(firebase.firestore.FieldPath.documentId(), "!=", uid)
       .where("isOnline", "==", true)
       .onSnapshot(function (snapshot) {
         setOnlineUsers(
@@ -172,25 +194,6 @@ export function ChatRoom(props) {
         setIdToken(idTokenResult);
       });
     }
-
-    sendMessage = async (e) => {
-      e.preventDefault();
-      const text = formValue;
-      setFormValue("");
-
-      const { uid, photoURL, displayName } = auth.currentUser;
-
-      await messagesRef.add({
-        text: text,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        username: displayName,
-        uid,
-        photoURL,
-        isDeleted: false,
-      });
-
-      dummy.current.scrollIntoView({ behavior: "smooth" });
-    };
   }, []);
 
   return (
@@ -237,7 +240,24 @@ export function ChatRoom(props) {
         ></textarea>
       </form>
 
-      <span onClick={() => {}}>{onlineUsers ? onlineUsers.length + 1 : 1}</span>
+      <span
+        className={styles["button"]}
+        onClick={() => {
+          setUsersVisible(!usersVisible);
+        }}
+      >
+        {onlineUsers ? onlineUsers.length : 1}
+      </span>
+
+      {usersVisible ? (
+        <ul className={styles["online-users"]}>
+          {onlineUsers.map((user) => {
+            return <li>{user.username}</li>;
+          })}
+        </ul>
+      ) : (
+        ""
+      )}
 
       {!isOnline ? (
         <div className={styles["chat-room-overlay"]}>

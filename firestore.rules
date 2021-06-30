@@ -37,5 +37,9 @@ service cloud.firestore {
       allow update: if true;
       allow delete: if true;
     }
+    
+    match /users/{docId} {
+      allow read: if true;
+    }
   }
 }

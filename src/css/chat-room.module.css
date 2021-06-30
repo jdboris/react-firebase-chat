@@ -31,6 +31,25 @@
   color: initial;
 }
 
+.button {
+  cursor: pointer;
+}
+
+.online-users {
+  background: white;
+  border: 1px solid rgb(222, 222, 222);
+  color: black;
+  padding: 5px;
+  font-size: 0.85em;
+
+  position: absolute;
+  margin-left: auto;
+  margin-right: auto;
+  left: 0;
+  right: 0;
+  max-width: 200px;
+}
+
 .chat-room::-webkit-scrollbar {
   width: 14px;
 }
