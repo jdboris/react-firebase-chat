@@ -7,6 +7,8 @@
   padding: 5px;
 
   position: relative;
+
+  color: rgb(255, 121, 0);
 }
 
 .chat-app header {
@@ -26,6 +28,7 @@
   flex-direction: column-reverse;
   flex-grow: 1;
   margin-bottom: 5px;
+  color: initial;
 }
 
 .chat-room::-webkit-scrollbar {
