@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import styles from "../css/chat-room.module.css";
+import MenuIcon from "@material-ui/icons/Menu";
 
 import firebase from "firebase/app";
 import "firebase/database";
@@ -95,6 +96,13 @@ function presence(setIsOnline) {
       }
     }
   });
+
+  firebase.auth().onIdTokenChanged(function (user) {
+    // If the user is now logged out
+    if (!user) {
+      userPresenceDatabaseRef.set(isOfflineForDatabase);
+    }
+  });
 }
 
 export function ChatRoom(props) {
@@ -103,6 +111,8 @@ export function ChatRoom(props) {
   const [idToken, setIdToken] = useState("");
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [usersVisible, setUsersVisible] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+
   const dummy = useRef();
 
   let messageInput;
@@ -181,12 +191,6 @@ export function ChatRoom(props) {
         // });
       });
 
-    // query = messagesRef
-    //   .orderBy("createdAt")
-    //   .limit(25)
-    //   .where("isDeleted", "==", false);
-
-    // const [onlineUsers] = useCollectionData(query, { idField: "id" });
     messageInput = null;
 
     if (!idToken) {
@@ -240,21 +244,47 @@ export function ChatRoom(props) {
         ></textarea>
       </form>
 
-      <span
-        className={styles["button"]}
-        onClick={() => {
-          setUsersVisible(!usersVisible);
-        }}
-      >
-        {onlineUsers ? onlineUsers.length : 1}
-      </span>
+      <div className={styles["chat-controls"]}>
+        <span
+          className={styles["button"]}
+          onClick={() => {
+            setUsersVisible(!usersVisible);
+          }}
+        >
+          {onlineUsers ? onlineUsers.length : 1}
+        </span>
+
+        <MenuIcon
+          className={styles["button"]}
+          onClick={() => {
+            setMenuVisible(!menuVisible);
+          }}
+        />
+
+        {menuVisible ? (
+          <div class={styles["menu"]}>
+            <div
+              onClick={() => {
+                auth.signOut();
+              }}
+            >
+              Log out
+            </div>
+          </div>
+        ) : (
+          ""
+        )}
+      </div>
 
       {usersVisible ? (
-        <ul className={styles["online-users"]}>
-          {onlineUsers.map((user) => {
-            return <li>{user.username}</li>;
-          })}
-        </ul>
+        <div className={styles["online-users"]}>
+          People here now
+          <ul>
+            {onlineUsers.map((user) => {
+              return <li>{user.username}</li>;
+            })}
+          </ul>
+        </div>
       ) : (
         ""
       )}
