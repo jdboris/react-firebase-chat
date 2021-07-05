@@ -3,107 +3,14 @@ import styles from "../css/chat-room.module.css";
 import MenuIcon from "@material-ui/icons/Menu";
 
 import firebase from "firebase/app";
-import "firebase/database";
 
 import { useCollectionData } from "react-firebase-hooks/firestore";
 
 import { firestore, auth } from "../app";
 
+import { presence } from "../presence";
+
 let uid = null;
-
-function presence(setIsOnline) {
-  let { displayName } = auth.currentUser;
-  let offlineTimeout = null;
-
-  // Create a reference to this user's specific status node.
-  // This is where we will store data about being online/offline.
-  const userPresenceDatabaseRef = firebase
-    .database()
-    .ref("/userPresences/" + uid);
-
-  // We'll create two constants which we will write to
-  // the Realtime database when this device is offline
-  // or online.
-  let isOfflineForDatabase = {
-    isOnline: false,
-    lastChanged: firebase.database.ServerValue.TIMESTAMP,
-    username: displayName,
-  };
-
-  let isOnlineForDatabase = {
-    isOnline: true,
-    lastChanged: firebase.database.ServerValue.TIMESTAMP,
-    username: displayName,
-  };
-
-  const userPresenceRef = firebase.firestore().doc("/userPresences/" + uid);
-
-  // Firestore uses a different server timestamp value, so we'll
-  // create two more constants for Firestore state.
-  let isOfflineForFirestore = {
-    isOnline: false,
-    lastChanged: firebase.firestore.FieldValue.serverTimestamp(),
-    username: displayName,
-  };
-
-  let isOnlineForFirestore = {
-    isOnline: true,
-    lastChanged: firebase.firestore.FieldValue.serverTimestamp(),
-    username: displayName,
-  };
-
-  firebase
-    .database()
-    .ref(".info/connected")
-    .on("value", function (snapshot) {
-      if (snapshot.val() == false) {
-        // Instead of simply returning, we'll also set Firestore's state
-        // to 'offline'. This ensures that our Firestore cache is aware
-        // of the switch to 'offline.'
-
-        userPresenceRef.set(isOfflineForFirestore);
-        return;
-      }
-
-      userPresenceDatabaseRef
-        .onDisconnect()
-        .set(isOfflineForDatabase)
-        .then(function () {
-          userPresenceDatabaseRef.set(isOnlineForDatabase);
-
-          // We'll also add Firestore set here for when we come online.
-          userPresenceRef.set(isOnlineForFirestore);
-        });
-    });
-
-  userPresenceRef.onSnapshot(function (doc) {
-    if (doc.data()) {
-      let isOnline = doc.data().isOnline;
-
-      if (isOnline) {
-        if (offlineTimeout !== null) {
-          clearTimeout(offlineTimeout);
-          offlineTimeout = null;
-          setIsOnline(true);
-        }
-      } else {
-        if (offlineTimeout === null) {
-          // Wait for 3 seconds before telling the user the connection was lost
-          offlineTimeout = setTimeout(() => {
-            setIsOnline(false);
-          }, 3000);
-        }
-      }
-    }
-  });
-
-  firebase.auth().onIdTokenChanged(function (user) {
-    // If the user is now logged out
-    if (!user) {
-      userPresenceDatabaseRef.set(isOfflineForDatabase);
-    }
-  });
-}
 
 export function ChatRoom(props) {
   const [isOnline, setIsOnline] = useState(true);
@@ -152,13 +59,10 @@ export function ChatRoom(props) {
     // const userPresencesRef = firestore.collection("userPresences");
     bannedUsersRef = firestore.collection("bannedUsers");
 
-    let oldUid = uid;
     // Fetch the current user's ID from Firebase Authentication.
     uid = firebase.auth().currentUser.uid;
 
-    if (!oldUid && uid) {
-      presence(setIsOnline);
-    }
+    presence(setIsOnline);
 
     // query = userPresencesRef
     //   .where(firebase.firestore.FieldPath.documentId(), "!=", uid)
@@ -262,7 +166,7 @@ export function ChatRoom(props) {
         />
 
         {menuVisible ? (
-          <div class={styles["menu"]}>
+          <div className={styles["menu"]}>
             <div
               onClick={() => {
                 auth.signOut();
