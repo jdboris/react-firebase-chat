@@ -25,6 +25,8 @@ export function ChatRoom(props) {
   const [isUsersOpen, setUsersOpen] = useState(false);
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [isFormatOpen, setFormatOpen] = useState(false);
+  const [isFontOpen, setFontOpen] = useState(false);
+  const [isFontSizeOpen, setFontSizeOpen] = useState(false);
 
   const dummy = useRef();
 
@@ -48,6 +50,13 @@ export function ChatRoom(props) {
 
     dummy.current.scrollIntoView({ behavior: "smooth" });
   };
+
+  const closeMenus = () => {
+    setMenuOpen(false);
+    setFontOpen(false);
+    setFontSizeOpen(false);
+  };
+
   const messagesRef = firestore.collection("messages");
   let bannedUsersRef;
 
@@ -111,8 +120,8 @@ export function ChatRoom(props) {
   }, []);
 
   return (
-    <>
-      <div className={styles["chat-room"]}>
+    <section className={styles["chat-section"]} onClickCapture={closeMenus}>
+      <section className={styles["messages-section"]}>
         <span ref={dummy}></span>
         {messages &&
           messages.reverse().map((msg) => (
@@ -128,19 +137,53 @@ export function ChatRoom(props) {
               bannedUsersRef={bannedUsersRef}
             />
           ))}
-      </div>
+      </section>
 
       {isFormatOpen ? (
         <div className={styles["format-controls"]}>
           <span>
             <CloseIcon />
           </span>
-          <span>
+          <span
+            onClickCapture={() => {
+              setFontOpen(!isFontOpen);
+            }}
+          >
             T<ArrowDropDownIcon className={styles["down-arrow"]} />
+            {isFontOpen ? (
+              <div className={styles["menu"]}>
+                <div
+                  onClick={() => {
+                    auth.signOut();
+                  }}
+                >
+                  Log out
+                </div>
+              </div>
+            ) : (
+              ""
+            )}
           </span>
-          <span>
+          <span
+            onClickCapture={() => {
+              setFontSizeOpen(!isFontSizeOpen);
+            }}
+          >
             {fontSize}
             <ArrowDropDownIcon className={styles["down-arrow"]} />
+            {isFontSizeOpen ? (
+              <div className={styles["menu"]}>
+                <div
+                  onClick={() => {
+                    auth.signOut();
+                  }}
+                >
+                  Log out
+                </div>
+              </div>
+            ) : (
+              ""
+            )}
           </span>
           <strong>B</strong>
           <em>i</em>
@@ -180,7 +223,7 @@ export function ChatRoom(props) {
           className={
             styles["button"] + " " + (isFormatOpen ? styles["outlined"] : "")
           }
-          onClick={() => {
+          onClick={(e) => {
             setFormatOpen(!isFormatOpen);
           }}
         />
@@ -198,7 +241,7 @@ export function ChatRoom(props) {
 
         <MenuIcon
           className={styles["button"]}
-          onClick={() => {
+          onClickCapture={() => {
             setMenuOpen(!isMenuOpen);
           }}
         />
@@ -241,6 +284,6 @@ export function ChatRoom(props) {
       ) : (
         ""
       )}
-    </>
+    </section>
   );
 }
