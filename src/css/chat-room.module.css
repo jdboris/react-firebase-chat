@@ -30,7 +30,14 @@ ul {
   justify-content: center;
 }
 
-.chat-room {
+.chat-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+}
+
+.messages-section {
   overflow-y: scroll;
   display: flex;
   flex-direction: column-reverse;
@@ -44,7 +51,8 @@ ul {
   padding: 7px;
   background: white;
   border: 1px solid rgb(222, 222, 222);
-  margin-top: -3.1em;
+  bottom: 1.3em;
+  white-space: nowrap;
 }
 
 .menu > * {
@@ -156,6 +164,7 @@ form svg {
   padding-right: 5px;
   text-align: center;
   display: flex;
+  position: relative;
 }
 
 .format-controls * {
