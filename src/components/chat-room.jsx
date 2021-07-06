@@ -1,6 +1,10 @@
 import React, { useRef, useState, useEffect } from "react";
 import styles from "../css/chat-room.module.css";
 import MenuIcon from "@material-ui/icons/Menu";
+import TextFormatIcon from "@material-ui/icons/TextFormat";
+import CloseIcon from "@material-ui/icons/Close";
+import ArrowDropDownIcon from "@material-ui/icons/ArrowDropDown";
+import FormatColorTextIcon from "@material-ui/icons/FormatColorText";
 
 import firebase from "firebase/app";
 import { firestore, auth } from "../app";
@@ -16,8 +20,11 @@ export function ChatRoom(props) {
   const [formValue, setFormValue] = useState("");
   const [idToken, setIdToken] = useState("");
   const [onlineUsers, setOnlineUsers] = useState([]);
-  const [usersVisible, setUsersVisible] = useState(false);
-  const [menuVisible, setMenuVisible] = useState(false);
+  const [fontSize, setFontSize] = useState(13);
+
+  const [isUsersOpen, setUsersOpen] = useState(false);
+  const [isMenuOpen, setMenuOpen] = useState(false);
+  const [isFormatOpen, setFormatOpen] = useState(false);
 
   const dummy = useRef();
 
@@ -123,6 +130,30 @@ export function ChatRoom(props) {
           ))}
       </div>
 
+      {isFormatOpen ? (
+        <div className={styles["format-controls"]}>
+          <span>
+            <CloseIcon />
+          </span>
+          <span>
+            T<ArrowDropDownIcon className={styles["down-arrow"]} />
+          </span>
+          <span>
+            {fontSize}
+            <ArrowDropDownIcon className={styles["down-arrow"]} />
+          </span>
+          <strong>B</strong>
+          <em>i</em>
+          <u>U</u>
+          <span>bg</span>
+          <span>
+            <FormatColorTextIcon className={styles["font-color"]} />
+          </span>
+        </div>
+      ) : (
+        ""
+      )}
+
       <form onSubmit={sendMessage}>
         <textarea
           ref={(input) => {
@@ -145,13 +176,21 @@ export function ChatRoom(props) {
             }
           }}
         ></textarea>
+        <TextFormatIcon
+          className={
+            styles["button"] + " " + (isFormatOpen ? styles["outlined"] : "")
+          }
+          onClick={() => {
+            setFormatOpen(!isFormatOpen);
+          }}
+        />
       </form>
 
       <div className={styles["chat-controls"]}>
         <span
           className={styles["button"]}
           onClick={() => {
-            setUsersVisible(!usersVisible);
+            setUsersOpen(!isUsersOpen);
           }}
         >
           {onlineUsers ? onlineUsers.length : 1}
@@ -160,11 +199,11 @@ export function ChatRoom(props) {
         <MenuIcon
           className={styles["button"]}
           onClick={() => {
-            setMenuVisible(!menuVisible);
+            setMenuOpen(!isMenuOpen);
           }}
         />
 
-        {menuVisible ? (
+        {isMenuOpen ? (
           <div className={styles["menu"]}>
             <div
               onClick={() => {
@@ -179,7 +218,7 @@ export function ChatRoom(props) {
         )}
       </div>
 
-      {usersVisible ? (
+      {isUsersOpen ? (
         <div className={styles["online-users"]}>
           People here now
           <ul>
