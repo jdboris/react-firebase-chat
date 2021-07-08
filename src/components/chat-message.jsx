@@ -4,7 +4,7 @@ import styles from "../css/chat-room.module.css";
 import { auth } from "../app";
 
 export function ChatMessage(props) {
-  let { text, uid, photoURL, createdAt, username } = props.message;
+  let { text, uid, photoURL, createdAt, username, fontSize } = props.message;
   let { claims } = props.idToken;
   const messageClass = uid === auth.currentUser.uid ? "sent" : "received";
 
@@ -68,7 +68,7 @@ export function ChatMessage(props) {
         </span>
         <p>
           <span className={styles["message-username"]}>{username}</span>:{" "}
-          {message}
+          <span style={{ fontSize: fontSize + "px" }}>{message}</span>
         </p>
       </div>
     </>

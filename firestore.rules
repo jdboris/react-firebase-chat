@@ -37,6 +37,20 @@ service cloud.firestore {
       allow update: if true;
       allow delete: if true;
     }
+  
+    match /userPreferences/{docId} {
+      allow create: if isDocOwner(docId);
+      allow read: if isDocOwner(docId);
+      allow update: if isDocOwner(docId);
+    }
+
+    function isDocOwner(docId) {
+      // debug( request.auth.uid );
+      let isSignedIn = request.auth.uid != null;
+      let isOwner = request.auth.uid == docId;
+
+      return isSignedIn && isOwner;
+    }
     
     match /users/{docId} {
       allow read: if true;

@@ -111,4 +111,17 @@ export function presence(setIsOnline) {
     firebase.database().ref(".info/connected").off("value");
     removeSnapshotListener();
   }
+
+  // snapshot.docChanges().forEach(function (change) {
+  //   if (change.type === "added") {
+  //     var msg = "User " + change.doc.id + " is online.";
+  //     console.log(msg);
+  //     // ...
+  //   }
+  //   if (change.type === "removed") {
+  //     var msg = "User " + change.doc.id + " is offline.";
+  //     console.log(msg);
+  //     // ...
+  //   }
+  // });
 }

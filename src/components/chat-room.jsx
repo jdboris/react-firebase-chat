@@ -46,6 +46,7 @@ export function ChatRoom(props) {
       uid,
       photoURL,
       isDeleted: false,
+      fontSize: fontSize,
     });
 
     dummy.current.scrollIntoView({ behavior: "smooth" });
@@ -58,7 +59,8 @@ export function ChatRoom(props) {
   };
 
   const messagesRef = firestore.collection("messages");
-  let bannedUsersRef;
+  const bannedUsersRef = firestore.collection("bannedUsers");
+  const userPreferencesRef = firestore.collection("userPreferences");
 
   let query = messagesRef
     .orderBy("createdAt")
@@ -70,24 +72,23 @@ export function ChatRoom(props) {
   console.log("RE-RENDER");
 
   useEffect(() => {
-    console.log("USE EFFECT");
-    // const userPresencesRef = firestore.collection("userPresences");
-    bannedUsersRef = firestore.collection("bannedUsers");
-
     // Fetch the current user's ID from Firebase Authentication.
     uid = firebase.auth().currentUser.uid;
+    userPreferencesRef
+      .doc(uid)
+      .get()
+      .then((doc) => {
+        if (doc.exists) {
+          const preferences = doc.data();
+          setFontSize(preferences.fontSize);
+        }
+      });
 
     presence(setIsOnline);
-
-    // query = userPresencesRef
-    //   .where(firebase.firestore.FieldPath.documentId(), "!=", uid)
-    //   .where("isOnline", "==", true);
-    // const [userPresences] = useCollectionData(query, { idField: "uid" });
 
     firebase
       .firestore()
       .collection("userPresences")
-      // .where(firebase.firestore.FieldPath.documentId(), "!=", uid)
       .where("isOnline", "==", true)
       .onSnapshot(function (snapshot) {
         setOnlineUsers(
@@ -95,19 +96,6 @@ export function ChatRoom(props) {
             return doc.data();
           })
         );
-
-        // snapshot.docChanges().forEach(function (change) {
-        //   if (change.type === "added") {
-        //     var msg = "User " + change.doc.id + " is online.";
-        //     console.log(msg);
-        //     // ...
-        //   }
-        //   if (change.type === "removed") {
-        //     var msg = "User " + change.doc.id + " is offline.";
-        //     console.log(msg);
-        //     // ...
-        //   }
-        // });
       });
 
     messageInput = null;
@@ -173,13 +161,22 @@ export function ChatRoom(props) {
             <ArrowDropDownIcon className={styles["down-arrow"]} />
             {isFontSizeOpen ? (
               <div className={styles["menu"]}>
-                <div
-                  onClick={() => {
-                    auth.signOut();
-                  }}
-                >
-                  Log out
-                </div>
+                {[...Array(14).keys()].map((element) => {
+                  return (
+                    <div
+                      onClickCapture={(e) => {
+                        userPreferencesRef
+                          .doc(uid)
+                          .set({ fontSize: 9 + element })
+                          .then(() => {
+                            setFontSize(9 + element);
+                          });
+                      }}
+                    >
+                      {9 + element}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               ""
