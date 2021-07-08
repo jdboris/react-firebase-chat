@@ -58,6 +58,11 @@ ul {
 .menu > * {
   color: #0084eb;
   cursor: pointer;
+  margin-bottom: 0.5em;
+}
+
+.menu > *:last-child {
+  margin-bottom: 0;
 }
 
 .menu > *:hover {
