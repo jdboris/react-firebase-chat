@@ -12,12 +12,13 @@ import { firestore, auth } from "../app";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import { presence } from "../presence";
 import { ChatMessage } from "./chat-message";
+import { toggleSelectionMarkup, MARKUP_SYMBOLS } from "../markup";
 
 let uid = null;
 
 export function ChatRoom(props) {
   const [isOnline, setIsOnline] = useState(true);
-  const [formValue, setFormValue] = useState("");
+  const [messageValue, setMessageValue] = useState("");
   const [idToken, setIdToken] = useState("");
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [fontSize, setFontSize] = useState(13);
@@ -27,15 +28,16 @@ export function ChatRoom(props) {
   const [isFormatOpen, setFormatOpen] = useState(false);
   const [isFontOpen, setFontOpen] = useState(false);
   const [isFontSizeOpen, setFontSizeOpen] = useState(false);
+  const [selection, setSelection] = useState({ start: 0, end: 0 });
 
   const dummy = useRef();
 
-  let messageInput;
+  let messageInput = useRef();
 
   const sendMessage = async (e) => {
     e.preventDefault();
-    const text = formValue;
-    setFormValue("");
+    const text = messageValue;
+    setMessageValue("");
 
     const { uid, photoURL, displayName } = auth.currentUser;
 
@@ -98,14 +100,19 @@ export function ChatRoom(props) {
         );
       });
 
-    messageInput = null;
-
     if (!idToken) {
       auth.currentUser.getIdTokenResult().then((idTokenResult) => {
         setIdToken(idTokenResult);
       });
     }
   }, []);
+
+  useEffect(() => {
+    if (!selection) return;
+    const { start, end } = selection;
+    messageInput.focus();
+    messageInput.setSelectionRange(start, end);
+  }, [selection]);
 
   return (
     <section className={styles["chat-section"]} onClickCapture={closeMenus}>
@@ -117,7 +124,7 @@ export function ChatRoom(props) {
               key={msg.id}
               message={msg}
               onClick={(targetUsername) => {
-                setFormValue(formValue + " @" + targetUsername + " ");
+                setMessageValue(messageValue + " @" + targetUsername + " ");
                 messageInput.focus();
               }}
               idToken={idToken}
@@ -182,9 +189,54 @@ export function ChatRoom(props) {
               ""
             )}
           </span>
-          <strong>B</strong>
-          <em>i</em>
-          <u>U</u>
+          <strong
+            onClick={() => {
+              let result = toggleSelectionMarkup(
+                messageInput,
+                MARKUP_SYMBOLS.BOLD
+              );
+
+              setMessageValue(result.value);
+              setSelection({
+                start: result.start,
+                end: result.end,
+              });
+            }}
+          >
+            B
+          </strong>
+          <em
+            onClick={() => {
+              let result = toggleSelectionMarkup(
+                messageInput,
+                MARKUP_SYMBOLS.ITALICS
+              );
+
+              setMessageValue(result.value);
+              setSelection({
+                start: result.start,
+                end: result.end,
+              });
+            }}
+          >
+            i
+          </em>
+          <u
+            onClick={() => {
+              let result = toggleSelectionMarkup(
+                messageInput,
+                MARKUP_SYMBOLS.UNDERLINE
+              );
+
+              setMessageValue(result.value);
+              setSelection({
+                start: result.start,
+                end: result.end,
+              });
+            }}
+          >
+            U
+          </u>
           <span>bg</span>
           <span>
             <FormatColorTextIcon className={styles["font-color"]} />
@@ -200,8 +252,8 @@ export function ChatRoom(props) {
             messageInput = input;
           }}
           autoFocus
-          value={formValue}
-          onChange={(e) => setFormValue(e.target.value)}
+          value={messageValue}
+          onChange={(e) => setMessageValue(e.target.value)}
           placeholder="Type here to send a message"
           onKeyPress={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
