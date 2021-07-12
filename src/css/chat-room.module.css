@@ -46,6 +46,18 @@ ul {
   margin-bottom: 0.3em;
 }
 
+[data-format="*"] {
+  font-style: italic;
+}
+
+[data-format="**"] {
+  font-weight: bold;
+}
+
+[data-format="_"] {
+  text-decoration: underline;
+}
+
 .menu {
   position: absolute;
   padding: 7px;
@@ -248,8 +260,13 @@ li {
   font-weight: bold;
 }
 
-.message p {
+.message > div {
   margin-left: 5px;
+}
+
+.message p {
+  display: inline;
+  white-space: pre-wrap;
 }
 
 .message.mention {
