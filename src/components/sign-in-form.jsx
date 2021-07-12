@@ -31,7 +31,7 @@ export function SignInForm() {
   };
 
   return (
-    <>
+    <div>
       <input
         type="email"
         name="email"
@@ -103,6 +103,6 @@ export function SignInForm() {
       <p>
         Do not violate the community guidelines or you will be banned for life!
       </p>
-    </>
+    </div>
   );
 }
