@@ -12,7 +12,7 @@ import { firestore, auth } from "../app";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import { presence } from "../presence";
 import { ChatMessage } from "./chat-message";
-import { toggleSelectionMarkup, MARKUP_SYMBOLS } from "../markup";
+import { toggleSelectionMarkup, MARKUP_SYMBOLS } from "../markdown";
 
 let uid = null;
 
@@ -221,22 +221,6 @@ export function ChatRoom(props) {
           >
             i
           </em>
-          <u
-            onClick={() => {
-              let result = toggleSelectionMarkup(
-                messageInput,
-                MARKUP_SYMBOLS.UNDERLINE
-              );
-
-              setMessageValue(result.value);
-              setSelection({
-                start: result.start,
-                end: result.end,
-              });
-            }}
-          >
-            U
-          </u>
           <span>bg</span>
           <span>
             <FormatColorTextIcon className={styles["font-color"]} />

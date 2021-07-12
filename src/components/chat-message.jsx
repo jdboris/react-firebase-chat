@@ -1,4 +1,5 @@
 import React from "react";
+import ReactMarkdown from "react-markdown";
 import styles from "../css/chat-room.module.css";
 
 import { auth } from "../app";
@@ -10,12 +11,15 @@ export function ChatMessage(props) {
 
   let mouseDownSpot = null;
 
-  const doesMentionCurrentUser = text.includes(
-    `@${auth.currentUser.displayName} `
-  );
+  const doesMentionCurrentUser = new RegExp(
+    `@${auth.currentUser.displayName}\\b`,
+    "g"
+  ).test(text);
 
-  let parts = text.split(`@${auth.currentUser.displayName} `);
-  let message = [parts[0]];
+  text = text.replace(
+    new RegExp(`@${auth.currentUser.displayName}\\b`, "g"),
+    `**@${auth.currentUser.displayName}**`
+  );
 
   function banUser() {
     props.bannedUsersRef.doc(props.message.uid).set({});
@@ -23,11 +27,6 @@ export function ChatMessage(props) {
 
   function deleteMessage() {
     props.messagesRef.doc(props.message.id).update({ isDeleted: true });
-  }
-
-  for (let i = 1; i < parts.length; i++) {
-    message.push(<strong>@{auth.currentUser.displayName} </strong>);
-    message.push(parts[i]);
   }
 
   return (
@@ -66,10 +65,14 @@ export function ChatMessage(props) {
             {createdAt && createdAt.toDate().toLocaleString()}
           </span>
         </span>
-        <p>
+        <div>
           <span className={styles["message-username"]}>{username}</span>:{" "}
-          <span style={{ fontSize: fontSize + "px" }}>{message}</span>
-        </p>
+          <span style={{ fontSize: fontSize + "px" }}>
+            <ReactMarkdown allowedElements={["p", "em", "strong", "u"]}>
+              {text}
+            </ReactMarkdown>
+          </span>
+        </div>
       </div>
     </>
   );
