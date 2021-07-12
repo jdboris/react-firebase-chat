@@ -1,5 +1,6 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
+import gfm from "remark-gfm";
 import styles from "../css/chat-room.module.css";
 
 import { auth } from "../app";
@@ -68,7 +69,28 @@ export function ChatMessage(props) {
         <div>
           <span className={styles["message-username"]}>{username}</span>:{" "}
           <span style={{ fontSize: fontSize + "px" }}>
-            <ReactMarkdown allowedElements={["p", "em", "strong", "u"]}>
+            <ReactMarkdown
+              components={{
+                // NOTE: Must overwrite the built-in renderer to ensure the text of the link is the URL
+                a: (props) => {
+                  return (
+                    <a
+                      href={props.href}
+                      target="_blank"
+                      rel="nofollow noreferrer noopener"
+                      // NOTE: Must stop propagation so clicking a link won't @ the poster
+                      onMouseUp={(e) => {
+                        e.stopPropagation();
+                      }}
+                    >
+                      {props.href}
+                    </a>
+                  );
+                },
+              }}
+              remarkPlugins={[gfm]}
+              allowedElements={["p", "em", "strong", "u", "a"]}
+            >
               {text}
             </ReactMarkdown>
           </span>
