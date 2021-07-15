@@ -2,10 +2,13 @@ const functions = require("firebase-functions");
 const Filter = require("bad-words");
 const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
+const fetch = require("node-fetch");
 
 admin.initializeApp();
 
 const db = admin.firestore();
+
+const OEMBED_PROVIDER_WHITELIST = ["YouTube", "Twitter"];
 
 exports.detectEvilUsers = functions.firestore
   .document("messages/{msgId}")
@@ -71,11 +74,10 @@ exports.signUp = functions.https.onCall((data, context) => {
     })
     .then(function (userRecord) {
       // See the UserRecord reference doc for the contents of userRecord.
-      console.log("Successfully created new user:", userRecord.uid);
       return { success: true };
     })
     .catch(function (error) {
-      console.log("Error creating new user:", error);
+      console.error("Error creating new user:", error);
       return { success: false };
     });
 
@@ -105,10 +107,10 @@ exports.sendWelcomeEmail = functions.auth.user().onCreate((user) => {
       return sendVerificationEmail(user.email, user.displayName, link);
     })
     .then((response) => {
-      console.log("Email sent: " + response);
+      //console.log("Email sent: " + response);
     })
     .catch((error) => {
-      console.log(error);
+      console.error(error);
     });
 });
 
@@ -225,7 +227,7 @@ exports.onUserStatusChanged = functions.database
     // and compare the timestamps.
     const statusSnapshot = await change.after.ref.once("value");
     const status = statusSnapshot.val();
-    console.log(status, eventStatus);
+
     // functions.logger.log(status, eventStatus);
     // If the current timestamp for this data is newer than
     // the data that triggered this event, we exit this function.
@@ -239,3 +241,82 @@ exports.onUserStatusChanged = functions.database
     // ... and write it to Firestore.
     return userStatusFirestoreRef.set(eventStatus);
   });
+
+exports.getOembedProviders = functions.https.onCall((data, context) => {
+  return fetch("https://oembed.com/providers.json")
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Could not fetch oembed proviers.");
+      }
+
+      return response.json();
+    })
+    .then((data) => {
+      // Only include the whitelist
+      let result = {
+        providers: data.reduce((accumulator, provider) => {
+          if (OEMBED_PROVIDER_WHITELIST.includes(provider.provider_name)) {
+            db.collection("oembedProviders")
+              .doc(provider.provider_name)
+              .set(provider);
+            accumulator[provider.provider_name] = provider;
+          }
+          return accumulator;
+        }, {}),
+      };
+
+      return result;
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+});
+
+// NOTE: Escapes the string for RegEx EXCEPT FOR '*'
+function escapeRegExExceptStar(string) {
+  return string.replace(/[.+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
+}
+
+exports.getOembed = functions.https.onCall((data, context) => {
+  return db
+    .collection("oembedProviders")
+    .get()
+    .then((snapshot) => {
+      let providers = snapshot.docs.map((doc) => doc.data());
+
+      if (providers && providers.length) {
+        for (let provider of providers) {
+          // For each possible scheme...
+          for (let scheme of provider.endpoints[0].schemes) {
+            let escaped = escapeRegExExceptStar(scheme);
+            escaped = escaped.replace(/\*/g, "(.*)");
+            let pattern = new RegExp("^" + escaped, "gi");
+
+            // ...if the provided URL matches the scheme
+            if (pattern.test(data.url)) {
+              // Fetch and return the HTML for the embed
+              let endpoint = `${
+                provider.endpoints[0].url
+              }?url=${encodeURIComponent(data.url)}`;
+
+              return fetch(endpoint)
+                .then((response) => {
+                  return response.json();
+                })
+                .then((data) => {
+                  return {
+                    providerName: provider.provider_name,
+                    html: data.html,
+                  };
+                });
+            }
+          }
+        }
+
+        return {
+          providerName: null,
+          html: null,
+        };
+      }
+    });
+});

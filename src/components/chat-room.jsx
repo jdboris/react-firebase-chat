@@ -11,6 +11,7 @@ import { firestore, auth } from "../app";
 
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import { presence } from "../presence";
+// import { getProviders } from "../oembed";
 import { ChatMessage } from "./chat-message";
 import { toggleSelectionMarkup, MARKUP_SYMBOLS } from "../markdown";
 
@@ -74,6 +75,8 @@ export function ChatRoom(props) {
   console.log("RE-RENDER");
 
   useEffect(() => {
+    // getProviders();
+
     // Fetch the current user's ID from Firebase Authentication.
     uid = firebase.auth().currentUser.uid;
     userPreferencesRef
