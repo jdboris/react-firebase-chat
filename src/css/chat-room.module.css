@@ -260,13 +260,19 @@ li {
   font-weight: bold;
 }
 
-.message > div {
+.message-contents {
   margin-left: 5px;
 }
 
+.message > div {
+  margin-left: 5px;
+  display: flex;
+  align-items: center;
+}
+
 .message p {
-  display: inline;
   white-space: pre-wrap;
+  margin: 0px;
 }
 
 .message.mention {

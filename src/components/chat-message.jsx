@@ -1,9 +1,45 @@
-import React from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import gfm from "remark-gfm";
 import styles from "../css/chat-room.module.css";
+import "../css/oembed.css";
+import firebase from "firebase/app";
 
 import { auth } from "../app";
+
+function Link(props) {
+  const [children, setChildren] = useState(props.href);
+  const [providerName, setProviderName] = useState("");
+
+  useEffect(() => {
+    const getOembed = firebase.functions().httpsCallable("getOembed");
+
+    getOembed({ url: props.href }).then((result) => {
+      if (result.data.html) {
+        setProviderName(result.data.providerName);
+        setChildren(
+          <span dangerouslySetInnerHTML={{ __html: result.data.html }}></span>
+        );
+      } else {
+        setChildren(
+          <a
+            href={props.href}
+            target="_blank"
+            rel="nofollow noreferrer noopener"
+            // NOTE: Must stop propagation so clicking a link won't @ the poster
+            onMouseUp={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            {props.href}
+          </a>
+        );
+      }
+    });
+  }, []);
+
+  return <span data-provider={providerName}>{children}</span>;
+}
 
 export function ChatMessage(props) {
   let { text, uid, photoURL, createdAt, username, fontSize } = props.message;
@@ -67,32 +103,29 @@ export function ChatMessage(props) {
           </span>
         </span>
         <div>
-          <span className={styles["message-username"]}>{username}</span>:{" "}
-          <span style={{ fontSize: fontSize + "px" }}>
-            <ReactMarkdown
-              components={{
-                // NOTE: Must overwrite the built-in renderer to ensure the text of the link is the URL
-                a: (props) => {
-                  return (
-                    <a
-                      href={props.href}
-                      target="_blank"
-                      rel="nofollow noreferrer noopener"
-                      // NOTE: Must stop propagation so clicking a link won't @ the poster
-                      onMouseUp={(e) => {
-                        e.stopPropagation();
-                      }}
-                    >
-                      {props.href}
-                    </a>
-                  );
-                },
-              }}
-              remarkPlugins={[gfm]}
-              allowedElements={["p", "em", "strong", "u", "a"]}
-            >
-              {text}
-            </ReactMarkdown>
+          <span className={styles["message-username"]}>{username}</span>:
+          <span
+            className={styles["message-contents"]}
+            style={{ fontSize: fontSize + "px" }}
+          >
+            {useMemo(() => {
+              return (
+                <ReactMarkdown
+                  components={{
+                    // NOTE: Must overwrite the built-in renderer to ensure the text of the link is the URL
+                    a: (props) => {
+                      return (
+                        <Link shouldComponentUpdate={false} href={props.href} />
+                      );
+                    },
+                  }}
+                  plugins={[gfm]}
+                  allowedElements={["p", "em", "strong", "u", "a"]}
+                >
+                  {text}
+                </ReactMarkdown>
+              );
+            }, [text])}
           </span>
         </div>
       </div>

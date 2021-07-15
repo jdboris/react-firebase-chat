@@ -55,5 +55,9 @@ service cloud.firestore {
     match /users/{docId} {
       allow read: if true;
     }
+  
+    match /oembedProviders/{docId} {
+      allow read: if true;
+    }
   }
 }
