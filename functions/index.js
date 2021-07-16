@@ -242,7 +242,8 @@ exports.onUserStatusChanged = functions.database
     return userStatusFirestoreRef.set(eventStatus);
   });
 
-exports.getOembedProviders = functions.https.onCall((data, context) => {
+// exports.getOembedProviders = functions.https.onCall((data, context) => {
+async function getOembedProviders() {
   return fetch("https://oembed.com/providers.json")
     .then((response) => {
       if (!response.ok) {
@@ -270,14 +271,38 @@ exports.getOembedProviders = functions.https.onCall((data, context) => {
     .catch((error) => {
       console.error(error);
     });
-});
+}
 
 // NOTE: Escapes the string for RegEx EXCEPT FOR '*'
 function escapeRegExExceptStar(string) {
   return string.replace(/[.+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
 }
 
-exports.getOembed = functions.https.onCall((data, context) => {
+exports.getOembed = functions.https.onCall(async (data, context) => {
+  const snapshot = await db.collection("settings").get("oembed");
+  let settings = {};
+
+  const weekInMilliseconds = 1000 * 60 * 60 * 24 * 7;
+
+  if (
+    !snapshot.docs.length ||
+    ((settings = snapshot.docs[0].data()) &&
+      (!settings.lastProviderUpdate ||
+        Date.now() >
+          settings.lastProviderUpdate.toMillis() + weekInMilliseconds))
+  ) {
+    const result = await getOembedProviders();
+    if (result.providers) {
+      await db
+        .collection("settings")
+        .doc("oembed")
+        .set({
+          ...settings,
+          lastProviderUpdate: admin.firestore.FieldValue.serverTimestamp(),
+        });
+    }
+  }
+
   return db
     .collection("oembedProviders")
     .get()
