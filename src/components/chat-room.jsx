@@ -22,13 +22,39 @@ export function ChatRoom(props) {
   const [messageValue, setMessageValue] = useState("");
   const [idToken, setIdToken] = useState("");
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const fonts = [
+    { name: "Arial", style: `Arial, Helvetica, sans-serif` },
+    { name: "Comic", style: `"Comic Sans MS", "Comic Sans", cursive` },
+    { name: "Georgia", style: `Georgia, Times, "Times New Roman", serif` },
+    {
+      name: "Handwriting",
+      style: `"Lucida Handwriting", Zapfino, Chalkduster, cursive`,
+    },
+    {
+      name: "Impact",
+      style: `Impact, Haettenschweiler, "Franklin Gothic Bold", Charcoal, "Helvetica Inserat", "Bitstream Vera Sans Bold", "Arial Black", "sans serif"`,
+    },
+    {
+      name: "Palatino",
+      style: `Palatino, "Palatino Linotype", "Palatino LT STD", "Book Antiqua", Georgia, serif`,
+    },
+    { name: "Papyrus", style: `Papyrus, fantasy` },
+    { name: "Times", style: `"Times New Roman", Times, serif` },
+    {
+      name: "Typewriter",
+      style: `"Lucida Sans Typewriter", "Lucida Console", monaco, "Bitstream Vera Sans Mono", monospace`,
+    },
+  ];
+  const [font, setFont] = useState(fonts[0]);
   const [fontSize, setFontSize] = useState(13);
+  const [fontColor, setFontColor] = useState("#000000");
 
   const [isUsersOpen, setUsersOpen] = useState(false);
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [isFormatOpen, setFormatOpen] = useState(false);
   const [isFontOpen, setFontOpen] = useState(false);
   const [isFontSizeOpen, setFontSizeOpen] = useState(false);
+  const [isFontColorOpen, setFontColorOpen] = useState(false);
   const [selection, setSelection] = useState({ start: 0, end: 0 });
 
   const dummy = useRef();
@@ -49,7 +75,9 @@ export function ChatRoom(props) {
       uid,
       photoURL,
       isDeleted: false,
+      font: font,
       fontSize: fontSize,
+      fontColor: fontColor,
     });
 
     dummy.current.scrollIntoView({ behavior: "smooth" });
@@ -59,6 +87,7 @@ export function ChatRoom(props) {
     setMenuOpen(false);
     setFontOpen(false);
     setFontSizeOpen(false);
+    setFontColorOpen(false);
   };
 
   const messagesRef = firestore.collection("messages");
@@ -85,7 +114,8 @@ export function ChatRoom(props) {
       .then((doc) => {
         if (doc.exists) {
           const preferences = doc.data();
-          setFontSize(preferences.fontSize);
+          if (preferences.fontSize) setFontSize(preferences.fontSize);
+          if (preferences.font) setFont(preferences.font);
         }
       });
 
@@ -150,13 +180,23 @@ export function ChatRoom(props) {
             T<ArrowDropDownIcon className={styles["down-arrow"]} />
             {isFontOpen ? (
               <div className={styles["menu"]}>
-                <div
-                  onClick={() => {
-                    auth.signOut();
-                  }}
-                >
-                  Log out
-                </div>
+                {fonts.map((fontObj) => {
+                  return (
+                    <div
+                      className={font == fontObj.name ? styles["bold"] : ""}
+                      onClickCapture={() => {
+                        userPreferencesRef
+                          .doc(uid)
+                          .set({ font: fontObj, fontSize: fontSize })
+                          .then(() => {
+                            setFont(fontObj);
+                          });
+                      }}
+                    >
+                      {fontObj.name}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               ""
@@ -177,7 +217,7 @@ export function ChatRoom(props) {
                       onClickCapture={(e) => {
                         userPreferencesRef
                           .doc(uid)
-                          .set({ fontSize: 9 + element })
+                          .set({ fontSize: 9 + element, font: font })
                           .then(() => {
                             setFontSize(9 + element);
                           });
@@ -225,7 +265,35 @@ export function ChatRoom(props) {
             i
           </em>
           <span>bg</span>
-          <span>
+          <span
+            onClickCapture={() => {
+              setFontColorOpen(!isFontColorOpen);
+            }}
+          >
+            {isFontColorOpen ? (
+              <div
+                className={`${styles["menu"]} ${styles["font-color-picker"]}`}
+              >
+                <div>
+                  <input
+                    type="color"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
+                    // NOTE: Required to prevent auto closing when clicking
+                    onClickCapture={() => {
+                      setFontColorOpen(true);
+                    }}
+                    value={fontColor}
+                    onChange={(e) => {
+                      setFontColor(e.target.value);
+                    }}
+                  />
+                </div>
+              </div>
+            ) : (
+              ""
+            )}
             <FormatColorTextIcon className={styles["font-color"]} />
           </span>
         </div>
@@ -253,6 +321,11 @@ export function ChatRoom(props) {
               );
               e.preventDefault();
             }
+          }}
+          style={{
+            fontFamily: font.style,
+            fontSize: fontSize,
+            color: fontColor,
           }}
         ></textarea>
         <TextFormatIcon

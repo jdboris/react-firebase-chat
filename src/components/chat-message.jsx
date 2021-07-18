@@ -38,11 +38,21 @@ function Link(props) {
     });
   }, []);
 
-  return <span data-provider={providerName}>{children}</span>;
+  return (
+    <span
+      onMouseUp={(e) => {
+        e.stopPropagation();
+      }}
+      data-provider={providerName}
+    >
+      {children}
+    </span>
+  );
 }
 
 export function ChatMessage(props) {
-  let { text, uid, photoURL, createdAt, username, fontSize } = props.message;
+  let { text, uid, photoURL, createdAt, username, fontSize, fontColor, font } =
+    props.message;
   let { claims } = props.idToken;
   const messageClass = uid === auth.currentUser.uid ? "sent" : "received";
 
@@ -106,7 +116,11 @@ export function ChatMessage(props) {
           <span className={styles["message-username"]}>{username}</span>:
           <span
             className={styles["message-contents"]}
-            style={{ fontSize: fontSize + "px" }}
+            style={{
+              fontSize: fontSize + "px",
+              color: fontColor,
+              fontFamily: font.style,
+            }}
           >
             {useMemo(() => {
               return (
