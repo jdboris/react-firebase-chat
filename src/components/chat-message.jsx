@@ -53,7 +53,9 @@ function Link(props) {
 export function ChatMessage(props) {
   let { text, uid, photoURL, createdAt, username, fontSize, fontColor, font } =
     props.message;
-  let { claims } = props.idToken;
+  const { userStyles } = props;
+  const { claims } = props.idToken;
+
   const messageClass = uid === auth.currentUser.uid ? "sent" : "received";
 
   let mouseDownSpot = null;
@@ -116,11 +118,15 @@ export function ChatMessage(props) {
           <span className={styles["message-username"]}>{username}</span>:
           <span
             className={styles["message-contents"]}
-            style={{
-              fontSize: fontSize + "px",
-              color: fontColor,
-              fontFamily: font.style,
-            }}
+            style={
+              userStyles
+                ? {
+                    fontSize: fontSize + "px",
+                    color: fontColor,
+                    fontFamily: font.style,
+                  }
+                : {}
+            }
           >
             {useMemo(() => {
               return (
