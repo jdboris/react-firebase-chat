@@ -3,6 +3,7 @@ import styles from "../css/chat-room.module.css";
 import MenuIcon from "@material-ui/icons/Menu";
 import TextFormatIcon from "@material-ui/icons/TextFormat";
 import CloseIcon from "@material-ui/icons/Close";
+import AddIcon from "@material-ui/icons/Add";
 import ArrowDropDownIcon from "@material-ui/icons/ArrowDropDown";
 import FormatColorTextIcon from "@material-ui/icons/FormatColorText";
 
@@ -48,6 +49,7 @@ export function ChatRoom(props) {
   const [font, setFont] = useState(fonts[0]);
   const [fontSize, setFontSize] = useState(13);
   const [fontColor, setFontColor] = useState("#000000");
+  const [userStyles, setUserStyles] = useState(true);
 
   const [isUsersOpen, setUsersOpen] = useState(false);
   const [isMenuOpen, setMenuOpen] = useState(false);
@@ -60,6 +62,16 @@ export function ChatRoom(props) {
   const dummy = useRef();
 
   let messageInput = useRef();
+
+  const setPreferences = (preferences) => {
+    return userPreferencesRef.doc(uid).set({
+      fontSize: fontSize,
+      fontColor: fontColor,
+      font: font,
+      userStyles: userStyles,
+      ...preferences,
+    });
+  };
 
   const sendMessage = async (e) => {
     e.preventDefault();
@@ -114,8 +126,11 @@ export function ChatRoom(props) {
       .then((doc) => {
         if (doc.exists) {
           const preferences = doc.data();
-          if (preferences.fontSize) setFontSize(preferences.fontSize);
-          if (preferences.font) setFont(preferences.font);
+          if ("fontSize" in preferences) setFontSize(preferences.fontSize);
+          if ("fontColor" in preferences) setFontColor(preferences.fontColor);
+          if ("font" in preferences) setFont(preferences.font);
+          if ("userStyles" in preferences)
+            setUserStyles(preferences.userStyles);
         }
       });
 
@@ -156,6 +171,7 @@ export function ChatRoom(props) {
             <ChatMessage
               key={msg.id}
               message={msg}
+              userStyles={userStyles}
               onClick={(targetUsername) => {
                 setMessageValue(messageValue + " @" + targetUsername + " ");
                 messageInput.focus();
@@ -169,133 +185,144 @@ export function ChatRoom(props) {
 
       {isFormatOpen ? (
         <div className={styles["format-controls"]}>
-          <span>
-            <CloseIcon />
-          </span>
           <span
             onClickCapture={() => {
-              setFontOpen(!isFontOpen);
-            }}
-          >
-            T<ArrowDropDownIcon className={styles["down-arrow"]} />
-            {isFontOpen ? (
-              <div className={styles["menu"]}>
-                {fonts.map((fontObj) => {
-                  return (
-                    <div
-                      className={font == fontObj.name ? styles["bold"] : ""}
-                      onClickCapture={() => {
-                        userPreferencesRef
-                          .doc(uid)
-                          .set({ font: fontObj, fontSize: fontSize })
-                          .then(() => {
-                            setFont(fontObj);
-                          });
-                      }}
-                    >
-                      {fontObj.name}
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              ""
-            )}
-          </span>
-          <span
-            onClickCapture={() => {
-              setFontSizeOpen(!isFontSizeOpen);
-            }}
-          >
-            {fontSize}
-            <ArrowDropDownIcon className={styles["down-arrow"]} />
-            {isFontSizeOpen ? (
-              <div className={styles["menu"]}>
-                {[...Array(14).keys()].map((element) => {
-                  return (
-                    <div
-                      onClickCapture={(e) => {
-                        userPreferencesRef
-                          .doc(uid)
-                          .set({ fontSize: 9 + element, font: font })
-                          .then(() => {
-                            setFontSize(9 + element);
-                          });
-                      }}
-                    >
-                      {9 + element}
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              ""
-            )}
-          </span>
-          <strong
-            onClick={() => {
-              let result = toggleSelectionMarkup(
-                messageInput,
-                MARKUP_SYMBOLS.BOLD
-              );
-
-              setMessageValue(result.value);
-              setSelection({
-                start: result.start,
-                end: result.end,
+              const newValue = !userStyles;
+              setPreferences({ userStyles: newValue }).then(() => {
+                setUserStyles(newValue);
               });
             }}
           >
-            B
-          </strong>
-          <em
-            onClick={() => {
-              let result = toggleSelectionMarkup(
-                messageInput,
-                MARKUP_SYMBOLS.ITALICS
-              );
-
-              setMessageValue(result.value);
-              setSelection({
-                start: result.start,
-                end: result.end,
-              });
-            }}
-          >
-            i
-          </em>
-          <span>bg</span>
-          <span
-            onClickCapture={() => {
-              setFontColorOpen(!isFontColorOpen);
-            }}
-          >
-            {isFontColorOpen ? (
-              <div
-                className={`${styles["menu"]} ${styles["font-color-picker"]}`}
+            {userStyles ? <CloseIcon /> : <AddIcon />}
+          </span>
+          {userStyles ? (
+            <>
+              <span
+                onClickCapture={() => {
+                  setFontOpen(!isFontOpen);
+                }}
               >
-                <div>
-                  <input
-                    type="color"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                    }}
-                    // NOTE: Required to prevent auto closing when clicking
-                    onClickCapture={() => {
-                      setFontColorOpen(true);
-                    }}
-                    value={fontColor}
-                    onChange={(e) => {
-                      setFontColor(e.target.value);
-                    }}
-                  />
-                </div>
-              </div>
-            ) : (
-              ""
-            )}
-            <FormatColorTextIcon className={styles["font-color"]} />
-          </span>
+                T<ArrowDropDownIcon className={styles["down-arrow"]} />
+                {isFontOpen ? (
+                  <div className={styles["menu"]}>
+                    {fonts.map((fontObj) => {
+                      return (
+                        <div
+                          className={
+                            font.name == fontObj.name ? styles["bold"] : ""
+                          }
+                          onClickCapture={() => {
+                            setPreferences({ font: fontObj }).then(() => {
+                              setFont(fontObj);
+                            });
+                          }}
+                        >
+                          {fontObj.name}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  ""
+                )}
+              </span>
+              <span
+                onClickCapture={() => {
+                  setFontSizeOpen(!isFontSizeOpen);
+                }}
+              >
+                {fontSize}
+                <ArrowDropDownIcon className={styles["down-arrow"]} />
+                {isFontSizeOpen ? (
+                  <div className={styles["menu"]}>
+                    {[...Array(14).keys()].map((element) => {
+                      return (
+                        <div
+                          onClickCapture={(e) => {
+                            setPreferences({
+                              fontSize: 9 + element,
+                            }).then(() => {
+                              setFontSize(9 + element);
+                            });
+                          }}
+                        >
+                          {9 + element}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  ""
+                )}
+              </span>
+              <strong
+                onClick={() => {
+                  let result = toggleSelectionMarkup(
+                    messageInput,
+                    MARKUP_SYMBOLS.BOLD
+                  );
+
+                  setMessageValue(result.value);
+                  setSelection({
+                    start: result.start,
+                    end: result.end,
+                  });
+                }}
+              >
+                B
+              </strong>
+              <em
+                onClick={() => {
+                  let result = toggleSelectionMarkup(
+                    messageInput,
+                    MARKUP_SYMBOLS.ITALICS
+                  );
+
+                  setMessageValue(result.value);
+                  setSelection({
+                    start: result.start,
+                    end: result.end,
+                  });
+                }}
+              >
+                i
+              </em>
+              <span>bg</span>
+              <span
+                onClickCapture={() => {
+                  setFontColorOpen(!isFontColorOpen);
+                }}
+              >
+                {isFontColorOpen ? (
+                  <div
+                    className={`${styles["menu"]} ${styles["font-color-picker"]}`}
+                  >
+                    <div>
+                      <input
+                        type="color"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                        // NOTE: Required to prevent auto closing when clicking
+                        onClickCapture={() => {
+                          setFontColorOpen(true);
+                        }}
+                        value={fontColor}
+                        onChange={(e) => {
+                          setFontColor(e.target.value);
+                        }}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  ""
+                )}
+                <FormatColorTextIcon className={styles["font-color"]} />
+              </span>
+            </>
+          ) : (
+            ""
+          )}
         </div>
       ) : (
         ""
@@ -322,11 +349,15 @@ export function ChatRoom(props) {
               e.preventDefault();
             }
           }}
-          style={{
-            fontFamily: font.style,
-            fontSize: fontSize,
-            color: fontColor,
-          }}
+          style={
+            userStyles
+              ? {
+                  fontFamily: font.style,
+                  fontSize: fontSize,
+                  color: fontColor,
+                }
+              : {}
+          }
         ></textarea>
         <TextFormatIcon
           className={
