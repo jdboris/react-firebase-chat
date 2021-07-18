@@ -206,8 +206,8 @@ form svg {
   font-size: 0.9em;
 }
 
-.font-color > :first-child {
-  color: black;
+.font-color > :nth-child(2) {
+  color: rgb(255, 121, 0);
 }
 
 textarea {

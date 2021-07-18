@@ -317,7 +317,10 @@ export function ChatRoom(props) {
                 ) : (
                   ""
                 )}
-                <FormatColorTextIcon className={styles["font-color"]} />
+                <FormatColorTextIcon
+                  className={styles["font-color"]}
+                  style={{ color: fontColor }}
+                />
               </span>
             </>
           ) : (
