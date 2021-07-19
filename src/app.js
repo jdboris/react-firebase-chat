@@ -2,6 +2,7 @@ import React from "react";
 import styles from "./css/chat-room.module.css";
 
 import firebase from "firebase/app";
+import "firebase/storage";
 import "firebase/firestore";
 import "firebase/auth";
 import "firebase/analytics";
@@ -11,7 +12,7 @@ import { useAuthState } from "react-firebase-hooks/auth";
 
 import { ChatRoom } from "./components/chat-room";
 import { SignInForm } from "./components/sign-in-form";
-import { SignOutButton } from "./components/sign-out-button";
+// import { SignOutButton } from "./components/sign-out-button";
 
 let databaseUrl = "https://stream-site-9ebd9-default-rtdb.firebaseio.com";
 
@@ -35,6 +36,8 @@ export const firestore = firebase.firestore();
 export const analytics = firebase.analytics();
 export const functions = firebase.functions();
 export const auth = firebase.auth();
+export const storage = firebase.storage();
+
 const db = firebase.database();
 
 if (window.location.hostname == "localhost") {
@@ -44,6 +47,7 @@ if (window.location.hostname == "localhost") {
   functions.useEmulator("localhost", 5001);
   // functions.useFunctionsEmulator("http://localhost:5001");
   db.useEmulator("localhost", 9000);
+  storage.useEmulator("localhost", 9199);
 }
 
 function App() {

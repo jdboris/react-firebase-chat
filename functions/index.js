@@ -97,21 +97,26 @@ exports.signUp = functions.https.onCall((data, context) => {
 });
 
 exports.sendWelcomeEmail = functions.auth.user().onCreate((user) => {
-  // Admin SDK API to generate the email verification link.
-  return admin
-    .auth()
-    .generateEmailVerificationLink(user.email)
-    .then((link) => {
-      // Construct email verification template, embed the link and send
-      // using custom SMTP server.
-      return sendVerificationEmail(user.email, user.displayName, link);
-    })
-    .then((response) => {
-      //console.log("Email sent: " + response);
-    })
-    .catch((error) => {
-      console.error(error);
-    });
+  // NOTE: Must create the document now to allow calling .update() later
+  db.doc(`userPreferences/${user.uid}`).set({});
+
+  if (user.email) {
+    // Admin SDK API to generate the email verification link.
+    return admin
+      .auth()
+      .generateEmailVerificationLink(user.email)
+      .then((link) => {
+        // Construct email verification template, embed the link and send
+        // using custom SMTP server.
+        return sendVerificationEmail(user.email, user.displayName, link);
+      })
+      .then((response) => {
+        //console.log("Email sent: " + response);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }
 });
 
 async function sendVerificationEmail(email, username, link) {
