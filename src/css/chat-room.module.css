@@ -6,6 +6,10 @@ ul {
   cursor: pointer;
 }
 
+label [type="file"] {
+  display: none;
+}
+
 .outlined {
   border: 1px solid;
 }
@@ -52,6 +56,7 @@ ul {
   flex-grow: 1;
   color: initial;
   margin-bottom: 0.3em;
+  width: 100%;
 }
 
 [data-format="*"] {
@@ -90,6 +95,16 @@ ul {
 }
 
 .button {
+  display: inline-block;
+  text-align: center;
+  padding: 0.38em;
+  white-space: nowrap;
+  background-color: #ccc;
+  border-radius: 0.25em;
+  cursor: pointer;
+}
+
+.pointer {
   cursor: pointer;
 }
 
@@ -103,7 +118,7 @@ ul {
   vertical-align: middle;
 }
 
-.online-users {
+.dialog {
   background: white;
   border: 1px solid rgb(222, 222, 222);
   color: black;
@@ -155,6 +170,7 @@ form {
   display: flex;
   font-size: 1.5rem;
   align-items: center;
+  width: 100%;
 }
 
 form > * {
@@ -210,6 +226,12 @@ form svg {
   color: rgb(255, 121, 0);
 }
 
+.sample-message {
+  height: 51px;
+  width: 100%;
+  background-size: contain;
+}
+
 textarea {
   width: 100%;
   height: 100%;
@@ -220,6 +242,7 @@ textarea {
   padding: 10px 15px;
   font-family: sans-serif;
   resize: none;
+  background-size: contain;
 }
 
 button {
@@ -262,6 +285,7 @@ li {
   font-size: 0.9rem;
   padding: 5px;
   padding-left: 0px;
+  background-size: contain;
 }
 
 .message-username {

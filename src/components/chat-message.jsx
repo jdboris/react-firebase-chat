@@ -51,8 +51,17 @@ function Link(props) {
 }
 
 export function ChatMessage(props) {
-  let { text, uid, photoURL, createdAt, username, fontSize, fontColor, font } =
-    props.message;
+  let {
+    text,
+    uid,
+    photoURL,
+    createdAt,
+    username,
+    fontSize,
+    fontColor,
+    font,
+    backgroundImage,
+  } = props.message;
   const { userStyles } = props;
   const { claims } = props.idToken;
 
@@ -105,6 +114,13 @@ export function ChatMessage(props) {
             }
           }
         }}
+        style={
+          userStyles
+            ? {
+                backgroundImage: `url(${backgroundImage})`,
+              }
+            : {}
+        }
       >
         <img src={photoURL || "https://i.imgur.com/h2yCi23.jpg"} />
         <span className={styles["message-details"]}>

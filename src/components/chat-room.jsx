@@ -8,13 +8,15 @@ import ArrowDropDownIcon from "@material-ui/icons/ArrowDropDown";
 import FormatColorTextIcon from "@material-ui/icons/FormatColorText";
 
 import firebase from "firebase/app";
-import { firestore, auth } from "../app";
+import { firestore, auth, storage } from "../app";
 
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import { presence } from "../presence";
 // import { getProviders } from "../oembed";
 import { ChatMessage } from "./chat-message";
+import { ColorInput } from "./color-input";
 import { toggleSelectionMarkup, MARKUP_SYMBOLS } from "../markdown";
+import { uuidv4 } from "../uuid";
 
 let uid = null;
 
@@ -49,6 +51,7 @@ export function ChatRoom(props) {
   const [font, setFont] = useState(fonts[0]);
   const [fontSize, setFontSize] = useState(13);
   const [fontColor, setFontColor] = useState("#000000");
+  const [messageBackground, setMessageBackground] = useState("");
   const [userStyles, setUserStyles] = useState(true);
 
   const [isUsersOpen, setUsersOpen] = useState(false);
@@ -56,22 +59,13 @@ export function ChatRoom(props) {
   const [isFormatOpen, setFormatOpen] = useState(false);
   const [isFontOpen, setFontOpen] = useState(false);
   const [isFontSizeOpen, setFontSizeOpen] = useState(false);
+  const [isStyleEditorOpen, setStyleEditorOpen] = useState(false);
   const [isFontColorOpen, setFontColorOpen] = useState(false);
   const [selection, setSelection] = useState({ start: 0, end: 0 });
 
   const dummy = useRef();
 
   let messageInput = useRef();
-
-  const setPreferences = (preferences) => {
-    return userPreferencesRef.doc(uid).set({
-      fontSize: fontSize,
-      fontColor: fontColor,
-      font: font,
-      userStyles: userStyles,
-      ...preferences,
-    });
-  };
 
   const sendMessage = async (e) => {
     e.preventDefault();
@@ -90,6 +84,7 @@ export function ChatRoom(props) {
       font: font,
       fontSize: fontSize,
       fontColor: fontColor,
+      backgroundImage: messageBackground,
     });
 
     dummy.current.scrollIntoView({ behavior: "smooth" });
@@ -131,6 +126,8 @@ export function ChatRoom(props) {
           if ("font" in preferences) setFont(preferences.font);
           if ("userStyles" in preferences)
             setUserStyles(preferences.userStyles);
+          if ("messageBackground" in preferences)
+            setMessageBackground(preferences.messageBackground);
         }
       });
 
@@ -188,9 +185,12 @@ export function ChatRoom(props) {
           <span
             onClickCapture={() => {
               const newValue = !userStyles;
-              setPreferences({ userStyles: newValue }).then(() => {
-                setUserStyles(newValue);
-              });
+              userPreferencesRef
+                .doc(uid)
+                .update({ userStyles: newValue })
+                .then(() => {
+                  setUserStyles(newValue);
+                });
             }}
           >
             {userStyles ? <CloseIcon /> : <AddIcon />}
@@ -212,9 +212,12 @@ export function ChatRoom(props) {
                             font.name == fontObj.name ? styles["bold"] : ""
                           }
                           onClickCapture={() => {
-                            setPreferences({ font: fontObj }).then(() => {
-                              setFont(fontObj);
-                            });
+                            userPreferencesRef
+                              .doc(uid)
+                              .update({ font: fontObj })
+                              .then(() => {
+                                setFont(fontObj);
+                              });
                           }}
                         >
                           {fontObj.name}
@@ -239,11 +242,14 @@ export function ChatRoom(props) {
                       return (
                         <div
                           onClickCapture={(e) => {
-                            setPreferences({
-                              fontSize: 9 + element,
-                            }).then(() => {
-                              setFontSize(9 + element);
-                            });
+                            userPreferencesRef
+                              .doc(uid)
+                              .update({
+                                fontSize: 9 + element,
+                              })
+                              .then(() => {
+                                setFontSize(9 + element);
+                              });
                           }}
                         >
                           {9 + element}
@@ -287,7 +293,13 @@ export function ChatRoom(props) {
               >
                 i
               </em>
-              <span>bg</span>
+              <span
+                onClickCapture={() => {
+                  setStyleEditorOpen(!isStyleEditorOpen);
+                }}
+              >
+                bg
+              </span>
               <span
                 onClickCapture={() => {
                   setFontColorOpen(!isFontColorOpen);
@@ -298,8 +310,18 @@ export function ChatRoom(props) {
                     className={`${styles["menu"]} ${styles["font-color-picker"]}`}
                   >
                     <div>
-                      <input
-                        type="color"
+                      <ColorInput
+                        onChangeDelayed={(newColor) => {
+                          console.log(newColor);
+                          userPreferencesRef
+                            .doc(uid)
+                            .update({
+                              fontColor: newColor,
+                            })
+                            .then(() => {
+                              setFontColor(newColor);
+                            });
+                        }}
                         onClick={(e) => {
                           e.stopPropagation();
                         }}
@@ -308,9 +330,6 @@ export function ChatRoom(props) {
                           setFontColorOpen(true);
                         }}
                         value={fontColor}
-                        onChange={(e) => {
-                          setFontColor(e.target.value);
-                        }}
                       />
                     </div>
                   </div>
@@ -358,13 +377,16 @@ export function ChatRoom(props) {
                   fontFamily: font.style,
                   fontSize: fontSize,
                   color: fontColor,
+                  backgroundImage: messageBackground
+                    ? `url(${messageBackground})`
+                    : "",
                 }
               : {}
           }
         ></textarea>
         <TextFormatIcon
           className={
-            styles["button"] + " " + (isFormatOpen ? styles["outlined"] : "")
+            styles["pointer"] + " " + (isFormatOpen ? styles["outlined"] : "")
           }
           onClick={(e) => {
             setFormatOpen(!isFormatOpen);
@@ -374,7 +396,7 @@ export function ChatRoom(props) {
 
       <div className={styles["chat-controls"]}>
         <span
-          className={styles["button"]}
+          className={styles["pointer"]}
           onClick={() => {
             setUsersOpen(!isUsersOpen);
           }}
@@ -383,7 +405,7 @@ export function ChatRoom(props) {
         </span>
 
         <MenuIcon
-          className={styles["button"]}
+          className={styles["pointer"]}
           onClickCapture={() => {
             setMenuOpen(!isMenuOpen);
           }}
@@ -392,7 +414,7 @@ export function ChatRoom(props) {
         {isMenuOpen ? (
           <div className={styles["menu"]}>
             <div
-              onClick={() => {
+              onClickCapture={() => {
                 auth.signOut();
               }}
             >
@@ -404,8 +426,44 @@ export function ChatRoom(props) {
         )}
       </div>
 
+      {isStyleEditorOpen ? (
+        <div className={styles["dialog"]}>
+          Message style editor
+          <div
+            className={styles["sample-message"]}
+            style={
+              messageBackground
+                ? { backgroundImage: `url(${messageBackground})` }
+                : {}
+            }
+          ></div>
+          <label
+            onChange={async (e) => {
+              const file = e.target.files[0];
+              const storageRef = storage.ref();
+              // Form the filename, which will be checked (for the uid) in security rules
+              const fileRef = storageRef.child(
+                `${uid}/${uuidv4()}.${file.name.split(".").pop()}`
+              );
+              await fileRef.put(file);
+              const url = await fileRef.getDownloadURL();
+              await firestore.collection("userPreferences").doc(uid).update({
+                messageBackground: url,
+              });
+              setMessageBackground(url);
+            }}
+            className={styles["button"]}
+          >
+            Upload Image
+            <input type="file" />
+          </label>
+        </div>
+      ) : (
+        ""
+      )}
+
       {isUsersOpen ? (
-        <div className={styles["online-users"]}>
+        <div className={styles["dialog"]}>
           People here now
           <ul>
             {onlineUsers.map((user) => {
