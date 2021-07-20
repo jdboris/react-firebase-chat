@@ -130,7 +130,7 @@ label [type="file"] {
   margin-right: auto;
   left: 0;
   right: 0;
-  max-width: 200px;
+  max-width: 350px;
 }
 
 .chat-room::-webkit-scrollbar {
@@ -226,12 +226,6 @@ form svg {
   color: rgb(255, 121, 0);
 }
 
-.sample-message {
-  height: 51px;
-  width: 100%;
-  background-size: contain;
-}
-
 textarea {
   width: 100%;
   height: 100%;
@@ -286,6 +280,10 @@ li {
   padding: 5px;
   padding-left: 0px;
   background-size: contain;
+}
+
+.dialog .message {
+  border-bottom: 1px solid;
 }
 
 .message-username {

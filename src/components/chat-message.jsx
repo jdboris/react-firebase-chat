@@ -61,10 +61,11 @@ export function ChatMessage(props) {
     fontColor,
     font,
     backgroundImage,
+    nameColor,
+    bgColor,
   } = props.message;
   const { userStyles } = props;
   const { claims } = props.idToken;
-
   const messageClass = uid === auth.currentUser.uid ? "sent" : "received";
 
   let mouseDownSpot = null;
@@ -118,6 +119,7 @@ export function ChatMessage(props) {
           userStyles
             ? {
                 backgroundImage: `url(${backgroundImage})`,
+                backgroundColor: bgColor,
               }
             : {}
         }
@@ -131,7 +133,13 @@ export function ChatMessage(props) {
           </span>
         </span>
         <div>
-          <span className={styles["message-username"]}>{username}</span>:
+          <span
+            className={styles["message-username"]}
+            style={{ color: nameColor }}
+          >
+            {username}
+          </span>
+          :
           <span
             className={styles["message-contents"]}
             style={
