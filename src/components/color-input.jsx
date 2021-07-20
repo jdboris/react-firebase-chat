@@ -17,25 +17,34 @@ import { ChatMessage } from "./chat-message";
 import { toggleSelectionMarkup, MARKUP_SYMBOLS } from "../markdown";
 
 export function ColorInput(props) {
+  const [completeTimeout, setCompleteTimeout] = useState(null);
   const [delayTimeout, setDelayTimeout] = useState(null);
 
   return (
     <input
       type="color"
+      // NOTE: Delay calling the provided onChange listener, because sliding the color input
+      //       around will trigger the onChange event very rapidly, which could perform poorly.
       onChange={(e) => {
-        clearTimeout(delayTimeout);
-        const newColor = e.target.value;
-        setDelayTimeout(
-          // NOTE: Delay calling the provided onChange listener, because sliding the colorpicker
-          //       around will trigger the onChange event very rapidly, which could perform poorly.
-          setTimeout(() => {
-            props.onChangeDelayed(newColor);
-          }, 200)
-        );
+        if (delayTimeout === null) {
+          setDelayTimeout(
+            setTimeout(() => {
+              clearTimeout(completeTimeout);
+              setCompleteTimeout(
+                setTimeout(() => {
+                  props.onChangeComplete(e);
+                }, 500)
+              );
+
+              props.onChange(e);
+              setDelayTimeout(null);
+            }, 200)
+          );
+        }
       }}
       onClick={props.onClick}
       onClickCapture={props.onClickCapture}
-      value={props.value}
+      defaultValue={props.defaultValue}
     />
   );
 }

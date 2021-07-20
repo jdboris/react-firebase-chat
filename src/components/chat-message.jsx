@@ -6,6 +6,7 @@ import "../css/oembed.css";
 import firebase from "firebase/app";
 
 import { auth } from "../app";
+import { hexToRgb } from "../color";
 
 function Link(props) {
   const [children, setChildren] = useState(props.href);
@@ -63,6 +64,7 @@ export function ChatMessage(props) {
     backgroundImage,
     nameColor,
     bgColor,
+    bgTransparency,
   } = props.message;
   const { userStyles } = props;
   const { claims } = props.idToken;
@@ -119,7 +121,7 @@ export function ChatMessage(props) {
           userStyles
             ? {
                 backgroundImage: `url(${backgroundImage})`,
-                backgroundColor: bgColor,
+                backgroundColor: `rgba(${hexToRgb(bgColor)},${bgTransparency})`,
               }
             : {}
         }
