@@ -15,9 +15,11 @@ import { presence } from "../presence";
 // import { getProviders } from "../oembed";
 import { ChatMessage } from "./chat-message";
 import { ColorInput } from "./color-input";
+import { SliderInput } from "./slider-input";
 import { toggleSelectionMarkup, MARKUP_SYMBOLS } from "../markdown";
 import { uploadFile } from "../storage";
 import { fonts } from "../fonts";
+import { hexToRgb } from "../color";
 
 let uid = null;
 
@@ -31,8 +33,9 @@ export function ChatRoom(props) {
   const [fontSize, setFontSize] = useState(13);
   const [fontColor, setFontColor] = useState("#000000");
   const [nameColor, setNameColor] = useState("#000000");
-  const [messageBgImage, setMessageBgImage] = useState("");
-  const [messageBgColor, setMessageBgColor] = useState("#FFFFFF");
+  const [msgBgImg, setMsgBgImg] = useState("");
+  const [msgBgColor, setMsgBgColor] = useState("#FFFFFF");
+  const [msgBgTransparency, setMsgBgTransparency] = useState(1);
   const [userStyles, setUserStyles] = useState(true);
 
   const [isUsersOpen, setUsersOpen] = useState(false);
@@ -65,9 +68,10 @@ export function ChatRoom(props) {
       font: font,
       fontSize: fontSize,
       fontColor: fontColor,
-      backgroundImage: messageBgImage,
-      bgColor: messageBgColor,
+      backgroundImage: msgBgImg,
+      bgColor: msgBgColor,
       nameColor: nameColor,
+      bgTransparency: msgBgTransparency,
     });
 
     dummy.current.scrollIntoView({ behavior: "smooth" });
@@ -109,11 +113,12 @@ export function ChatRoom(props) {
           if ("font" in preferences) setFont(preferences.font);
           if ("userStyles" in preferences)
             setUserStyles(preferences.userStyles);
-          if ("messageBgImage" in preferences)
-            setMessageBgImage(preferences.messageBgImage);
+          if ("msgBgImg" in preferences) setMsgBgImg(preferences.msgBgImg);
           if ("nameColor" in preferences) setNameColor(preferences.nameColor);
-          if ("messageBgColor" in preferences)
-            setMessageBgColor(preferences.messageBgColor);
+          if ("msgBgColor" in preferences)
+            setMsgBgColor(preferences.msgBgColor);
+          if ("msgBgTransparency" in preferences)
+            setMsgBgTransparency(preferences.msgBgTransparency);
         }
       });
 
@@ -297,15 +302,14 @@ export function ChatRoom(props) {
                   >
                     <div>
                       <ColorInput
-                        onChangeDelayed={(newColor) => {
-                          userPreferencesRef
-                            .doc(uid)
-                            .update({
-                              fontColor: newColor,
-                            })
-                            .then(() => {
-                              setFontColor(newColor);
-                            });
+                        defaultValue={fontColor}
+                        onChange={(e) => {
+                          setFontColor(e.target.value);
+                        }}
+                        onChangeComplete={(e) => {
+                          userPreferencesRef.doc(uid).update({
+                            fontColor: e.target.value,
+                          });
                         }}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -314,7 +318,6 @@ export function ChatRoom(props) {
                         onClickCapture={() => {
                           setFontColorOpen(true);
                         }}
-                        value={fontColor}
                       />
                     </div>
                   </div>
@@ -362,10 +365,10 @@ export function ChatRoom(props) {
                   fontFamily: font.style,
                   fontSize: fontSize,
                   color: fontColor,
-                  backgroundImage: messageBgImage
-                    ? `url(${messageBgImage})`
-                    : "",
-                  backgroundColor: messageBgColor,
+                  backgroundImage: msgBgImg ? `url(${msgBgImg})` : "",
+                  backgroundColor: `rgba(${hexToRgb(
+                    msgBgColor
+                  )},${msgBgTransparency})`,
                 }
               : {}
           }
@@ -413,97 +416,105 @@ export function ChatRoom(props) {
       </div>
 
       {isStyleEditorOpen ? (
-        <div className={styles["dialog"]}>
+        <div
+          className={styles["dialog"] + " " + styles["message-style-editor"]}
+        >
           Message style editor
-          <ChatMessage
-            message={{
-              text: "Sample message text",
-              uid: uid,
-              createdAt: new firebase.firestore.Timestamp(
-                1626757369,
-                337000000
-              ),
-              username: auth.currentUser.displayName,
-              fontSize: fontSize,
-              fontColor: fontColor,
-              font: font,
-              backgroundImage: messageBgImage,
-              nameColor: nameColor,
-              bgColor: messageBgColor,
-            }}
-            idToken={idToken}
-            userStyles={userStyles}
-            onClick={() => {}}
-          />
-          <div>
-            <label className={styles["button"]}>
-              Upload Image
-              <input
-                type="file"
-                onChange={async (e) => {
-                  const file = e.target.files[0];
-                  const url = await uploadFile(file);
-                  if (url) {
-                    setMessageBgImage(url);
-                  }
-                }}
-              />
-            </label>
-            {messageBgImage ? (
-              <label
-                onClick={async (e) => {
-                  await firestore
-                    .collection("userPreferences")
-                    .doc(uid)
-                    .update({
-                      messageBgImage: "",
-                    });
-                  setMessageBgImage("");
-                }}
-                className={styles["button"]}
-              >
-                Clear Image
-              </label>
-            ) : (
-              ""
-            )}
+          <div className={styles["sample-message-wrapper"]}>
+            <ChatMessage
+              message={{
+                text: "Sample message text",
+                uid: uid,
+                createdAt: new firebase.firestore.Timestamp(
+                  1626757369,
+                  337000000
+                ),
+                username: auth.currentUser.displayName,
+                fontSize: fontSize,
+                fontColor: fontColor,
+                font: font,
+                backgroundImage: msgBgImg,
+                nameColor: nameColor,
+                bgColor: msgBgColor,
+                bgTransparency: msgBgTransparency,
+              }}
+              idToken={idToken}
+              userStyles={userStyles}
+              onClick={() => {}}
+            />
           </div>
-          <div>
-            <label>
-              Name color{" "}
-              <ColorInput
-                onChangeDelayed={(newColor) => {
-                  userPreferencesRef
-                    .doc(uid)
-                    .update({
-                      nameColor: newColor,
-                    })
-                    .then(() => {
-                      setNameColor(newColor);
-                    });
-                }}
-                value={nameColor}
-              />
+          <label>
+            Name color
+            <ColorInput
+              defaultValue={nameColor}
+              onChange={(e) => {
+                setNameColor(e.target.value);
+              }}
+              onChangeComplete={(e) => {
+                userPreferencesRef.doc(uid).update({
+                  nameColor: e.target.value,
+                });
+              }}
+            />
+          </label>
+          <label>
+            Bg color
+            <ColorInput
+              defaultValue={msgBgColor}
+              onChange={(e) => {
+                setMsgBgColor(e.target.value);
+              }}
+              onChangeComplete={(e) => {
+                userPreferencesRef.doc(uid).update({
+                  msgBgColor: e.target.value,
+                });
+              }}
+            />
+          </label>
+          <label>
+            Bg transparency
+            <SliderInput
+              min="0"
+              max="100"
+              defaultValue={msgBgTransparency * 100}
+              onChange={(e) => {
+                setMsgBgTransparency(e.target.value / 100);
+              }}
+              onChangeComplete={(e) => {
+                userPreferencesRef.doc(uid).update({
+                  msgBgTransparency: e.target.value / 100,
+                });
+              }}
+            />
+          </label>
+          <label className={styles["button"]}>
+            Upload Image
+            <input
+              type="file"
+              onChange={async (e) => {
+                const file = e.target.files[0];
+                const url = await uploadFile(file);
+                if (url) {
+                  setMsgBgImg(url);
+                }
+              }}
+            />
+          </label>
+          {msgBgImg ? (
+            <label
+              onClick={async (e) => {
+                await firestore.collection("userPreferences").doc(uid).update({
+                  msgBgImage: "",
+                });
+                setMsgBgImg("");
+              }}
+              className={styles["button"]}
+            >
+              Clear Image
             </label>
-          </div>
-          <div>
-            <label>
-              Bg color{" "}
-              <ColorInput
-                onChangeDelayed={(newColor) => {
-                  userPreferencesRef
-                    .doc(uid)
-                    .update({
-                      messageBgColor: newColor,
-                    })
-                    .then(() => {
-                      setMessageBgColor(newColor);
-                    });
-                }}
-                value={messageBgColor}
-              />
-            </label>
-          </div>
+          ) : (
+            ""
+          )}
         </div>
       ) : (
         ""
