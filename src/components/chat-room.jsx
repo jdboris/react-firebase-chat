@@ -8,7 +8,7 @@ import ArrowDropDownIcon from "@material-ui/icons/ArrowDropDown";
 import FormatColorTextIcon from "@material-ui/icons/FormatColorText";
 
 import firebase from "firebase/app";
-import { firestore, auth, storage } from "../app";
+import { firestore, auth } from "../app";
 
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import { presence } from "../presence";
@@ -16,7 +16,8 @@ import { presence } from "../presence";
 import { ChatMessage } from "./chat-message";
 import { ColorInput } from "./color-input";
 import { toggleSelectionMarkup, MARKUP_SYMBOLS } from "../markdown";
-import { uuidv4 } from "../uuid";
+import { uploadFile } from "../storage";
+import { fonts } from "../fonts";
 
 let uid = null;
 
@@ -25,29 +26,7 @@ export function ChatRoom(props) {
   const [messageValue, setMessageValue] = useState("");
   const [idToken, setIdToken] = useState("");
   const [onlineUsers, setOnlineUsers] = useState([]);
-  const fonts = [
-    { name: "Arial", style: `Arial, Helvetica, sans-serif` },
-    { name: "Comic", style: `"Comic Sans MS", "Comic Sans", cursive` },
-    { name: "Georgia", style: `Georgia, Times, "Times New Roman", serif` },
-    {
-      name: "Handwriting",
-      style: `"Lucida Handwriting", Zapfino, Chalkduster, cursive`,
-    },
-    {
-      name: "Impact",
-      style: `Impact, Haettenschweiler, "Franklin Gothic Bold", Charcoal, "Helvetica Inserat", "Bitstream Vera Sans Bold", "Arial Black", "sans serif"`,
-    },
-    {
-      name: "Palatino",
-      style: `Palatino, "Palatino Linotype", "Palatino LT STD", "Book Antiqua", Georgia, serif`,
-    },
-    { name: "Papyrus", style: `Papyrus, fantasy` },
-    { name: "Times", style: `"Times New Roman", Times, serif` },
-    {
-      name: "Typewriter",
-      style: `"Lucida Sans Typewriter", "Lucida Console", monaco, "Bitstream Vera Sans Mono", monospace`,
-    },
-  ];
+
   const [font, setFont] = useState(fonts[0]);
   const [fontSize, setFontSize] = useState(13);
   const [fontColor, setFontColor] = useState("#000000");
@@ -440,23 +419,31 @@ export function ChatRoom(props) {
           <label
             onChange={async (e) => {
               const file = e.target.files[0];
-              const storageRef = storage.ref();
-              // Form the filename, which will be checked (for the uid) in security rules
-              const fileRef = storageRef.child(
-                `${uid}/${uuidv4()}.${file.name.split(".").pop()}`
-              );
-              await fileRef.put(file);
-              const url = await fileRef.getDownloadURL();
-              await firestore.collection("userPreferences").doc(uid).update({
-                messageBackground: url,
-              });
-              setMessageBackground(url);
+              const url = await uploadFile(file);
+              if (url) {
+                setMessageBackground(url);
+              }
             }}
             className={styles["button"]}
           >
             Upload Image
             <input type="file" />
           </label>
+          {messageBackground ? (
+            <label
+              onClick={async (e) => {
+                await firestore.collection("userPreferences").doc(uid).update({
+                  messageBackground: "",
+                });
+                setMessageBackground("");
+              }}
+              className={styles["button"]}
+            >
+              Clear Image
+            </label>
+          ) : (
+            ""
+          )}
         </div>
       ) : (
         ""
