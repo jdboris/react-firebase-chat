@@ -436,18 +436,18 @@ export function ChatRoom(props) {
             onClick={() => {}}
           />
           <div>
-            <label
-              onChange={async (e) => {
-                const file = e.target.files[0];
-                const url = await uploadFile(file);
-                if (url) {
-                  setMessageBgImage(url);
-                }
-              }}
-              className={styles["button"]}
-            >
+            <label className={styles["button"]}>
               Upload Image
-              <input type="file" />
+              <input
+                type="file"
+                onChange={async (e) => {
+                  const file = e.target.files[0];
+                  const url = await uploadFile(file);
+                  if (url) {
+                    setMessageBgImage(url);
+                  }
+                }}
+              />
             </label>
             {messageBgImage ? (
               <label
