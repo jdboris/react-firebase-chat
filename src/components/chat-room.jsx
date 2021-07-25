@@ -6,6 +6,7 @@ import CloseIcon from "@material-ui/icons/Close";
 import AddIcon from "@material-ui/icons/Add";
 import ArrowDropDownIcon from "@material-ui/icons/ArrowDropDown";
 import FormatColorTextIcon from "@material-ui/icons/FormatColorText";
+import PencilIcon from '@material-ui/icons/Create';
 
 import firebase from "firebase/app";
 import { firestore, auth } from "../app";
@@ -45,6 +46,7 @@ export function ChatRoom(props) {
   const [isFontSizeOpen, setFontSizeOpen] = useState(false);
   const [isStyleEditorOpen, setStyleEditorOpen] = useState(false);
   const [isFontColorOpen, setFontColorOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [selection, setSelection] = useState({ start: 0, end: 0 });
 
   const dummy = useRef();
@@ -171,7 +173,7 @@ export function ChatRoom(props) {
           ))}
       </section>
 
-      {isFormatOpen ? (
+      {isFormatOpen && (
         <div className={styles["format-controls"]}>
           <span
             onClickCapture={() => {
@@ -186,7 +188,7 @@ export function ChatRoom(props) {
           >
             {userStyles ? <CloseIcon /> : <AddIcon />}
           </span>
-          {userStyles ? (
+          {userStyles && (
             <>
               <span
                 onClickCapture={() => {
@@ -330,12 +332,8 @@ export function ChatRoom(props) {
                 />
               </span>
             </>
-          ) : (
-            ""
           )}
         </div>
-      ) : (
-        ""
       )}
 
       <form onSubmit={sendMessage}>
@@ -400,8 +398,15 @@ export function ChatRoom(props) {
           }}
         />
 
-        {isMenuOpen ? (
+        {isMenuOpen && (
           <div className={styles["menu"]}>
+            <div
+              onClickCapture={() => {
+                setIsProfileOpen(!isProfileOpen);
+              }}
+            >
+              Edit profile
+            </div>
             <div
               onClickCapture={() => {
                 auth.signOut();
@@ -410,12 +415,10 @@ export function ChatRoom(props) {
               Log out
             </div>
           </div>
-        ) : (
-          ""
         )}
       </div>
 
-      {isStyleEditorOpen ? (
+      {isStyleEditorOpen && (
         <div
           className={styles["dialog"] + " " + styles["message-style-editor"]}
         >
@@ -500,7 +503,7 @@ export function ChatRoom(props) {
               }}
             />
           </label>
-          {msgBgImg ? (
+          {msgBgImg && (
             <label
               onClick={async (e) => {
                 await firestore.collection("userPreferences").doc(uid).update({
@@ -512,15 +515,11 @@ export function ChatRoom(props) {
             >
               Clear Image
             </label>
-          ) : (
-            ""
           )}
         </div>
-      ) : (
-        ""
       )}
 
-      {isUsersOpen ? (
+      {isUsersOpen && (
         <div className={styles["dialog"]}>
           People here now
           <ul>
@@ -529,19 +528,36 @@ export function ChatRoom(props) {
             })}
           </ul>
         </div>
-      ) : (
-        ""
       )}
+      
+      {isProfileOpen && (
+        <div className={styles["dialog"]}>
+          Edit profile
+          <label>
+            <img className={styles["avatar"]} src={auth.currentUser.photoURL} />
+              {PencilIcon}
+             <input
+              type="file"
+              onChange={async (e) => {
+                const file = e.target.files[0];
+                const url = await uploadFile(file);
+                if (url) {
+                  await auth.currentUser.updateProfile({photoURL: url});
+                }
+              }}
+            />
+          </label>
+        </div>
+      )}
+      
 
-      {!isOnline ? (
+      {!isOnline && (
         <div className={styles["chat-room-overlay"]}>
           <div className={styles["overlay-message"]}>
             <div>Connection failed.</div>
             <div>Reconnecting...</div>
           </div>
         </div>
-      ) : (
-        ""
       )}
     </section>
   );
