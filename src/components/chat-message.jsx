@@ -128,8 +128,8 @@ export function ChatMessage(props) {
       >
         <img src={photoURL || "https://i.imgur.com/h2yCi23.jpg"} />
         <span className={styles["message-details"]}>
-          {claims.isModerator ? <button onClick={banUser}>X</button> : ""}
-          {claims.isModerator ? <button onClick={deleteMessage}>X</button> : ""}
+          {claims.isModerator && <button onClick={banUser}>X</button>}
+          {claims.isModerator && <button onClick={deleteMessage}>X</button>}
           <span className={styles["message-timestamp"]}>
             {createdAt && createdAt.toDate().toLocaleString()}
           </span>
