@@ -11,9 +11,6 @@ export async function uploadFile(file) {
   );
   await fileRef.put(file);
   const url = await fileRef.getDownloadURL();
-  await firestore.collection("userPreferences").doc(uid).update({
-    msgBgImg: url,
-  });
 
   return url;
 }
