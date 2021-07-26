@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import PersonIcon from "@material-ui/icons/Person";
 import ReactMarkdown from "react-markdown";
 import gfm from "remark-gfm";
 import styles from "../css/chat-room.module.css";
@@ -126,7 +127,11 @@ export function ChatMessage(props) {
             : {}
         }
       >
-        <img src={photoURL || "https://i.imgur.com/h2yCi23.jpg"} />
+        {photoURL ? (
+          <img className={styles["avatar"]} src={photoURL} />
+        ) : (
+          <PersonIcon className={styles["avatar"]} />
+        )}
         <span className={styles["message-details"]}>
           {claims.isModerator && <button onClick={banUser}>X</button>}
           {claims.isModerator && <button onClick={deleteMessage}>X</button>}

@@ -177,6 +177,11 @@ label [type="file"] {
   max-width: 50%;
 }
 
+.profile-editor img,
+.profile-editor svg {
+  cursor: pointer;
+}
+
 .chat-room::-webkit-scrollbar {
   width: 14px;
 }
@@ -406,7 +411,8 @@ li {
 .received p {
 }
 
-img {
+/* NOTE: Specificity required for priority */
+.chat-app .avatar {
   height: 40px;
   width: 40px;
 }

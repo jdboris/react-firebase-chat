@@ -6,7 +6,8 @@ import CloseIcon from "@material-ui/icons/Close";
 import AddIcon from "@material-ui/icons/Add";
 import ArrowDropDownIcon from "@material-ui/icons/ArrowDropDown";
 import FormatColorTextIcon from "@material-ui/icons/FormatColorText";
-import PencilIcon from '@material-ui/icons/Create';
+import PencilIcon from "@material-ui/icons/Create";
+import PersonIcon from "@material-ui/icons/Person";
 
 import firebase from "firebase/app";
 import { firestore, auth } from "../app";
@@ -29,6 +30,7 @@ export function ChatRoom(props) {
   const [messageValue, setMessageValue] = useState("");
   const [idToken, setIdToken] = useState("");
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [user, setUser] = useState(null);
 
   const [font, setFont] = useState(fonts[0]);
   const [fontSize, setFontSize] = useState(13);
@@ -101,6 +103,10 @@ export function ChatRoom(props) {
 
   useEffect(() => {
     // getProviders();
+
+    const userUnsubscribe = firebase.auth().onAuthStateChanged((user) => {
+      setUser(user);
+    });
 
     // Fetch the current user's ID from Firebase Authentication.
     uid = firebase.auth().currentUser.uid;
@@ -498,6 +504,12 @@ export function ChatRoom(props) {
                 const file = e.target.files[0];
                 const url = await uploadFile(file);
                 if (url) {
+                  await firestore
+                    .collection("userPreferences")
+                    .doc(uid)
+                    .update({
+                      msgBgImg: url,
+                    });
                   setMsgBgImg(url);
                 }
               }}
@@ -507,7 +519,7 @@ export function ChatRoom(props) {
             <label
               onClick={async (e) => {
                 await firestore.collection("userPreferences").doc(uid).update({
-                  msgBgImage: "",
+                  msgBgImg: "",
                 });
                 setMsgBgImg("");
               }}
@@ -529,27 +541,32 @@ export function ChatRoom(props) {
           </ul>
         </div>
       )}
-      
+
       {isProfileOpen && (
-        <div className={styles["dialog"]}>
+        <div className={styles["dialog"] + " " + styles["profile-editor"]}>
           Edit profile
-          <label>
-            <img className={styles["avatar"]} src={auth.currentUser.photoURL} />
-              {PencilIcon}
-             <input
-              type="file"
-              onChange={async (e) => {
-                const file = e.target.files[0];
-                const url = await uploadFile(file);
-                if (url) {
-                  await auth.currentUser.updateProfile({photoURL: url});
-                }
-              }}
-            />
-          </label>
+          <div>
+            <label>
+              {user.photoURL ? (
+                <img className={styles["avatar"]} src={user.photoURL} />
+              ) : (
+                <PersonIcon className={styles["avatar"]} />
+              )}
+              {<PencilIcon />}
+              <input
+                type="file"
+                onChange={async (e) => {
+                  const file = e.target.files[0];
+                  const url = await uploadFile(file);
+                  if (url) {
+                    await auth.currentUser.updateProfile({ photoURL: url });
+                  }
+                }}
+              />
+            </label>
+          </div>
         </div>
       )}
-      
 
       {!isOnline && (
         <div className={styles["chat-room-overlay"]}>
