@@ -23,14 +23,20 @@ import { uploadFile } from "../storage";
 import { fonts } from "../fonts";
 import { hexToRgb } from "../color";
 
-let uid = null;
-
 export function ChatRoom(props) {
+  // Fetch the current user's ID from Firebase Authentication.
+  const user = auth.currentUser;
+  const [uid, setUid] = useState(user.uid);
+  const [displayName, setDisplayName] = useState(user.displayName);
+  const [photoURL, setPhotoURL] = useState(user.photoURL);
+  uid != user.uid && setUid(user.uid);
+  displayName != user.displayName && setDisplayName(user.displayName);
+  photoURL != user.photoURL && setPhotoURL(user.photoURL);
+  
   const [isOnline, setIsOnline] = useState(true);
   const [messageValue, setMessageValue] = useState("");
   const [idToken, setIdToken] = useState("");
   const [onlineUsers, setOnlineUsers] = useState([]);
-  const [user, setUser] = useState(null);
 
   const [font, setFont] = useState(fonts[0]);
   const [fontSize, setFontSize] = useState(13);
@@ -103,13 +109,7 @@ export function ChatRoom(props) {
 
   useEffect(() => {
     // getProviders();
-
-    const userUnsubscribe = firebase.auth().onAuthStateChanged((user) => {
-      setUser(user);
-    });
-
-    // Fetch the current user's ID from Firebase Authentication.
-    uid = firebase.auth().currentUser.uid;
+    
     userPreferencesRef
       .doc(uid)
       .get()
@@ -547,8 +547,8 @@ export function ChatRoom(props) {
           Edit profile
           <div>
             <label>
-              {user.photoURL ? (
-                <img className={styles["avatar"]} src={user.photoURL} />
+              {photoURL ? (
+                <img className={styles["avatar"]} src={photoURL} />
               ) : (
                 <PersonIcon className={styles["avatar"]} />
               )}
@@ -560,6 +560,7 @@ export function ChatRoom(props) {
                   const url = await uploadFile(file);
                   if (url) {
                     await auth.currentUser.updateProfile({ photoURL: url });
+                    setPhotoURL(url);
                   }
                 }}
               />
