@@ -32,7 +32,7 @@ export function ChatRoom(props) {
   uid != user.uid && setUid(user.uid);
   displayName != user.displayName && setDisplayName(user.displayName);
   photoURL != user.photoURL && setPhotoURL(user.photoURL);
-  
+
   const [isOnline, setIsOnline] = useState(true);
   const [messageValue, setMessageValue] = useState("");
   const [idToken, setIdToken] = useState("");
@@ -109,7 +109,7 @@ export function ChatRoom(props) {
 
   useEffect(() => {
     // getProviders();
-    
+
     userPreferencesRef
       .doc(uid)
       .get()
@@ -202,7 +202,7 @@ export function ChatRoom(props) {
                 }}
               >
                 T<ArrowDropDownIcon className={styles["down-arrow"]} />
-                {isFontOpen ? (
+                {isFontOpen && (
                   <div className={styles["menu"]}>
                     {fonts.map((fontObj) => {
                       return (
@@ -224,8 +224,6 @@ export function ChatRoom(props) {
                       );
                     })}
                   </div>
-                ) : (
-                  ""
                 )}
               </span>
               <span
@@ -235,7 +233,7 @@ export function ChatRoom(props) {
               >
                 {fontSize}
                 <ArrowDropDownIcon className={styles["down-arrow"]} />
-                {isFontSizeOpen ? (
+                {isFontSizeOpen && (
                   <div className={styles["menu"]}>
                     {[...Array(14).keys()].map((element) => {
                       return (
@@ -256,8 +254,6 @@ export function ChatRoom(props) {
                       );
                     })}
                   </div>
-                ) : (
-                  ""
                 )}
               </span>
               <strong
@@ -304,7 +300,7 @@ export function ChatRoom(props) {
                   setFontColorOpen(!isFontColorOpen);
                 }}
               >
-                {isFontColorOpen ? (
+                {isFontColorOpen && (
                   <div
                     className={`${styles["menu"]} ${styles["font-color-picker"]}`}
                   >
@@ -329,8 +325,6 @@ export function ChatRoom(props) {
                       />
                     </div>
                   </div>
-                ) : (
-                  ""
                 )}
                 <FormatColorTextIcon
                   className={styles["font-color"]}
@@ -408,17 +402,17 @@ export function ChatRoom(props) {
           <div className={styles["menu"]}>
             <div
               onClickCapture={() => {
-                setIsProfileOpen(!isProfileOpen);
-              }}
-            >
-              Edit profile
-            </div>
-            <div
-              onClickCapture={() => {
                 auth.signOut();
               }}
             >
               Log out
+            </div>
+            <div
+              onClickCapture={() => {
+                setIsProfileOpen(!isProfileOpen);
+              }}
+            >
+              Edit profile
             </div>
           </div>
         )}
