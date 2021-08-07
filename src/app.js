@@ -50,6 +50,10 @@ if (window.location.hostname == "localhost") {
   storage.useEmulator("localhost", 9199);
 }
 
+export const messagesRef = firestore.collection("messages");
+export const bannedUsersRef = firestore.collection("bannedUsers");
+export const userPreferencesRef = firestore.collection("userPreferences");
+
 function App() {
   const [user] = useAuthState(auth);
 
