@@ -1,27 +1,22 @@
-import React, { useRef, useState, useEffect } from "react";
-import styles from "../css/chat-room.module.css";
-import MenuIcon from "@material-ui/icons/Menu";
-import TextFormatIcon from "@material-ui/icons/TextFormat";
-import CloseIcon from "@material-ui/icons/Close";
-import AddIcon from "@material-ui/icons/Add";
-import ArrowDropDownIcon from "@material-ui/icons/ArrowDropDown";
-import FormatColorTextIcon from "@material-ui/icons/FormatColorText";
 import PencilIcon from "@material-ui/icons/Create";
+import MenuIcon from "@material-ui/icons/Menu";
 import PersonIcon from "@material-ui/icons/Person";
-
 import firebase from "firebase/app";
-import { firestore, auth } from "../app";
-
+import React, { useEffect, useRef, useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
+import { auth, firestore, messagesRef, userPreferencesRef } from "../app";
+import styles from "../css/chat-room.module.css";
+import { fonts } from "../fonts";
+import { toggleSelectionMarkup } from "../markdown";
 import { presence } from "../presence";
+import { uploadFile } from "../storage";
 // import { getProviders } from "../oembed";
 import { ChatMessage } from "./chat-message";
 import { ColorInput } from "./color-input";
+import { MessageInputForm } from "./message-input-form";
+import { MessageList } from "./message-list";
 import { SliderInput } from "./slider-input";
-import { toggleSelectionMarkup, MARKUP_SYMBOLS } from "../markdown";
-import { uploadFile } from "../storage";
-import { fonts } from "../fonts";
-import { hexToRgb } from "../color";
+import { UserStyleControls } from "./user-style-controls";
 
 export function ChatRoom(props) {
   // Fetch the current user's ID from Firebase Authentication.
@@ -50,14 +45,13 @@ export function ChatRoom(props) {
   const [isUsersOpen, setUsersOpen] = useState(false);
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [isFormatOpen, setFormatOpen] = useState(false);
-  const [isFontOpen, setFontOpen] = useState(false);
   const [isFontSizeOpen, setFontSizeOpen] = useState(false);
   const [isStyleEditorOpen, setStyleEditorOpen] = useState(false);
   const [isFontColorOpen, setFontColorOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [selection, setSelection] = useState({ start: 0, end: 0 });
 
-  const dummy = useRef();
+  const [sentMsgCount, setSentMsgCount] = useState(0);
 
   let messageInput = useRef();
 
@@ -84,19 +78,14 @@ export function ChatRoom(props) {
       bgTransparency: msgBgTransparency,
     });
 
-    dummy.current.scrollIntoView({ behavior: "smooth" });
+    setSentMsgCount(sentMsgCount + 1);
   };
 
   const closeMenus = () => {
     setMenuOpen(false);
-    setFontOpen(false);
     setFontSizeOpen(false);
     setFontColorOpen(false);
   };
-
-  const messagesRef = firestore.collection("messages");
-  const bannedUsersRef = firestore.collection("bannedUsers");
-  const userPreferencesRef = firestore.collection("userPreferences");
 
   let query = messagesRef
     .orderBy("createdAt")
@@ -108,8 +97,6 @@ export function ChatRoom(props) {
   console.log("RE-RENDER");
 
   useEffect(() => {
-    // getProviders();
-
     userPreferencesRef
       .doc(uid)
       .get()
@@ -160,226 +147,58 @@ export function ChatRoom(props) {
 
   return (
     <section className={styles["chat-section"]} onClickCapture={closeMenus}>
-      <section className={styles["messages-section"]}>
-        <span ref={dummy}></span>
-        {messages &&
-          messages.reverse().map((msg) => (
-            <ChatMessage
-              key={msg.id}
-              message={msg}
-              userStyles={userStyles}
-              onClick={(targetUsername) => {
-                setMessageValue(messageValue + " @" + targetUsername + " ");
-                messageInput.focus();
-              }}
-              idToken={idToken}
-              messagesRef={messagesRef}
-              bannedUsersRef={bannedUsersRef}
-            />
-          ))}
-      </section>
+      <MessageList
+        messages={messages}
+        scrollToBottom={true}
+        userStyles={userStyles}
+        onMessageClick={(targetUsername) => {
+          setMessageValue(messageValue + " @" + targetUsername + " ");
+          messageInput.focus();
+        }}
+        idToken={idToken}
+        sentMsgCount={sentMsgCount}
+      />
 
-      {isFormatOpen && (
-        <div className={styles["format-controls"]}>
-          <span
-            onClickCapture={() => {
-              const newValue = !userStyles;
-              userPreferencesRef
-                .doc(uid)
-                .update({ userStyles: newValue })
-                .then(() => {
-                  setUserStyles(newValue);
-                });
-            }}
-          >
-            {userStyles ? <CloseIcon /> : <AddIcon />}
-          </span>
-          {userStyles && (
-            <>
-              <span
-                onClickCapture={() => {
-                  setFontOpen(!isFontOpen);
-                }}
-              >
-                T<ArrowDropDownIcon className={styles["down-arrow"]} />
-                {isFontOpen && (
-                  <div className={styles["menu"]}>
-                    {fonts.map((fontObj) => {
-                      return (
-                        <div
-                          className={
-                            font.name == fontObj.name ? styles["bold"] : ""
-                          }
-                          onClickCapture={() => {
-                            userPreferencesRef
-                              .doc(uid)
-                              .update({ font: fontObj })
-                              .then(() => {
-                                setFont(fontObj);
-                              });
-                          }}
-                        >
-                          {fontObj.name}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </span>
-              <span
-                onClickCapture={() => {
-                  setFontSizeOpen(!isFontSizeOpen);
-                }}
-              >
-                {fontSize}
-                <ArrowDropDownIcon className={styles["down-arrow"]} />
-                {isFontSizeOpen && (
-                  <div className={styles["menu"]}>
-                    {[...Array(14).keys()].map((element) => {
-                      return (
-                        <div
-                          onClickCapture={(e) => {
-                            userPreferencesRef
-                              .doc(uid)
-                              .update({
-                                fontSize: 9 + element,
-                              })
-                              .then(() => {
-                                setFontSize(9 + element);
-                              });
-                          }}
-                        >
-                          {9 + element}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </span>
-              <strong
-                onClick={() => {
-                  let result = toggleSelectionMarkup(
-                    messageInput,
-                    MARKUP_SYMBOLS.BOLD
-                  );
+      <UserStyleControls
+        open={isFormatOpen}
+        enabled={userStyles}
+        font={font}
+        setFont={setFont}
+        isFontSizeOpen={isFontSizeOpen}
+        setFontSizeOpen={setFontSizeOpen}
+        fontSize={fontSize}
+        setFontSize={setFontSize}
+        messageInput={messageInput}
+        setMessageValue={setMessageValue}
+        setStyleEditorOpen={setStyleEditorOpen}
+        isStyleEditorOpen={isStyleEditorOpen}
+        isFontColorOpen={isFontColorOpen}
+        setFontColorOpen={setFontColorOpen}
+        fontColor={fontColor}
+        setFontColor={setFontColor}
+        toggleSelectionMarkup={(symbol) => {
+          return toggleSelectionMarkup(messageInput, symbol);
+        }}
+        setSelection={setSelection}
+      />
 
-                  setMessageValue(result.value);
-                  setSelection({
-                    start: result.start,
-                    end: result.end,
-                  });
-                }}
-              >
-                B
-              </strong>
-              <em
-                onClick={() => {
-                  let result = toggleSelectionMarkup(
-                    messageInput,
-                    MARKUP_SYMBOLS.ITALICS
-                  );
-
-                  setMessageValue(result.value);
-                  setSelection({
-                    start: result.start,
-                    end: result.end,
-                  });
-                }}
-              >
-                i
-              </em>
-              <span
-                onClickCapture={() => {
-                  setStyleEditorOpen(!isStyleEditorOpen);
-                }}
-              >
-                bg
-              </span>
-              <span
-                onClickCapture={() => {
-                  setFontColorOpen(!isFontColorOpen);
-                }}
-              >
-                {isFontColorOpen && (
-                  <div
-                    className={`${styles["menu"]} ${styles["font-color-picker"]}`}
-                  >
-                    <div>
-                      <ColorInput
-                        defaultValue={fontColor}
-                        onChange={(e) => {
-                          setFontColor(e.target.value);
-                        }}
-                        onChangeComplete={(e) => {
-                          userPreferencesRef.doc(uid).update({
-                            fontColor: e.target.value,
-                          });
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                        }}
-                        // NOTE: Required to prevent auto closing when clicking
-                        onClickCapture={() => {
-                          setFontColorOpen(true);
-                        }}
-                      />
-                    </div>
-                  </div>
-                )}
-                <FormatColorTextIcon
-                  className={styles["font-color"]}
-                  style={{ color: fontColor }}
-                />
-              </span>
-            </>
-          )}
-        </div>
-      )}
-
-      <form onSubmit={sendMessage}>
-        <textarea
-          ref={(input) => {
-            messageInput = input;
-          }}
-          autoFocus
-          value={messageValue}
-          onChange={(e) => setMessageValue(e.target.value)}
-          placeholder="Type here to send a message"
-          onKeyPress={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.target.form.dispatchEvent(
-                new Event("submit", {
-                  cancelable: true,
-                  // BUGFIX: https://github.com/final-form/react-final-form/issues/878#issuecomment-745364350
-                  bubbles: true,
-                })
-              );
-              e.preventDefault();
-            }
-          }}
-          style={
-            userStyles
-              ? {
-                  fontFamily: font.style,
-                  fontSize: fontSize,
-                  color: fontColor,
-                  backgroundImage: msgBgImg ? `url(${msgBgImg})` : "",
-                  backgroundColor: `rgba(${hexToRgb(
-                    msgBgColor
-                  )},${msgBgTransparency})`,
-                }
-              : {}
-          }
-        ></textarea>
-        <TextFormatIcon
-          className={
-            styles["pointer"] + " " + (isFormatOpen ? styles["outlined"] : "")
-          }
-          onClick={(e) => {
-            setFormatOpen(!isFormatOpen);
-          }}
-        />
-      </form>
+      <MessageInputForm
+        sendMessage={sendMessage}
+        messageInput={(input) => {
+          messageInput = input;
+        }}
+        messageValue={messageValue}
+        setMessageValue={setMessageValue}
+        userStyles={userStyles}
+        font={font}
+        fontSize={fontSize}
+        fontColor={fontColor}
+        msgBgImg={msgBgImg}
+        msgBgTransparency={msgBgTransparency}
+        msgBgColor={msgBgColor}
+        isFormatOpen={isFormatOpen}
+        setFormatOpen={setFormatOpen}
+      />
 
       <div className={styles["chat-controls"]}>
         <span

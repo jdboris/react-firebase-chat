@@ -6,7 +6,7 @@ import styles from "../css/chat-room.module.css";
 import "../css/oembed.css";
 import firebase from "firebase/app";
 
-import { auth } from "../app";
+import { auth, messagesRef, bannedUsersRef } from "../app";
 import { hexToRgb } from "../color";
 
 function Link(props) {
@@ -84,11 +84,11 @@ export function ChatMessage(props) {
   );
 
   function banUser() {
-    props.bannedUsersRef.doc(props.message.uid).set({});
+    bannedUsersRef.doc(props.message.uid).set({});
   }
 
   function deleteMessage() {
-    props.messagesRef.doc(props.message.id).update({ isDeleted: true });
+    messagesRef.doc(props.message.id).update({ isDeleted: true });
   }
 
   return (
