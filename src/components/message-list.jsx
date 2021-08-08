@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useEffect } from "react";
 import styles from "../css/chat-room.module.css";
 import { ChatMessage } from "./chat-message";
 
@@ -14,17 +14,15 @@ export function MessageList(props) {
       <span ref={dummy}></span>
       {props.messages &&
         // Must make a copy because props are immutable
-        [...props.messages]
-          .reverse()
-          .map((msg) => (
-            <ChatMessage
-              key={msg.id}
-              message={msg}
-              userStyles={props.userStyles}
-              onClick={props.onMessageClick}
-              idToken={props.idToken}
-            />
-          ))}
+        props.messages.map((msg) => (
+          <ChatMessage
+            key={msg.id}
+            message={msg}
+            userStyles={props.userStyles}
+            onClick={props.onMessageClick}
+            idToken={props.idToken}
+          />
+        ))}
     </section>
   );
 }

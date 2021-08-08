@@ -1,6 +1,7 @@
 import PencilIcon from "@material-ui/icons/Create";
 import MenuIcon from "@material-ui/icons/Menu";
 import PersonIcon from "@material-ui/icons/Person";
+import CloseIcon from "@material-ui/icons/Close";
 import firebase from "firebase/app";
 import React, { useEffect, useRef, useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
@@ -48,7 +49,7 @@ export function ChatRoom(props) {
   const [isFontSizeOpen, setFontSizeOpen] = useState(false);
   const [isStyleEditorOpen, setStyleEditorOpen] = useState(false);
   const [isFontColorOpen, setFontColorOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isProfileOpen, setProfileOpen] = useState(false);
   const [selection, setSelection] = useState({ start: 0, end: 0 });
 
   const [sentMsgCount, setSentMsgCount] = useState(0);
@@ -88,7 +89,7 @@ export function ChatRoom(props) {
   };
 
   let query = messagesRef
-    .orderBy("createdAt")
+    .orderBy("createdAt", "desc")
     .limit(25)
     .where("isDeleted", "==", false);
 
@@ -228,7 +229,7 @@ export function ChatRoom(props) {
             </div>
             <div
               onClickCapture={() => {
-                setIsProfileOpen(!isProfileOpen);
+                setProfileOpen(!isProfileOpen);
               }}
             >
               Edit profile
@@ -241,7 +242,14 @@ export function ChatRoom(props) {
         <div
           className={styles["dialog"] + " " + styles["message-style-editor"]}
         >
-          Message style editor
+          <div className={styles["dialog-header"]}>
+            Message style editor
+            <CloseIcon
+              onClick={() => {
+                setStyleEditorOpen(false);
+              }}
+            />
+          </div>
           <div className={styles["sample-message-wrapper"]}>
             <ChatMessage
               message={{
@@ -346,7 +354,14 @@ export function ChatRoom(props) {
 
       {isUsersOpen && (
         <div className={styles["dialog"]}>
-          People here now
+          <div className={styles["dialog-header"]}>
+            People here now
+            <CloseIcon
+              onClick={() => {
+                setUsersOpen(false);
+              }}
+            />
+          </div>
           <ul>
             {onlineUsers.map((user) => {
               return <li>{user.username}</li>;
@@ -357,7 +372,14 @@ export function ChatRoom(props) {
 
       {isProfileOpen && (
         <div className={styles["dialog"] + " " + styles["profile-editor"]}>
-          Edit profile
+          <div className={styles["dialog-header"]}>
+            Edit profile
+            <CloseIcon
+              onClick={() => {
+                setProfileOpen(false);
+              }}
+            />
+          </div>
           <div>
             <label>
               {photoURL ? (
