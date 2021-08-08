@@ -167,6 +167,16 @@ label [type="file"] {
   max-width: 350px;
 }
 
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.dialog-header svg {
+  font-size: 1em;
+  cursor: pointer;
+}
+
 .message-style-editor label:not(.button) {
   display: flex;
   justify-content: space-between;
