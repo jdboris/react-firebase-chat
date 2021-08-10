@@ -36,6 +36,8 @@ export function MessageInputForm(props) {
                 backgroundColor: `rgba(${hexToRgb(props.msgBgColor)},${
                   props.msgBgTransparency
                 })`,
+                backgroundRepeat: props.msgBgRepeat,
+                backgroundPosition: props.msgBgPosition,
               }
             : {}
         }

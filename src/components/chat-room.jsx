@@ -41,6 +41,9 @@ export function ChatRoom(props) {
   const [msgBgImg, setMsgBgImg] = useState("");
   const [msgBgColor, setMsgBgColor] = useState("#FFFFFF");
   const [msgBgTransparency, setMsgBgTransparency] = useState(1);
+  const [msgBgRepeat, setMsgBgRepeat] = useState("no-repeat");
+  const [msgBgPosition, setMsgBgPosition] = useState("left");
+
   const [userStyles, setUserStyles] = useState(true);
 
   const [isUsersOpen, setUsersOpen] = useState(false);
@@ -77,6 +80,8 @@ export function ChatRoom(props) {
       bgColor: msgBgColor,
       nameColor: nameColor,
       bgTransparency: msgBgTransparency,
+      msgBgRepeat: msgBgRepeat,
+      msgBgPosition: msgBgPosition,
     });
 
     setSentMsgCount(sentMsgCount + 1);
@@ -115,6 +120,10 @@ export function ChatRoom(props) {
             setMsgBgColor(preferences.msgBgColor);
           if ("msgBgTransparency" in preferences)
             setMsgBgTransparency(preferences.msgBgTransparency);
+          if ("msgBgRepeat" in preferences)
+            setMsgBgRepeat(preferences.msgBgRepeat);
+          if ("msgBgPosition" in preferences)
+            setMsgBgPosition(preferences.msgBgPosition);
         }
       });
 
@@ -197,6 +206,8 @@ export function ChatRoom(props) {
         msgBgImg={msgBgImg}
         msgBgTransparency={msgBgTransparency}
         msgBgColor={msgBgColor}
+        msgBgRepeat={msgBgRepeat}
+        msgBgPosition={msgBgPosition}
         isFormatOpen={isFormatOpen}
         setFormatOpen={setFormatOpen}
       />
@@ -267,6 +278,8 @@ export function ChatRoom(props) {
                 nameColor: nameColor,
                 bgColor: msgBgColor,
                 bgTransparency: msgBgTransparency,
+                msgBgRepeat: msgBgRepeat,
+                msgBgPosition: msgBgPosition,
               }}
               idToken={idToken}
               userStyles={userStyles}
@@ -348,6 +361,72 @@ export function ChatRoom(props) {
             >
               Clear Image
             </label>
+          )}
+          <div>
+            {msgBgImg && (
+              <label>
+                <input
+                  type="checkbox"
+                  onChange={async (e) => {
+                    const checked = e.target.checked;
+                    await firestore
+                      .collection("userPreferences")
+                      .doc(uid)
+                      .update({
+                        msgBgRepeat: checked ? "repeat" : "no-repeat",
+                      });
+                    setMsgBgRepeat(checked ? "repeat" : "no-repeat");
+                  }}
+                  checked={msgBgRepeat == "repeat"}
+                />
+                Tile image
+              </label>
+            )}
+          </div>
+          {msgBgImg && (
+            <div>
+              Align image
+              <label>
+                <input
+                  type="radio"
+                  name="msgBgPosition"
+                  checked={msgBgPosition == "left" ? true : false}
+                  onChange={async (e) => {
+                    const checked = e.target.checked;
+                    if (checked) {
+                      await firestore
+                        .collection("userPreferences")
+                        .doc(uid)
+                        .update({
+                          msgBgPosition: "left",
+                        });
+                      setMsgBgPosition("left");
+                    }
+                  }}
+                />
+                Left
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="msgBgPosition"
+                  checked={msgBgPosition == "right" ? true : false}
+                  onChange={async (e) => {
+                    const checked = e.target.checked;
+                    if (checked) {
+                      await firestore
+                        .collection("userPreferences")
+                        .doc(uid)
+                        .update({
+                          msgBgPosition: "right",
+                        });
+                      setMsgBgPosition("right");
+                    }
+                  }}
+                />
+                Right
+              </label>
+            </div>
           )}
         </div>
       )}
