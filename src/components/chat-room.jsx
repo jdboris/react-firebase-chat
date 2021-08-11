@@ -43,6 +43,7 @@ export function ChatRoom(props) {
   const [msgBgTransparency, setMsgBgTransparency] = useState(1);
   const [msgBgRepeat, setMsgBgRepeat] = useState("no-repeat");
   const [msgBgPosition, setMsgBgPosition] = useState("left");
+  const [msgBgImgTransparency, setMsgBgImgTransparency] = useState(1);
 
   const [userStyles, setUserStyles] = useState(true);
 
@@ -82,6 +83,7 @@ export function ChatRoom(props) {
       bgTransparency: msgBgTransparency,
       msgBgRepeat: msgBgRepeat,
       msgBgPosition: msgBgPosition,
+      msgBgImgTransparency: msgBgImgTransparency,
     });
 
     setSentMsgCount(sentMsgCount + 1);
@@ -94,8 +96,8 @@ export function ChatRoom(props) {
   };
 
   let query = messagesRef
-    .orderBy("createdAt", "desc")
     .limit(25)
+    .orderBy("createdAt", "desc")
     .where("isDeleted", "==", false);
 
   const [messages] = useCollectionData(query, { idField: "id" });
@@ -124,6 +126,8 @@ export function ChatRoom(props) {
             setMsgBgRepeat(preferences.msgBgRepeat);
           if ("msgBgPosition" in preferences)
             setMsgBgPosition(preferences.msgBgPosition);
+          if ("msgBgImgTransparency" in preferences)
+            setMsgBgImgTransparency(preferences.msgBgImgTransparency);
         }
       });
 
@@ -210,6 +214,7 @@ export function ChatRoom(props) {
         msgBgPosition={msgBgPosition}
         isFormatOpen={isFormatOpen}
         setFormatOpen={setFormatOpen}
+        msgBgImgTransparency={msgBgImgTransparency}
       />
 
       <div className={styles["chat-controls"]}>
@@ -280,6 +285,7 @@ export function ChatRoom(props) {
                 bgTransparency: msgBgTransparency,
                 msgBgRepeat: msgBgRepeat,
                 msgBgPosition: msgBgPosition,
+                msgBgImgTransparency: msgBgImgTransparency,
               }}
               idToken={idToken}
               userStyles={userStyles}
@@ -344,6 +350,7 @@ export function ChatRoom(props) {
                     .update({
                       msgBgImg: url,
                     });
+                  console.log(url);
                   setMsgBgImg(url);
                 }
               }}
@@ -384,49 +391,67 @@ export function ChatRoom(props) {
             )}
           </div>
           {msgBgImg && (
-            <div>
-              Align image
+            <>
+              <div>
+                Align image
+                <label>
+                  <input
+                    type="radio"
+                    name="msgBgPosition"
+                    checked={msgBgPosition == "left" ? true : false}
+                    onChange={async (e) => {
+                      const checked = e.target.checked;
+                      if (checked) {
+                        await firestore
+                          .collection("userPreferences")
+                          .doc(uid)
+                          .update({
+                            msgBgPosition: "left",
+                          });
+                        setMsgBgPosition("left");
+                      }
+                    }}
+                  />
+                  Left
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="msgBgPosition"
+                    checked={msgBgPosition == "right" ? true : false}
+                    onChange={async (e) => {
+                      const checked = e.target.checked;
+                      if (checked) {
+                        await firestore
+                          .collection("userPreferences")
+                          .doc(uid)
+                          .update({
+                            msgBgPosition: "right",
+                          });
+                        setMsgBgPosition("right");
+                      }
+                    }}
+                  />
+                  Right
+                </label>
+              </div>
               <label>
-                <input
-                  type="radio"
-                  name="msgBgPosition"
-                  checked={msgBgPosition == "left" ? true : false}
-                  onChange={async (e) => {
-                    const checked = e.target.checked;
-                    if (checked) {
-                      await firestore
-                        .collection("userPreferences")
-                        .doc(uid)
-                        .update({
-                          msgBgPosition: "left",
-                        });
-                      setMsgBgPosition("left");
-                    }
+                Image transparency
+                <SliderInput
+                  min="0"
+                  max="100"
+                  defaultValue={msgBgImgTransparency * 100}
+                  onChange={(e) => {
+                    setMsgBgImgTransparency(e.target.value / 100);
+                  }}
+                  onChangeComplete={(e) => {
+                    userPreferencesRef.doc(uid).update({
+                      msgBgImgTransparency: e.target.value / 100,
+                    });
                   }}
                 />
-                Left
               </label>
-              <label>
-                <input
-                  type="radio"
-                  name="msgBgPosition"
-                  checked={msgBgPosition == "right" ? true : false}
-                  onChange={async (e) => {
-                    const checked = e.target.checked;
-                    if (checked) {
-                      await firestore
-                        .collection("userPreferences")
-                        .doc(uid)
-                        .update({
-                          msgBgPosition: "right",
-                        });
-                      setMsgBgPosition("right");
-                    }
-                  }}
-                />
-                Right
-              </label>
-            </div>
+            </>
           )}
         </div>
       )}
