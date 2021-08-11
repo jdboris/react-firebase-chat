@@ -68,6 +68,7 @@ export function ChatMessage(props) {
     bgTransparency,
     msgBgRepeat,
     msgBgPosition,
+    msgBgImgTransparency,
   } = props.message;
   const { userStyles } = props;
   const { claims } = props.idToken;
@@ -120,77 +121,78 @@ export function ChatMessage(props) {
             }
           }
         }}
+        style={
+          userStyles
+            ? {
+                backgroundColor: `rgba(${hexToRgb(bgColor)},${bgTransparency})`,
+              }
+            : {}
+        }
       >
         <div
-          className={styles["inner-wrapper"]}
+          className={styles["message-background-image"]}
           style={
             userStyles
               ? {
                   backgroundImage: `url(${backgroundImage})`,
-                  backgroundColor: `rgba(${hexToRgb(
-                    bgColor
-                  )},${bgTransparency})`,
                   backgroundRepeat: msgBgRepeat,
                   backgroundPosition: msgBgPosition,
+                  opacity: msgBgImgTransparency,
                 }
               : {}
           }
-        >
-          {photoURL ? (
-            <img className={styles["avatar"]} src={photoURL} />
-          ) : (
-            <PersonIcon className={styles["avatar"]} />
-          )}
-          <span className={styles["message-details"]}>
-            {claims.isModerator && <button onClick={banUser}>X</button>}
-            {claims.isModerator && <button onClick={deleteMessage}>X</button>}
-            <span className={styles["message-timestamp"]}>
-              {createdAt && createdAt.toDate().toLocaleString()}
-            </span>
+        ></div>
+        {photoURL ? (
+          <img className={styles["avatar"]} src={photoURL} />
+        ) : (
+          <PersonIcon className={styles["avatar"]} />
+        )}
+        <span className={styles["message-details"]}>
+          {claims.isModerator && <button onClick={banUser}>X</button>}
+          {claims.isModerator && <button onClick={deleteMessage}>X</button>}
+          <span className={styles["message-timestamp"]}>
+            {createdAt && createdAt.toDate().toLocaleString()}
           </span>
-          <div>
-            <span
-              className={styles["message-username"]}
-              style={{ color: nameColor }}
-            >
-              {username}
-            </span>
-            :
-            <span
-              className={styles["message-contents"]}
-              style={
-                userStyles
-                  ? {
-                      fontSize: fontSize + "px",
-                      color: fontColor,
-                      fontFamily: font.style,
-                    }
-                  : {}
-              }
-            >
-              {useMemo(() => {
-                return (
-                  <ReactMarkdown
-                    components={{
-                      // NOTE: Must overwrite the built-in renderer to ensure the text of the link is the URL
-                      a: (props) => {
-                        return (
-                          <Link
-                            shouldComponentUpdate={false}
-                            href={props.href}
-                          />
-                        );
-                      },
-                    }}
-                    plugins={[gfm]}
-                    allowedElements={["p", "em", "strong", "u", "a"]}
-                  >
-                    {text}
-                  </ReactMarkdown>
-                );
-              }, [text])}
-            </span>
-          </div>
+        </span>
+        <div>
+          <span
+            className={styles["message-username"]}
+            style={{ color: nameColor }}
+          >
+            {username}
+          </span>
+          :
+          <span
+            className={styles["message-contents"]}
+            style={
+              userStyles
+                ? {
+                    fontSize: fontSize + "px",
+                    color: fontColor,
+                    fontFamily: font.style,
+                  }
+                : {}
+            }
+          >
+            {useMemo(() => {
+              return (
+                <ReactMarkdown
+                  components={{
+                    // NOTE: Must overwrite the built-in renderer to ensure the text of the link is the URL
+                    a: (props) => {
+                      return (
+                        <Link shouldComponentUpdate={false} href={props.href} />
+                      );
+                    },
+                  }}
+                  plugins={[gfm]}
+                  allowedElements={["p", "em", "strong", "u", "a"]}
+                >
+                  {text}
+                </ReactMarkdown>
+              );
+            }, [text])}
+          </span>
         </div>
       </div>
     </>

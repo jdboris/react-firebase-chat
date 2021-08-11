@@ -11,18 +11,20 @@ export function MessageList(props) {
 
   return (
     <section className={styles["messages-section"]}>
-      <span ref={dummy}></span>
       {props.messages &&
         // Must make a copy because props are immutable
-        props.messages.map((msg) => (
-          <ChatMessage
-            key={msg.id}
-            message={msg}
-            userStyles={props.userStyles}
-            onClick={props.onMessageClick}
-            idToken={props.idToken}
-          />
-        ))}
+        [...props.messages]
+          .reverse()
+          .map((msg) => (
+            <ChatMessage
+              key={msg.id}
+              message={msg}
+              userStyles={props.userStyles}
+              onClick={props.onMessageClick}
+              idToken={props.idToken}
+            />
+          ))}
+      <span ref={dummy}></span>
     </section>
   );
 }

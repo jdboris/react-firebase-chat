@@ -5,7 +5,31 @@ import styles from "../css/chat-room.module.css";
 
 export function MessageInputForm(props) {
   return (
-    <form onSubmit={props.sendMessage}>
+    <form
+      onSubmit={props.sendMessage}
+      style={
+        props.userStyles
+          ? {
+              backgroundColor: `rgba(${hexToRgb(props.msgBgColor)},${
+                props.msgBgTransparency
+              })`,
+            }
+          : {}
+      }
+    >
+      <div
+        className={styles["message-background-image"]}
+        style={
+          props.userStyles
+            ? {
+                backgroundImage: `url(${props.msgBgImg})`,
+                backgroundRepeat: props.msgBgRepeat,
+                backgroundPosition: props.msgBgPosition,
+                opacity: props.msgBgImgTransparency,
+              }
+            : {}
+        }
+      ></div>
       <textarea
         ref={(input) => {
           props.messageInput(input);
@@ -32,16 +56,11 @@ export function MessageInputForm(props) {
                 fontFamily: props.font.style,
                 fontSize: props.fontSize,
                 color: props.fontColor,
-                backgroundImage: props.msgBgImg ? `url(${props.msgBgImg})` : "",
-                backgroundColor: `rgba(${hexToRgb(props.msgBgColor)},${
-                  props.msgBgTransparency
-                })`,
-                backgroundRepeat: props.msgBgRepeat,
-                backgroundPosition: props.msgBgPosition,
               }
             : {}
         }
       ></textarea>
+
       <TextFormatIcon
         className={
           styles["pointer"] +
