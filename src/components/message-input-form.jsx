@@ -7,7 +7,7 @@ import { uploadFile } from "../storage";
 
 export function MessageInputForm(props) {
   return (
-    <form onSubmit={props.sendMessage}>
+    <form className={styles["message-form"]} onSubmit={props.sendMessage}>
       <label>
         <CameraIcon
           className={styles["camera-icon"] + " " + styles["pointer"]}

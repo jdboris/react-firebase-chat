@@ -98,7 +98,7 @@ exports.signUp = functions.https.onCall((data, context) => {
 
 exports.sendWelcomeEmail = functions.auth.user().onCreate((user) => {
   // NOTE: Must create the document now to allow calling .update() later
-  db.doc(`userPreferences/${user.uid}`).set({});
+  db.doc(`users/${user.uid}`).set({});
 
   if (user.email) {
     // Admin SDK API to generate the email verification link.

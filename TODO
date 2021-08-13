@@ -1,5 +1,4 @@
--uploading images
--improve signup/login
+-force usernames and emails to be unique
 -emojis
 -manage moderators
 -ban by username
@@ -9,3 +8,5 @@
 -auto announcement
 -private messages
 -premium
+-input validation
+-shorten image urls https://firebase.google.com/docs/dynamic-links/rest

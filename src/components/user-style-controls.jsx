@@ -3,7 +3,7 @@ import ArrowDropDownIcon from "@material-ui/icons/ArrowDropDown";
 import CloseIcon from "@material-ui/icons/Close";
 import FormatColorTextIcon from "@material-ui/icons/FormatColorText";
 import React, { useState } from "react";
-import { auth, userPreferencesRef } from "../app";
+import { auth, usersRef } from "../app";
 import styles from "../css/chat-room.module.css";
 import { fonts } from "../fonts";
 import { MARKUP_SYMBOLS } from "../markdown";
@@ -22,7 +22,7 @@ export function UserStyleControls(props) {
           <span
             onClickCapture={() => {
               const newValue = !enabled;
-              userPreferencesRef
+              usersRef
                 .doc(uid)
                 .update({ enabled: newValue })
                 .then(() => {
@@ -51,7 +51,7 @@ export function UserStyleControls(props) {
                               : ""
                           }
                           onClickCapture={() => {
-                            userPreferencesRef
+                            usersRef
                               .doc(uid)
                               .update({ font: fontObj })
                               .then(() => {
@@ -79,7 +79,7 @@ export function UserStyleControls(props) {
                       return (
                         <div
                           onClickCapture={(e) => {
-                            userPreferencesRef
+                            usersRef
                               .doc(uid)
                               .update({
                                 fontSize: 9 + element,
@@ -147,7 +147,7 @@ export function UserStyleControls(props) {
                           props.setFontColor(e.target.value);
                         }}
                         onChangeComplete={(e) => {
-                          userPreferencesRef.doc(uid).update({
+                          usersRef.doc(uid).update({
                             fontColor: e.target.value,
                           });
                         }}
