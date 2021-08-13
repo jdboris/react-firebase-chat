@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import isImageUrl from "is-image-url";
 import PersonIcon from "@material-ui/icons/Person";
 import ReactMarkdown from "react-markdown";
 import gfm from "remark-gfm";
@@ -12,6 +13,7 @@ import { hexToRgb } from "../color";
 function Link(props) {
   const [children, setChildren] = useState(props.href);
   const [providerName, setProviderName] = useState("");
+  const [isInline, setInline] = useState(false);
 
   useEffect(() => {
     const getOembed = firebase.functions().httpsCallable("getOembed");
@@ -21,6 +23,21 @@ function Link(props) {
         setProviderName(result.data.providerName);
         setChildren(
           <span dangerouslySetInnerHTML={{ __html: result.data.html }}></span>
+        );
+      } else if (isImageUrl(props.href)) {
+        setInline(true);
+        setChildren(
+          <a
+            href={props.href}
+            target="_blank"
+            rel="nofollow noreferrer noopener"
+            // NOTE: Must stop propagation so clicking a link won't @ the poster
+            onMouseUp={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            <img src={props.href} />
+          </a>
         );
       } else {
         setChildren(
@@ -46,6 +63,7 @@ function Link(props) {
         e.stopPropagation();
       }}
       data-provider={providerName}
+      style={isInline ? { display: "inline" } : {}}
     >
       {children}
     </span>
