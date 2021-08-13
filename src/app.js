@@ -52,7 +52,7 @@ if (window.location.hostname == "localhost") {
 
 export const messagesRef = firestore.collection("messages");
 export const bannedUsersRef = firestore.collection("bannedUsers");
-export const userPreferencesRef = firestore.collection("userPreferences");
+export const usersRef = firestore.collection("users");
 
 function App() {
   const [user] = useAuthState(auth);
