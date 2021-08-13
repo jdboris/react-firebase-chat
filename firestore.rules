@@ -38,7 +38,7 @@ service cloud.firestore {
       allow delete: if true;
     }
   
-    match /userPreferences/{docId} {
+    match /users/{docId} {
       allow create: if isDocOwner(docId);
       allow read: if isDocOwner(docId);
       allow update: if isDocOwner(docId);

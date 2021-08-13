@@ -11,27 +11,25 @@ export function SignInForm() {
   const [password, setPassword] = useState("");
   const [isNewUser, setIsNewUser] = useState(false);
 
-  const signInWithEmail = () => {
-    auth.signInWithEmailAndPassword(email, password);
-  };
-
-  const signInAnonymously = () => {
-    auth.signInAnonymously();
-  };
-
-  const signUp = () => {
-    let signUp = firebase.functions().httpsCallable("signUp");
-    signUp({ email: email, password: password, username: username }).then(
-      (result) => {
-        if (result.data.success) {
+  return (
+    <form
+      className={styles["login-form"]}
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (isNewUser) {
+          let signUp = firebase.functions().httpsCallable("signUp");
+          signUp({ email: email, password: password, username: username }).then(
+            (result) => {
+              if (result.data.success) {
+                auth.signInWithEmailAndPassword(email, password);
+              }
+            }
+          );
+        } else {
           auth.signInWithEmailAndPassword(email, password);
         }
-      }
-    );
-  };
-
-  return (
-    <div>
+      }}
+    >
       <input
         type="email"
         name="email"
@@ -66,9 +64,7 @@ export function SignInForm() {
 
       {isNewUser ? (
         <>
-          <button className={styles["sign-in"]} onClick={signUp}>
-            Sign Up
-          </button>
+          <button>Sign Up</button>
           <a
             href="#"
             onClick={(e) => {
@@ -81,9 +77,7 @@ export function SignInForm() {
         </>
       ) : (
         <>
-          <button className={styles["sign-in"]} onClick={signInWithEmail}>
-            Sign In
-          </button>
+          <button>Sign In</button>
           <a
             href="#"
             onClick={(e) => {
@@ -96,13 +90,14 @@ export function SignInForm() {
         </>
       )}
 
-      <button className={styles["sign-in"]} onClick={signInAnonymously}>
-        Sign In Anonymously
+      <button
+        className={styles["sign-in"]}
+        onClick={() => {
+          auth.signInAnonymously();
+        }}
+      >
+        Chat Anonymously
       </button>
-
-      <p>
-        Do not violate the community guidelines or you will be banned for life!
-      </p>
-    </div>
+    </form>
   );
 }
