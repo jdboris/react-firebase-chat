@@ -5,7 +5,7 @@ import CloseIcon from "@material-ui/icons/Close";
 import firebase from "firebase/app";
 import React, { useEffect, useRef, useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
-import { auth, firestore, messagesRef, userPreferencesRef } from "../app";
+import { auth, firestore, messagesRef, usersRef as usersRef } from "../app";
 import styles from "../css/chat-room.module.css";
 import { fonts } from "../fonts";
 import { toggleSelectionMarkup } from "../markdown";
@@ -105,7 +105,7 @@ export function ChatRoom(props) {
   console.log("RE-RENDER");
 
   useEffect(() => {
-    userPreferencesRef
+    usersRef
       .doc(uid)
       .get()
       .then((doc) => {
@@ -300,7 +300,7 @@ export function ChatRoom(props) {
                 setNameColor(e.target.value);
               }}
               onChangeComplete={(e) => {
-                userPreferencesRef.doc(uid).update({
+                usersRef.doc(uid).update({
                   nameColor: e.target.value,
                 });
               }}
@@ -314,7 +314,7 @@ export function ChatRoom(props) {
                 setMsgBgColor(e.target.value);
               }}
               onChangeComplete={(e) => {
-                userPreferencesRef.doc(uid).update({
+                usersRef.doc(uid).update({
                   msgBgColor: e.target.value,
                 });
               }}
@@ -330,7 +330,7 @@ export function ChatRoom(props) {
                 setMsgBgTransparency(e.target.value / 100);
               }}
               onChangeComplete={(e) => {
-                userPreferencesRef.doc(uid).update({
+                usersRef.doc(uid).update({
                   msgBgTransparency: e.target.value / 100,
                 });
               }}
@@ -344,12 +344,9 @@ export function ChatRoom(props) {
                 const file = e.target.files[0];
                 const url = await uploadFile(file);
                 if (url) {
-                  await firestore
-                    .collection("userPreferences")
-                    .doc(uid)
-                    .update({
-                      msgBgImg: url,
-                    });
+                  await firestore.collection("users").doc(uid).update({
+                    msgBgImg: url,
+                  });
                   console.log(url);
                   setMsgBgImg(url);
                 }
@@ -359,7 +356,7 @@ export function ChatRoom(props) {
           {msgBgImg && (
             <label
               onClick={async (e) => {
-                await firestore.collection("userPreferences").doc(uid).update({
+                await firestore.collection("users").doc(uid).update({
                   msgBgImg: "",
                 });
                 setMsgBgImg("");
@@ -377,7 +374,7 @@ export function ChatRoom(props) {
                   onChange={async (e) => {
                     const checked = e.target.checked;
                     await firestore
-                      .collection("userPreferences")
+                      .collection("users")
                       .doc(uid)
                       .update({
                         msgBgRepeat: checked ? "repeat" : "no-repeat",
@@ -402,12 +399,9 @@ export function ChatRoom(props) {
                     onChange={async (e) => {
                       const checked = e.target.checked;
                       if (checked) {
-                        await firestore
-                          .collection("userPreferences")
-                          .doc(uid)
-                          .update({
-                            msgBgPosition: "left",
-                          });
+                        await firestore.collection("users").doc(uid).update({
+                          msgBgPosition: "left",
+                        });
                         setMsgBgPosition("left");
                       }
                     }}
@@ -422,12 +416,9 @@ export function ChatRoom(props) {
                     onChange={async (e) => {
                       const checked = e.target.checked;
                       if (checked) {
-                        await firestore
-                          .collection("userPreferences")
-                          .doc(uid)
-                          .update({
-                            msgBgPosition: "right",
-                          });
+                        await firestore.collection("users").doc(uid).update({
+                          msgBgPosition: "right",
+                        });
                         setMsgBgPosition("right");
                       }
                     }}
@@ -445,7 +436,7 @@ export function ChatRoom(props) {
                     setMsgBgImgTransparency(e.target.value / 100);
                   }}
                   onChangeComplete={(e) => {
-                    userPreferencesRef.doc(uid).update({
+                    usersRef.doc(uid).update({
                       msgBgImgTransparency: e.target.value / 100,
                     });
                   }}
