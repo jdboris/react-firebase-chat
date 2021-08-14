@@ -490,6 +490,7 @@ export function ChatRoom(props) {
               messageValue={messageValue}
               setMessageValue={setMessageValue}
               messageInput={messageInput}
+              shouldComponentUpdate={false}
             />
           </div>
         </div>
