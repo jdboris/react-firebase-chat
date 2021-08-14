@@ -1,0 +1,9 @@
+{
+    "version": 3,
+    "mappings": "AAAA,AAAA,eAAe,CAAC;EACd,OAAO,EAAE,IAAI;EACb,SAAS,EAAE,IAAI;EACf,UAAU,EAAE,KAAK;EACjB,UAAU,EAAE,MAAM;EAClB,UAAU,EAAE,MAAM;EAClB,eAAe,EAAE,YAAY;CAC9B;;AAED,AAAA,eAAe,GAAG,CAAC,CAAC;EAClB,MAAM,EAAE,OAAO;EACf,OAAO,EAAE,GAAG;EACZ,SAAS,EAAE,KAAK;CACjB",
+    "sources": [
+        "emoji-selector.module.scss"
+    ],
+    "names": [],
+    "file": "emoji-selector.module.css"
+}

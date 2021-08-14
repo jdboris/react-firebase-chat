@@ -1,11 +1,14 @@
-import { default as React } from "react";
 import CameraIcon from "@material-ui/icons/CameraAlt";
 import TextFormatIcon from "@material-ui/icons/TextFormat";
+import SmileIcon from "@material-ui/icons/SentimentVerySatisfied";
+import React, { useRef } from "react";
 import { hexToRgb } from "../color";
 import styles from "../css/chat-room.module.css";
 import { uploadFile } from "../storage";
 
 export function MessageInputForm(props) {
+  let messageInput = useRef();
+
   return (
     <form className={styles["message-form"]} onSubmit={props.sendMessage}>
       <label>
@@ -18,8 +21,10 @@ export function MessageInputForm(props) {
             const file = e.target.files[0];
             const url = await uploadFile(file);
             if (url) {
-              props.setMessageValue(props.messageValue + " " + url);
+              messageInput.focus();
+              props.setMessageValue(props.messageValue + " " + url + " ");
             }
+            e.target.value = "";
           }}
         />
       </label>
@@ -51,7 +56,8 @@ export function MessageInputForm(props) {
         ></div>
         <textarea
           ref={(input) => {
-            props.messageInput(input);
+            messageInput = input;
+            props.setMessageInput(input);
           }}
           autoFocus
           value={props.messageValue}
@@ -80,7 +86,16 @@ export function MessageInputForm(props) {
           }
         ></textarea>
       </div>
-
+      <SmileIcon
+        className={
+          styles["pointer"] +
+          " " +
+          (props.isEmojisOpen ? styles["outlined"] : "")
+        }
+        onClick={(e) => {
+          props.setEmojisOpen(!props.isEmojisOpen);
+        }}
+      />
       <TextFormatIcon
         className={
           styles["pointer"] +

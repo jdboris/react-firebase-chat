@@ -35,6 +35,11 @@ function Link(props) {
             onMouseUp={(e) => {
               e.stopPropagation();
             }}
+            style={{
+              padding: "0px",
+              display: "inline-flex",
+              verticalAlign: "bottom",
+            }}
           >
             <img src={props.href} />
           </a>
