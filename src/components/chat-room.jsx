@@ -19,6 +19,7 @@ import { MessageList } from "./message-list";
 import { SliderInput } from "./slider-input";
 import { UserStyleControls } from "./user-style-controls";
 import { EmojiSelector } from "./emoji-selector";
+import { insertIntoInput } from "../utils";
 
 export function ChatRoom(props) {
   // Fetch the current user's ID from Firebase Authentication.
@@ -481,11 +482,14 @@ export function ChatRoom(props) {
           </div>
           <div>
             <EmojiSelector
-              onSelect={() => {
+              onSelect={(emojiChar) => {
                 messageInput.focus();
+                insertIntoInput(emojiChar + " ", messageInput);
+                setMessageValue(messageInput.value);
               }}
               messageValue={messageValue}
               setMessageValue={setMessageValue}
+              messageInput={messageInput}
             />
           </div>
         </div>
