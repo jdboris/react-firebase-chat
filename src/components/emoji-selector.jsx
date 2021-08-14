@@ -16,16 +16,19 @@ export function EmojiSelector(props) {
             })
           );
         }}
+        autoFocus
       />
-      {emojis.map((emojiChar) => (
-        <span
-          onClick={() => {
-            props.onSelect(emojiChar);
-          }}
-        >
-          {emojiChar}
-        </span>
-      ))}
+      <section>
+        {emojis.map((emojiChar) => (
+          <span
+            onClick={() => {
+              props.onSelect(emojiChar);
+            }}
+          >
+            {emojiChar}
+          </span>
+        ))}
+      </section>
     </div>
   );
 }
