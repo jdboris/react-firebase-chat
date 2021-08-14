@@ -8,8 +8,7 @@ export function EmojiSelector(props) {
       {emoji.unicode.map((emojiChar) => (
         <span
           onClick={() => {
-            props.onSelect();
-            props.setMessageValue(props.messageValue + emojiChar + " ");
+            props.onSelect(emojiChar);
           }}
         >
           {emojiChar}
