@@ -1,21 +1,23 @@
 .emoji-selector {
-  display: flex;
-  flex-wrap: wrap;
-  max-height: 150px;
-  overflow-y: scroll;
-  overflow-x: hidden;
-  justify-content: space-around;
-}
+  section {
+    display: flex;
+    flex-wrap: wrap;
+    max-height: 150px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    justify-content: space-around;
+  }
 
-.emoji-selector > * {
-  cursor: pointer;
-  padding: 5px;
-  font-size: 1.3em;
-}
+  section > * {
+    cursor: pointer;
+    padding: 5px;
+    font-size: 1.3em;
+  }
 
-.emoji-selector > input {
-  width: 100%;
-
-  cursor: initial;
-  font-size: initial;
+  input {
+    width: 100%;
+    padding: 5px;
+    cursor: initial;
+    font-size: initial;
+  }
 }
