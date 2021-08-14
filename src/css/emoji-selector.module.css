@@ -1,4 +1,4 @@
-.emoji-selector {
+.emoji-selector section {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -11,14 +11,15 @@
       justify-content: space-around;
 }
 
-.emoji-selector > * {
+.emoji-selector section > * {
   cursor: pointer;
   padding: 5px;
   font-size: 1.3em;
 }
 
-.emoji-selector > input {
+.emoji-selector input {
   width: 100%;
+  padding: 5px;
   cursor: initial;
   font-size: initial;
 }
