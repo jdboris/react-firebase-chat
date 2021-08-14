@@ -1,0 +1,14 @@
+.emoji-selector {
+  display: flex;
+  flex-wrap: wrap;
+  max-height: 150px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  justify-content: space-around;
+}
+
+.emoji-selector > * {
+  cursor: pointer;
+  padding: 5px;
+  font-size: 1.3em;
+}

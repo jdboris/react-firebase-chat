@@ -1,0 +1,19 @@
+.emoji-selector {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+  max-height: 150px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  -ms-flex-pack: distribute;
+      justify-content: space-around;
+}
+
+.emoji-selector > * {
+  cursor: pointer;
+  padding: 5px;
+  font-size: 1.3em;
+}
+/*# sourceMappingURL=emoji-selector.module.css.map */

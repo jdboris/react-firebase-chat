@@ -18,6 +18,7 @@ import { MessageInputForm } from "./message-input-form";
 import { MessageList } from "./message-list";
 import { SliderInput } from "./slider-input";
 import { UserStyleControls } from "./user-style-controls";
+import { EmojiSelector } from "./emoji-selector";
 
 export function ChatRoom(props) {
   // Fetch the current user's ID from Firebase Authentication.
@@ -49,6 +50,7 @@ export function ChatRoom(props) {
 
   const [isUsersOpen, setUsersOpen] = useState(false);
   const [isMenuOpen, setMenuOpen] = useState(false);
+  const [isEmojisOpen, setEmojisOpen] = useState(false);
   const [isFormatOpen, setFormatOpen] = useState(false);
   const [isFontSizeOpen, setFontSizeOpen] = useState(false);
   const [isStyleEditorOpen, setStyleEditorOpen] = useState(false);
@@ -198,7 +200,7 @@ export function ChatRoom(props) {
 
       <MessageInputForm
         sendMessage={sendMessage}
-        messageInput={(input) => {
+        setMessageInput={(input) => {
           messageInput = input;
         }}
         messageValue={messageValue}
@@ -212,6 +214,8 @@ export function ChatRoom(props) {
         msgBgColor={msgBgColor}
         msgBgRepeat={msgBgRepeat}
         msgBgPosition={msgBgPosition}
+        isEmojisOpen={isEmojisOpen}
+        setEmojisOpen={setEmojisOpen}
         isFormatOpen={isFormatOpen}
         setFormatOpen={setFormatOpen}
         msgBgImgTransparency={msgBgImgTransparency}
@@ -462,6 +466,28 @@ export function ChatRoom(props) {
               return <li>{user.username}</li>;
             })}
           </ul>
+        </div>
+      )}
+
+      {isEmojisOpen && (
+        <div className={styles["dialog"]}>
+          <div className={styles["dialog-header"]}>
+            Emojis
+            <CloseIcon
+              onClick={() => {
+                setEmojisOpen(false);
+              }}
+            />
+          </div>
+          <div>
+            <EmojiSelector
+              onSelect={() => {
+                messageInput.focus();
+              }}
+              messageValue={messageValue}
+              setMessageValue={setMessageValue}
+            />
+          </div>
         </div>
       )}
 

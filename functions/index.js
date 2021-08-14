@@ -61,7 +61,15 @@ exports.addModerator = functions.https.onCall((data, context) => {
   });
 });
 
-exports.signUp = functions.https.onCall((data, context) => {
+exports.signUp = functions.https.onCall(async (data, context) => {
+  // Require username to be unique
+  const query = db.collection("users").where("username", "==", data.username);
+  const snapshot = await query.get();
+  const docs = await snapshot.docs;
+  if (docs.length > 0) {
+    return { success: false, message: "Username taken." };
+  }
+
   return admin
     .auth()
     .createUser({
@@ -73,12 +81,20 @@ exports.signUp = functions.https.onCall((data, context) => {
       disabled: false,
     })
     .then(function (userRecord) {
+      // NOTE: Must create the document now to allow calling .update() later
+      db.doc(`users/${userRecord.uid}`).set({
+        username: userRecord.displayName,
+      });
+
       // See the UserRecord reference doc for the contents of userRecord.
       return { success: true };
     })
     .catch(function (error) {
       console.error("Error creating new user:", error);
-      return { success: false };
+      return {
+        success: false,
+        message: "Something went wrong. Please try again.",
+      };
     });
 
   // return admin
@@ -97,9 +113,6 @@ exports.signUp = functions.https.onCall((data, context) => {
 });
 
 exports.sendWelcomeEmail = functions.auth.user().onCreate((user) => {
-  // NOTE: Must create the document now to allow calling .update() later
-  db.doc(`users/${user.uid}`).set({});
-
   if (user.email) {
     // Admin SDK API to generate the email verification link.
     return admin
