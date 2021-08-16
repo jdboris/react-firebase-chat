@@ -8,12 +8,15 @@ import styles from "../css/chat-room.module.css";
 import { fonts } from "../fonts";
 import { MARKUP_SYMBOLS } from "../markdown";
 import { ColorInput } from "./color-input";
+import { MenuWithButton } from "./menu-with-button";
 
 export function UserStyleControls(props) {
   const { uid } = auth.currentUser;
 
   const [enabled, setEnabled] = useState(props.enabled);
   const [isFontOpen, setFontOpen] = useState(false);
+  const [isFontSizeOpen, setFontSizeOpen] = useState(false);
+  const [isFontColorOpen, setFontColorOpen] = useState(false);
 
   return (
     <>
@@ -34,68 +37,54 @@ export function UserStyleControls(props) {
           </span>
           {enabled && (
             <>
-              <span
-                onClickCapture={() => {
-                  setFontOpen(!isFontOpen);
-                }}
-              >
-                T<ArrowDropDownIcon className={styles["down-arrow"]} />
-                {isFontOpen && (
-                  <div className={styles["menu"]}>
-                    {fonts.map((fontObj) => {
-                      return (
-                        <div
-                          className={
-                            props.font.name == fontObj.name
-                              ? styles["bold"]
-                              : ""
-                          }
-                          onClickCapture={() => {
-                            usersRef
-                              .doc(uid)
-                              .update({ font: fontObj })
-                              .then(() => {
-                                props.setFont(fontObj);
-                              });
-                          }}
-                        >
-                          {fontObj.name}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </span>
-              <span
-                onClickCapture={() => {
-                  props.setFontSizeOpen(!props.isFontSizeOpen);
-                }}
-              >
-                {props.fontSize}
-                <ArrowDropDownIcon className={styles["down-arrow"]} />
-                {props.isFontSizeOpen && (
-                  <div className={styles["menu"]}>
-                    {[...Array(14).keys()].map((element) => {
-                      return (
-                        <div
-                          onClickCapture={(e) => {
-                            usersRef
-                              .doc(uid)
-                              .update({
-                                fontSize: 9 + element,
-                              })
-                              .then(() => {
-                                props.setFontSize(9 + element);
-                              });
-                          }}
-                        >
-                          {9 + element}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </span>
+              <MenuWithButton
+                button={
+                  <>
+                    T
+                    <ArrowDropDownIcon className={styles["down-arrow"]} />
+                  </>
+                }
+                openKey={props.menuOpenKey}
+                items={fonts.reduce((items, fontObj) => {
+                  items[
+                    fontObj.name + (props.font.name == fontObj.name ? " ✓" : "")
+                  ] = () => {
+                    usersRef
+                      .doc(uid)
+                      .update({ font: fontObj })
+                      .then(() => {
+                        props.setFont(fontObj);
+                      });
+                  };
+
+                  return items;
+                }, {})}
+              />
+
+              <MenuWithButton
+                button={
+                  <>
+                    {props.fontSize}
+                    <ArrowDropDownIcon className={styles["down-arrow"]} />
+                  </>
+                }
+                openKey={props.menuOpenKey}
+                items={[...Array(14).keys()].reduce((items, number) => {
+                  items[9 + number] = () => {
+                    usersRef
+                      .doc(uid)
+                      .update({
+                        fontSize: 9 + number,
+                      })
+                      .then(() => {
+                        props.setFontSize(9 + number);
+                      });
+                  };
+
+                  return items;
+                }, {})}
+              />
+
               <strong
                 onClick={() => {
                   let result = props.toggleSelectionMarkup(MARKUP_SYMBOLS.BOLD);
@@ -131,42 +120,31 @@ export function UserStyleControls(props) {
               >
                 bg
               </span>
-              <span
-                onClickCapture={() => {
-                  props.setFontColorOpen(!props.isFontColorOpen);
-                }}
+
+              <MenuWithButton
+                button={
+                  <FormatColorTextIcon
+                    className={styles["font-color"]}
+                    style={{ color: props.fontColor }}
+                  />
+                }
+                openKey={props.menuOpenKey}
               >
-                {props.isFontColorOpen && (
-                  <div
-                    className={`${styles["menu"]} ${styles["font-color-picker"]}`}
-                  >
-                    <div>
-                      <ColorInput
-                        defaultValue={props.fontColor}
-                        onChange={(e) => {
-                          props.setFontColor(e.target.value);
-                        }}
-                        onChangeComplete={(e) => {
-                          usersRef.doc(uid).update({
-                            fontColor: e.target.value,
-                          });
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                        }}
-                        // NOTE: Required to prevent auto closing when clicking
-                        onClickCapture={() => {
-                          props.setFontColorOpen(true);
-                        }}
-                      />
-                    </div>
-                  </div>
-                )}
-                <FormatColorTextIcon
-                  className={styles["font-color"]}
-                  style={{ color: props.fontColor }}
+                <ColorInput
+                  defaultValue={props.fontColor}
+                  onChange={(e) => {
+                    props.setFontColor(e.target.value);
+                  }}
+                  onChangeComplete={(e) => {
+                    usersRef.doc(uid).update({
+                      fontColor: e.target.value,
+                    });
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
                 />
-              </span>
+              </MenuWithButton>
             </>
           )}
         </div>
