@@ -1,20 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
-import styles from "../css/chat-room.module.css";
-import MenuIcon from "@material-ui/icons/Menu";
-import TextFormatIcon from "@material-ui/icons/TextFormat";
-import CloseIcon from "@material-ui/icons/Close";
-import AddIcon from "@material-ui/icons/Add";
-import ArrowDropDownIcon from "@material-ui/icons/ArrowDropDown";
-import FormatColorTextIcon from "@material-ui/icons/FormatColorText";
-
-import firebase from "firebase/app";
-import { firestore, auth, storage } from "../app";
-
-import { useCollectionData } from "react-firebase-hooks/firestore";
-import { presence } from "../presence";
-// import { getProviders } from "../oembed";
-import { ChatMessage } from "./chat-message";
-import { toggleSelectionMarkup, MARKUP_SYMBOLS } from "../markdown";
+import React, { useState } from "react";
 
 export function ColorInput(props) {
   const [completeTimeout, setCompleteTimeout] = useState(null);
