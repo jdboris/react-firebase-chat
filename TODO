@@ -3,8 +3,8 @@
 -mod actions log
 -unban users
 -word filter
--auto announcement
 -private messages
 -premium
 -input validation, error messages
+-auto announcement
 -shorten image urls https://firebase.google.com/docs/dynamic-links/rest

@@ -2,6 +2,7 @@ import PencilIcon from "@material-ui/icons/Create";
 import MenuIcon from "@material-ui/icons/Menu";
 import PersonIcon from "@material-ui/icons/Person";
 import CloseIcon from "@material-ui/icons/Close";
+import GavelIcon from "@material-ui/icons/Gavel";
 import firebase from "firebase/app";
 import React, { useEffect, useRef, useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
@@ -20,6 +21,7 @@ import { SliderInput } from "./slider-input";
 import { UserStyleControls } from "./user-style-controls";
 import { EmojiSelector } from "./emoji-selector";
 import { insertIntoInput } from "../utils";
+import { MenuWithButton } from "./menu-with-button";
 
 export function ChatRoom(props) {
   // Fetch the current user's ID from Firebase Authentication.
@@ -50,12 +52,11 @@ export function ChatRoom(props) {
   const [userStyles, setUserStyles] = useState(true);
 
   const [isUsersOpen, setUsersOpen] = useState(false);
-  const [isMenuOpen, setMenuOpen] = useState(false);
+  const [isModsOpen, setModsOpen] = useState(false);
+  const [menuOpenKey, setMenuOpenKey] = useState(0);
   const [isEmojisOpen, setEmojisOpen] = useState(false);
   const [isFormatOpen, setFormatOpen] = useState(false);
-  const [isFontSizeOpen, setFontSizeOpen] = useState(false);
   const [isStyleEditorOpen, setStyleEditorOpen] = useState(false);
-  const [isFontColorOpen, setFontColorOpen] = useState(false);
   const [isProfileOpen, setProfileOpen] = useState(false);
   const [selection, setSelection] = useState({ start: 0, end: 0 });
 
@@ -64,38 +65,38 @@ export function ChatRoom(props) {
   let messageInput = useRef();
 
   const sendMessage = async (e) => {
-    e.preventDefault();
-    const text = messageValue;
-    setMessageValue("");
+    if (messageValue) {
+      e.preventDefault();
+      const text = messageValue;
+      setMessageValue("");
 
-    const { uid, photoURL, displayName } = auth.currentUser;
+      const { uid, photoURL, displayName } = auth.currentUser;
 
-    await messagesRef.add({
-      text: text,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      username: displayName,
-      uid,
-      photoURL,
-      isDeleted: false,
-      font: font,
-      fontSize: fontSize,
-      fontColor: fontColor,
-      backgroundImage: msgBgImg,
-      bgColor: msgBgColor,
-      nameColor: nameColor,
-      bgTransparency: msgBgTransparency,
-      msgBgRepeat: msgBgRepeat,
-      msgBgPosition: msgBgPosition,
-      msgBgImgTransparency: msgBgImgTransparency,
-    });
+      await messagesRef.add({
+        text: text,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        username: displayName,
+        uid,
+        photoURL,
+        isDeleted: false,
+        font: font,
+        fontSize: fontSize,
+        fontColor: fontColor,
+        backgroundImage: msgBgImg,
+        bgColor: msgBgColor,
+        nameColor: nameColor,
+        bgTransparency: msgBgTransparency,
+        msgBgRepeat: msgBgRepeat,
+        msgBgPosition: msgBgPosition,
+        msgBgImgTransparency: msgBgImgTransparency,
+      });
 
-    setSentMsgCount(sentMsgCount + 1);
+      setSentMsgCount(sentMsgCount + 1);
+    }
   };
 
   const closeMenus = () => {
-    setMenuOpen(false);
-    setFontSizeOpen(false);
-    setFontColorOpen(false);
+    setMenuOpenKey(menuOpenKey + 1);
   };
 
   let query = messagesRef
@@ -178,19 +179,17 @@ export function ChatRoom(props) {
 
       <UserStyleControls
         open={isFormatOpen}
+        menuOpenKey={menuOpenKey}
+        setMenuOpenKey={setMenuOpenKey}
         enabled={userStyles}
         font={font}
         setFont={setFont}
-        isFontSizeOpen={isFontSizeOpen}
-        setFontSizeOpen={setFontSizeOpen}
         fontSize={fontSize}
         setFontSize={setFontSize}
         messageInput={messageInput}
         setMessageValue={setMessageValue}
         setStyleEditorOpen={setStyleEditorOpen}
         isStyleEditorOpen={isStyleEditorOpen}
-        isFontColorOpen={isFontColorOpen}
-        setFontColorOpen={setFontColorOpen}
         fontColor={fontColor}
         setFontColor={setFontColor}
         toggleSelectionMarkup={(symbol) => {
@@ -224,7 +223,7 @@ export function ChatRoom(props) {
 
       <div className={styles["chat-controls"]}>
         <span
-          className={styles["pointer"]}
+          className={styles["pointer"] + " " + styles["user-count"]}
           onClick={() => {
             setUsersOpen(!isUsersOpen);
           }}
@@ -232,31 +231,28 @@ export function ChatRoom(props) {
           {onlineUsers ? onlineUsers.length : 1}
         </span>
 
-        <MenuIcon
-          className={styles["pointer"]}
-          onClickCapture={() => {
-            setMenuOpen(!isMenuOpen);
+        <MenuWithButton
+          button={<GavelIcon className={styles["gavel-icon"]} />}
+          openKey={menuOpenKey}
+          items={{
+            "Manage Moderators": () => {
+              setModsOpen(!isModsOpen);
+            },
           }}
         />
 
-        {isMenuOpen && (
-          <div className={styles["menu"]}>
-            <div
-              onClickCapture={() => {
-                auth.signOut();
-              }}
-            >
-              Log out
-            </div>
-            <div
-              onClickCapture={() => {
-                setProfileOpen(!isProfileOpen);
-              }}
-            >
-              Edit profile
-            </div>
-          </div>
-        )}
+        <MenuWithButton
+          button={<MenuIcon />}
+          openKey={menuOpenKey}
+          items={{
+            "Log out": () => {
+              auth.signOut();
+            },
+            "Edit profile": () => {
+              setProfileOpen(!isProfileOpen);
+            },
+          }}
+        />
       </div>
 
       {isStyleEditorOpen && (
@@ -470,31 +466,34 @@ export function ChatRoom(props) {
         </div>
       )}
 
-      {isEmojisOpen && (
-        <div className={styles["dialog"]}>
-          <div className={styles["dialog-header"]}>
-            Emojis
-            <CloseIcon
-              onClick={() => {
-                setEmojisOpen(false);
-              }}
-            />
-          </div>
-          <div>
-            <EmojiSelector
-              onSelect={(emojiChar) => {
-                messageInput.focus();
-                insertIntoInput(emojiChar + " ", messageInput);
-                setMessageValue(messageInput.value);
-              }}
-              messageValue={messageValue}
-              setMessageValue={setMessageValue}
-              messageInput={messageInput}
-              shouldComponentUpdate={false}
-            />
-          </div>
+      {/* NOTE: Hide with class to avoid expensive re-rendering */}
+      <div
+        className={
+          styles["dialog"] + " " + (isEmojisOpen ? "" : styles["hidden"])
+        }
+      >
+        <div className={styles["dialog-header"]}>
+          Emojis
+          <CloseIcon
+            onClick={() => {
+              setEmojisOpen(false);
+            }}
+          />
         </div>
-      )}
+        <div>
+          <EmojiSelector
+            onSelect={(emojiChar) => {
+              messageInput.focus();
+              insertIntoInput(emojiChar + " ", messageInput);
+              setMessageValue(messageInput.value);
+            }}
+            messageValue={messageValue}
+            setMessageValue={setMessageValue}
+            messageInput={messageInput}
+            shouldComponentUpdate={false}
+          />
+        </div>
+      </div>
 
       {isProfileOpen && (
         <div className={styles["dialog"] + " " + styles["profile-editor"]}>
