@@ -22,6 +22,7 @@ import { UserStyleControls } from "./user-style-controls";
 import { EmojiSelector } from "./emoji-selector";
 import { insertIntoInput } from "../utils";
 import { MenuWithButton } from "./menu-with-button";
+import { ModeratorsDialog } from "./moderators-dialog";
 
 export function ChatRoom(props) {
   // Fetch the current user's ID from Firebase Authentication.
@@ -231,15 +232,17 @@ export function ChatRoom(props) {
           {onlineUsers ? onlineUsers.length : 1}
         </span>
 
-        <MenuWithButton
-          button={<GavelIcon className={styles["gavel-icon"]} />}
-          openKey={menuOpenKey}
-          items={{
-            "Manage Moderators": () => {
-              setModsOpen(!isModsOpen);
-            },
-          }}
-        />
+        {idToken && idToken.claims.isModerator && (
+          <MenuWithButton
+            button={<GavelIcon className={styles["gavel-icon"]} />}
+            openKey={menuOpenKey}
+            items={{
+              "Manage Moderators": () => {
+                setModsOpen(!isModsOpen);
+              },
+            }}
+          />
+        )}
 
         <MenuWithButton
           button={<MenuIcon />}
@@ -259,14 +262,14 @@ export function ChatRoom(props) {
         <div
           className={styles["dialog"] + " " + styles["message-style-editor"]}
         >
-          <div className={styles["dialog-header"]}>
+          <header>
             Message style editor
             <CloseIcon
               onClick={() => {
                 setStyleEditorOpen(false);
               }}
             />
-          </div>
+          </header>
           <div className={styles["sample-message-wrapper"]}>
             <ChatMessage
               message={{
@@ -450,14 +453,14 @@ export function ChatRoom(props) {
 
       {isUsersOpen && (
         <div className={styles["dialog"]}>
-          <div className={styles["dialog-header"]}>
+          <header>
             People here now
             <CloseIcon
               onClick={() => {
                 setUsersOpen(false);
               }}
             />
-          </div>
+          </header>
           <ul>
             {onlineUsers.map((user) => {
               return <li>{user.username}</li>;
@@ -466,20 +469,27 @@ export function ChatRoom(props) {
         </div>
       )}
 
+      <ModeratorsDialog
+        open={isModsOpen}
+        requestClose={() => {
+          setModsOpen(false);
+        }}
+      />
+
       {/* NOTE: Hide with class to avoid expensive re-rendering */}
       <div
         className={
           styles["dialog"] + " " + (isEmojisOpen ? "" : styles["hidden"])
         }
       >
-        <div className={styles["dialog-header"]}>
+        <header>
           Emojis
           <CloseIcon
             onClick={() => {
               setEmojisOpen(false);
             }}
           />
-        </div>
+        </header>
         <div>
           <EmojiSelector
             onSelect={(emojiChar) => {
@@ -497,14 +507,14 @@ export function ChatRoom(props) {
 
       {isProfileOpen && (
         <div className={styles["dialog"] + " " + styles["profile-editor"]}>
-          <div className={styles["dialog-header"]}>
+          <header>
             Edit profile
             <CloseIcon
               onClick={() => {
                 setProfileOpen(false);
               }}
             />
-          </div>
+          </header>
           <div>
             <label>
               {photoURL ? (

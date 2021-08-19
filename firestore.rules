@@ -41,7 +41,8 @@ service cloud.firestore {
     match /users/{docId} {
       allow create: if isDocOwner(docId);
       allow read: if isDocOwner(docId);
-      allow update: if isDocOwner(docId);
+      allow update: if isDocOwner(docId) && 
+                    (!request.resource.data.keys().hasAny(['isModerator']));
     }
 
     function isDocOwner(docId) {
