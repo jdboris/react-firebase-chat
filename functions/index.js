@@ -42,6 +42,10 @@ async function grantModeratorRole(username) {
     .where("username", "==", username)
     .get();
 
+  if (!snapshot.docs.length) {
+    return;
+  }
+
   const user = await admin.auth().getUser(snapshot.docs[0].id);
 
   // If the user is a mod already
@@ -75,12 +79,21 @@ async function revokeModeratorRole(username) {
     .where("username", "==", username)
     .get();
 
+  if (!snapshot.docs.length) {
+    return;
+  }
+
   const user = await admin.auth().getUser(snapshot.docs[0].id);
 
   // If the user is not a mod already
   if (!user.customClaims || !user.customClaims.isModerator) {
     return;
   }
+  // If the user is trying to demod himself
+  if (user.displayName === username) {
+    return;
+  }
+
   await admin.auth().setCustomUserClaims(user.uid, {
     isModerator: false,
   });
