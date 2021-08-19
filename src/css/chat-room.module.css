@@ -88,8 +88,8 @@ label [type="file"] {
 }
 
 .chat-app header {
-  min-height: 20px;
-  color: white;
+  /* min-height: 20px;
+  color: white; */
 }
 
 .chat-app {
@@ -184,6 +184,7 @@ svg.gavel-icon {
 
 .user-count {
   margin: 0px 5px;
+  margin-top: 3px;
 }
 
 .dialog {
@@ -201,14 +202,20 @@ svg.gavel-icon {
   max-width: 350px;
 }
 
-.dialog-header {
+.dialog header {
   display: flex;
   justify-content: space-between;
+  font-size: 1.3em;
 }
 
-.dialog-header svg {
-  font-size: 1em;
+.dialog header svg {
+  font-size: 1rem;
   cursor: pointer;
+}
+
+.moderators main > div {
+  display: flex;
+  justify-content: space-between;
 }
 
 .message-style-editor > label:not(.button) {
@@ -466,13 +473,15 @@ li {
 .message-details {
   position: absolute;
   display: flex;
-  flex-wrap: wrap;
-  flex-direction: column;
   align-items: flex-end;
   top: 0px;
   right: 0px;
   font-size: 0.75rem;
   padding: inherit;
+}
+.message-details svg {
+  width: 75%;
+  height: 75%;
 }
 
 .message-timestamp {
@@ -490,6 +499,9 @@ li {
   font-size: 10px;
   background: none;
   color: black;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .message button:hover {
