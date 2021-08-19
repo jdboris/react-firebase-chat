@@ -129,6 +129,7 @@ export function UserStyleControls(props) {
                   />
                 }
                 openKey={props.menuOpenKey}
+                keepOpen={true}
               >
                 <ColorInput
                   defaultValue={props.fontColor}

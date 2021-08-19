@@ -14,6 +14,7 @@ export function EmojiSelector(props) {
         }}
         value={searchValue}
         autoFocus
+        placeholder="smile, thinking, glasses, etc..."
       />
       <section>
         {emoji.unicode.reduce((accumulator, emojiChar, i) => {
