@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import isImageUrl from "is-image-url";
 import PersonIcon from "@material-ui/icons/Person";
+import BlockIcon from "@material-ui/icons/Block";
 import ReactMarkdown from "react-markdown";
 import gfm from "remark-gfm";
 import styles from "../css/chat-room.module.css";
@@ -171,11 +172,15 @@ export function ChatMessage(props) {
           <PersonIcon className={styles["avatar"]} />
         )}
         <span className={styles["message-details"]}>
-          {claims.isModerator && <button onClick={banUser}>X</button>}
-          {claims.isModerator && <button onClick={deleteMessage}>X</button>}
           <span className={styles["message-timestamp"]}>
             {createdAt && createdAt.toDate().toLocaleString()}
           </span>
+          {claims.isModerator && (
+            <button onClick={banUser}>
+              <BlockIcon />
+            </button>
+          )}
+          {claims.isModerator && <button onClick={deleteMessage}>X</button>}
         </span>
         <div>
           <span

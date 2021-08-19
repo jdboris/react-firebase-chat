@@ -36,27 +36,68 @@ exports.detectEvilUsers = functions.firestore
     // }
   });
 
-async function grantModeratorRole(email) {
-  const user = await admin.auth().getUserByEmail(email);
-  if (user.customClaims && user.customClaims.moderator === true) {
+async function grantModeratorRole(username) {
+  const snapshot = await db
+    .collection("users")
+    .where("username", "==", username)
+    .get();
+
+  const user = await admin.auth().getUser(snapshot.docs[0].id);
+
+  // If the user is a mod already
+  if (user.customClaims && user.customClaims.isModerator === true) {
     return;
   }
-  return admin.auth().setCustomUserClaims(user.uid, {
-    moderator: true,
+  await admin.auth().setCustomUserClaims(user.uid, {
+    isModerator: true,
   });
+  await db.collection("users").doc(user.uid).update({ isModerator: true });
 }
 
-exports.addModerator = functions.https.onCall((data, context) => {
-  if (context.auth.token.moderator !== true) {
+exports.addModerator = functions.https.onCall((username, context) => {
+  if (context.auth.token.isModerator !== true) {
     return {
       error:
         "Request not authorized. User must be a moderator to fulfill request.",
     };
   }
-  const email = data.email;
-  return grantModeratorRole(email).then(() => {
+
+  return grantModeratorRole(username).then(() => {
     return {
-      result: `Request fulfilled! ${email} is now a moderator.`,
+      result: `Request fulfilled! ${username} is now a moderator.`,
+    };
+  });
+});
+
+async function revokeModeratorRole(username) {
+  const snapshot = await db
+    .collection("users")
+    .where("username", "==", username)
+    .get();
+
+  const user = await admin.auth().getUser(snapshot.docs[0].id);
+
+  // If the user is not a mod already
+  if (!user.customClaims || !user.customClaims.isModerator) {
+    return;
+  }
+  await admin.auth().setCustomUserClaims(user.uid, {
+    isModerator: false,
+  });
+  await db.collection("users").doc(user.uid).update({ isModerator: false });
+}
+
+exports.removeModerator = functions.https.onCall((username, context) => {
+  if (context.auth.token.isModerator !== true) {
+    return {
+      error:
+        "Request not authorized. User must be a moderator to fulfill request.",
+    };
+  }
+
+  return revokeModeratorRole(username).then(() => {
+    return {
+      result: `Request fulfilled! ${username} is no longer a moderator.`,
     };
   });
 });

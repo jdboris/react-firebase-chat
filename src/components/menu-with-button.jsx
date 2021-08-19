@@ -32,7 +32,9 @@ export function MenuWithButton(props) {
           className={styles["menu"]}
           onClickCapture={(e) => {
             // NOTE: Required to prevent auto closing when clicking contents
-            setKeepOpen(true);
+            if (props.keepOpen) {
+              setKeepOpen(true);
+            }
           }}
         >
           {props.items &&
