@@ -5,7 +5,11 @@ import CloseIcon from "@material-ui/icons/Close";
 import GavelIcon from "@material-ui/icons/Gavel";
 import firebase from "firebase/app";
 import React, { useEffect, useRef, useState } from "react";
-import { useCollectionData } from "react-firebase-hooks/firestore";
+import {
+  useCollectionData,
+  useDocument,
+  useDocumentData,
+} from "react-firebase-hooks/firestore";
 import { auth, firestore, messagesRef, usersRef as usersRef } from "../app";
 import styles from "../css/chat-room.module.css";
 import { fonts } from "../fonts";
@@ -23,20 +27,37 @@ import { EmojiSelector } from "./emoji-selector";
 import { insertIntoInput } from "../utils";
 import { MenuWithButton } from "./menu-with-button";
 import { ModeratorsDialog } from "./moderators-dialog";
+import { BanlistDialog } from "./banlist-dialog";
 
 export function ChatRoom(props) {
   // Fetch the current user's ID from Firebase Authentication.
-  const user = auth.currentUser;
-  const [uid, setUid] = useState(user.uid);
-  const [displayName, setDisplayName] = useState(user.displayName);
+  const authUser = props.user;
+  const [userSnapshot, isLoadingUser, error] = useDocument(
+    usersRef.doc(authUser.uid)
+  );
+
+  const user = userSnapshot
+    ? {
+        uid: authUser.uid,
+        photoUrl: authUser.photoURL,
+        email: authUser.email,
+        ...userSnapshot.data(),
+      }
+    : {
+        uid: authUser.uid,
+        photoUrl: authUser.photoURL,
+        email: authUser.email,
+      };
+
+  // const [uid, setUid] = useState(user.uid);
+  // const [displayName, setDisplayName] = useState(user.displayName);
   const [photoURL, setPhotoURL] = useState(user.photoURL);
-  uid != user.uid && setUid(user.uid);
-  displayName != user.displayName && setDisplayName(user.displayName);
-  photoURL != user.photoURL && setPhotoURL(user.photoURL);
+  // uid != user.uid && setUid(user.uid);
+  // displayName != user.displayName && setDisplayName(user.displayName);
+  // photoURL != user.photoURL && setPhotoURL(user.photoURL);
 
   const [isOnline, setIsOnline] = useState(true);
   const [messageValue, setMessageValue] = useState("");
-  const [idToken, setIdToken] = useState("");
   const [onlineUsers, setOnlineUsers] = useState([]);
 
   const [font, setFont] = useState(fonts[0]);
@@ -53,6 +74,7 @@ export function ChatRoom(props) {
   const [userStyles, setUserStyles] = useState(true);
 
   const [isUsersOpen, setUsersOpen] = useState(false);
+  const [isBanlistOpen, setBanlistOpen] = useState(false);
   const [isModsOpen, setModsOpen] = useState(false);
   const [menuOpenKey, setMenuOpenKey] = useState(0);
   const [isEmojisOpen, setEmojisOpen] = useState(false);
@@ -100,7 +122,7 @@ export function ChatRoom(props) {
     setMenuOpenKey(menuOpenKey + 1);
   };
 
-  let query = messagesRef
+  const query = messagesRef
     .limit(25)
     .orderBy("createdAt", "desc")
     .where("isDeleted", "==", false);
@@ -111,7 +133,7 @@ export function ChatRoom(props) {
 
   useEffect(() => {
     usersRef
-      .doc(uid)
+      .doc(user.uid)
       .get()
       .then((doc) => {
         if (doc.exists) {
@@ -149,12 +171,6 @@ export function ChatRoom(props) {
           })
         );
       });
-
-    if (!idToken) {
-      auth.currentUser.getIdTokenResult().then((idTokenResult) => {
-        setIdToken(idTokenResult);
-      });
-    }
   }, []);
 
   useEffect(() => {
@@ -174,8 +190,8 @@ export function ChatRoom(props) {
           setMessageValue(messageValue + " @" + targetUsername + " ");
           messageInput.focus();
         }}
-        idToken={idToken}
         sentMsgCount={sentMsgCount}
+        currentUser={user}
       />
 
       <UserStyleControls
@@ -232,13 +248,16 @@ export function ChatRoom(props) {
           {onlineUsers ? onlineUsers.length : 1}
         </span>
 
-        {idToken && idToken.claims.isModerator && (
+        {user.isModerator && (
           <MenuWithButton
             button={<GavelIcon className={styles["gavel-icon"]} />}
             openKey={menuOpenKey}
             items={{
               "Manage Moderators": () => {
                 setModsOpen(!isModsOpen);
+              },
+              Banlist: () => {
+                setBanlistOpen(!isBanlistOpen);
               },
             }}
           />
@@ -274,7 +293,7 @@ export function ChatRoom(props) {
             <ChatMessage
               message={{
                 text: "Sample message text",
-                uid: uid,
+                uid: user.uid,
                 createdAt: new firebase.firestore.Timestamp(
                   1626757369,
                   337000000
@@ -291,9 +310,9 @@ export function ChatRoom(props) {
                 msgBgPosition: msgBgPosition,
                 msgBgImgTransparency: msgBgImgTransparency,
               }}
-              idToken={idToken}
               userStyles={userStyles}
               onClick={() => {}}
+              currentUser={user}
             />
           </div>
           <label>
@@ -304,7 +323,7 @@ export function ChatRoom(props) {
                 setNameColor(e.target.value);
               }}
               onChangeComplete={(e) => {
-                usersRef.doc(uid).update({
+                usersRef.doc(user.uid).update({
                   nameColor: e.target.value,
                 });
               }}
@@ -318,7 +337,7 @@ export function ChatRoom(props) {
                 setMsgBgColor(e.target.value);
               }}
               onChangeComplete={(e) => {
-                usersRef.doc(uid).update({
+                usersRef.doc(user.uid).update({
                   msgBgColor: e.target.value,
                 });
               }}
@@ -334,7 +353,7 @@ export function ChatRoom(props) {
                 setMsgBgTransparency(e.target.value / 100);
               }}
               onChangeComplete={(e) => {
-                usersRef.doc(uid).update({
+                usersRef.doc(user.uid).update({
                   msgBgTransparency: e.target.value / 100,
                 });
               }}
@@ -348,10 +367,9 @@ export function ChatRoom(props) {
                 const file = e.target.files[0];
                 const url = await uploadFile(file);
                 if (url) {
-                  await firestore.collection("users").doc(uid).update({
+                  await usersRef.doc(user.uid).update({
                     msgBgImg: url,
                   });
-                  console.log(url);
                   setMsgBgImg(url);
                 }
               }}
@@ -360,7 +378,7 @@ export function ChatRoom(props) {
           {msgBgImg && (
             <label
               onClick={async (e) => {
-                await firestore.collection("users").doc(uid).update({
+                await usersRef.doc(user.uid).update({
                   msgBgImg: "",
                 });
                 setMsgBgImg("");
@@ -377,15 +395,14 @@ export function ChatRoom(props) {
                   type="checkbox"
                   onChange={async (e) => {
                     const checked = e.target.checked;
-                    await firestore
-                      .collection("users")
-                      .doc(uid)
-                      .update({
-                        msgBgRepeat: checked ? "repeat" : "no-repeat",
-                      });
+                    console.log(checked);
+                    await usersRef.doc(user.uid).update({
+                      msgBgRepeat: checked ? "repeat" : "no-repeat",
+                    });
+
                     setMsgBgRepeat(checked ? "repeat" : "no-repeat");
                   }}
-                  checked={msgBgRepeat == "repeat"}
+                  defaultChecked={msgBgRepeat == "repeat"}
                 />
                 Tile image
               </label>
@@ -399,11 +416,11 @@ export function ChatRoom(props) {
                   <input
                     type="radio"
                     name="msgBgPosition"
-                    checked={msgBgPosition == "left" ? true : false}
+                    defaultChecked={msgBgPosition == "left"}
                     onChange={async (e) => {
                       const checked = e.target.checked;
                       if (checked) {
-                        await firestore.collection("users").doc(uid).update({
+                        await usersRef.doc(user.uid).update({
                           msgBgPosition: "left",
                         });
                         setMsgBgPosition("left");
@@ -416,11 +433,11 @@ export function ChatRoom(props) {
                   <input
                     type="radio"
                     name="msgBgPosition"
-                    checked={msgBgPosition == "right" ? true : false}
+                    defaultChecked={msgBgPosition == "right"}
                     onChange={async (e) => {
                       const checked = e.target.checked;
                       if (checked) {
-                        await firestore.collection("users").doc(uid).update({
+                        await usersRef.doc(user.uid).update({
                           msgBgPosition: "right",
                         });
                         setMsgBgPosition("right");
@@ -440,7 +457,7 @@ export function ChatRoom(props) {
                     setMsgBgImgTransparency(e.target.value / 100);
                   }}
                   onChangeComplete={(e) => {
-                    usersRef.doc(uid).update({
+                    usersRef.doc(user.uid).update({
                       msgBgImgTransparency: e.target.value / 100,
                     });
                   }}
@@ -473,6 +490,13 @@ export function ChatRoom(props) {
         open={isModsOpen}
         requestClose={() => {
           setModsOpen(false);
+        }}
+      />
+
+      <BanlistDialog
+        open={isBanlistOpen}
+        requestClose={() => {
+          setBanlistOpen(false);
         }}
       />
 

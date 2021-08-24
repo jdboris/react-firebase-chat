@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import styles from "./css/chat-room.module.css";
 
 import firebase from "firebase/app";
@@ -12,6 +12,7 @@ import { useAuthState } from "react-firebase-hooks/auth";
 
 import { ChatRoom } from "./components/chat-room";
 import { SignInForm } from "./components/sign-in-form";
+import { useDocument, useDocumentData } from "react-firebase-hooks/firestore";
 // import { SignOutButton } from "./components/sign-out-button";
 
 let databaseUrl = "https://stream-site-9ebd9-default-rtdb.firebaseio.com";
@@ -51,16 +52,20 @@ if (window.location.hostname == "localhost") {
 }
 
 export const messagesRef = firestore.collection("messages");
-export const bannedUsersRef = firestore.collection("bannedUsers");
+export const reauthenticationsRef = firestore.collection("reauthentications");
 export const usersRef = firestore.collection("users");
+
+export const banUser = firebase.functions().httpsCallable("banUser");
+export const unbanUser = firebase.functions().httpsCallable("unbanUser");
 
 function App() {
   const [user] = useAuthState(auth);
+  const email = user && !user.isAnonymous ? user.email : "";
 
   return (
     <div className={styles["chat-app"]}>
       <header>{/* <SignOutButton /> */}</header>
-      {user ? <ChatRoom /> : <SignInForm />}
+      {user ? <ChatRoom user={user} /> : <SignInForm email={email} />}
     </div>
   );
 }

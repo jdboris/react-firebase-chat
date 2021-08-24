@@ -5,9 +5,9 @@ import firebase from "firebase/app";
 
 import { auth } from "../app";
 
-export function SignInForm() {
+export function SignInForm(props) {
   const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(props.email);
   const [password, setPassword] = useState("");
   const [isNewUser, setIsNewUser] = useState(false);
 
