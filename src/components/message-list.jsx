@@ -6,8 +6,10 @@ export function MessageList(props) {
   const messageList = useRef();
 
   useEffect(() => {
-    messageList.current.scrollTo(0, messageList.current.scrollHeight);
+    messageList.current.scrollTop = 0;
   }, [props.sentMsgCount]);
+
+  console.log(props.currentUser);
 
   return (
     <section ref={messageList} className={styles["messages-section"]}>
@@ -19,7 +21,7 @@ export function MessageList(props) {
             message={msg}
             userStyles={props.userStyles}
             onClick={props.onMessageClick}
-            idToken={props.idToken}
+            currentUser={props.currentUser}
           />
         ))}
     </section>

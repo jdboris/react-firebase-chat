@@ -1,9 +1,14 @@
--ban by username
 -mod actions log
--unban users
+-give anons names
 -word filter
 -private messages
 -premium
 -input validation, error messages
 -auto announcement
 -shorten image urls https://firebase.google.com/docs/dynamic-links/rest
+-consider specifying "function location" to reduce latency (i.e. between functions and storage)
+    -https://firebase.google.com/docs/functions/locations
+-consider resizing images, and/or make thumbnails
+    -https://firebase.google.com/docs/storage/extend-with-functions#example_image_transformation
+-add security logic to cloud functions (i.e. ensuring the user is authenticated)
+-give list items key attributes to shut the warnings up

@@ -115,7 +115,7 @@ label [type="file"] {
   width: 100%;
 }
 
-.messages-section > :first-child {
+.messages-section > :last-child {
   margin-top: auto;
 }
 
@@ -354,6 +354,8 @@ textarea {
   font-family: sans-serif;
   resize: none;
   background-size: contain;
+  position: relative;
+  z-index: 1;
 }
 
 button {
@@ -429,6 +431,10 @@ li {
   margin: 0px;
   padding: 0px;
   z-index: -1;
+}
+
+.input-wrapper .message-background-image {
+  z-index: 1;
 }
 
 .sample-message-wrapper .message {

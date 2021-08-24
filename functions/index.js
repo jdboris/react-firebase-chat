@@ -3,6 +3,8 @@ const Filter = require("bad-words");
 const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
 const fetch = require("node-fetch");
+const crypto = require("crypto");
+const { fromBuffer: fileTypeFromBuffer } = require("file-type");
 
 admin.initializeApp();
 
@@ -10,31 +12,122 @@ const db = admin.firestore();
 
 const OEMBED_PROVIDER_WHITELIST = ["YouTube", "Twitter"];
 
-exports.detectEvilUsers = functions.firestore
-  .document("messages/{msgId}")
-  .onCreate(async (doc, ctx) => {
-    const filter = new Filter();
-    const { text, uid } = doc.data();
+// async function logoutUser(user) {
+//   return admin
+//     .auth()
+//     .revokeRefreshTokens(user.uid)
+//     .then(() => {
+//       return admin.auth().getUser(user.uid);
+//     })
+//     .then((userRecord) => {
+//       return new Date(userRecord.tokensValidAfterTime).getTime() / 1000;
+//     });
+// }
 
-    if (filter.isProfane(text)) {
-      const cleaned = filter.clean(text);
-      await doc.ref.update({
-        text: `🤐 I got BANNED for life for saying... ${cleaned}`,
-      });
+async function getUser(uid) {
+  const snapshot = await db.collection("users").doc(uid).get();
+  return snapshot.data();
+}
 
-      await db.collection("bannedUsers").doc(uid).set({});
+async function markUserBanned(username) {
+  const snapshot = await db
+    .collection("users")
+    .where("username", "==", username)
+    .get();
+
+  if (!snapshot.docs.length) {
+    return {
+      error: "User not found.",
+    };
+  }
+
+  const user = await getUser(snapshot.docs[0].id);
+
+  // If the user is banned already
+  if (user.isBanned === true) {
+    return {
+      error: "User is already banned.",
+    };
+  }
+
+  if (user.isModerator === true) {
+    return {
+      error: "Cannot ban a moderator.",
+    };
+  }
+
+  await db
+    .collection("users")
+    .doc(snapshot.docs[0].id)
+    .update({ isBanned: true });
+}
+
+exports.banUser = functions.https.onCall(async (username, context) => {
+  const user = await getUser(context.auth.uid);
+
+  if (user.isModerator !== true) {
+    return {
+      error:
+        "Request not authorized. User must be a moderator to fulfill request.",
+    };
+  }
+
+  return markUserBanned(username).then((result) => {
+    if (result) {
+      return result;
     }
-
-    // const userRef = db.collection("users").doc(uid);
-
-    // const userData = (await userRef.get()).data() || { msgCount: 0 };
-
-    // if (userData.msgCount >= 7) {
-    //   await db.collection("bannedUsers").doc(uid).set({});
-    // } else {
-    //   await userRef.set({ msgCount: (userData.msgCount || 0) + 1 });
-    // }
+    return {
+      result: `Request fulfilled! ${username} is now banned.`,
+    };
   });
+});
+
+async function markUserUnbanned(username) {
+  const snapshot = await db
+    .collection("users")
+    .where("username", "==", username)
+    .get();
+
+  if (!snapshot.docs.length) {
+    return {
+      error: "User not found.",
+    };
+  }
+
+  const user = await getUser(snapshot.docs[0].id);
+
+  // If the user is not banned already
+  if (!user.isBanned) {
+    return {
+      error: "User is not banned.",
+    };
+  }
+
+  await db
+    .collection("users")
+    .doc(snapshot.docs[0].id)
+    .update({ isBanned: false });
+}
+
+exports.unbanUser = functions.https.onCall(async (username, context) => {
+  const user = await getUser(context.auth.uid);
+
+  if (user.isModerator !== true) {
+    return {
+      error:
+        "Request not authorized. User must be a moderator to fulfill request.",
+    };
+  }
+
+  return markUserUnbanned(username).then((result) => {
+    if (result) {
+      return result;
+    }
+    return {
+      result: `Request fulfilled! ${username} is no longer banned.`,
+    };
+  });
+});
 
 async function grantModeratorRole(username) {
   const snapshot = await db
@@ -43,30 +136,46 @@ async function grantModeratorRole(username) {
     .get();
 
   if (!snapshot.docs.length) {
-    return;
+    return {
+      error: "User not found.",
+    };
   }
 
-  const user = await admin.auth().getUser(snapshot.docs[0].id);
+  const user = await getUser(snapshot.docs[0].id);
 
   // If the user is a mod already
-  if (user.customClaims && user.customClaims.isModerator === true) {
-    return;
+  if (user.isModerator === true) {
+    return {
+      error: "User is already a mod.",
+    };
   }
-  await admin.auth().setCustomUserClaims(user.uid, {
-    isModerator: true,
-  });
-  await db.collection("users").doc(user.uid).update({ isModerator: true });
+
+  if (user.isBanned === true) {
+    return {
+      error: "Cannot mod a banned user.",
+    };
+  }
+
+  await db
+    .collection("users")
+    .doc(snapshot.docs[0].id)
+    .update({ isModerator: true });
 }
 
-exports.addModerator = functions.https.onCall((username, context) => {
-  if (context.auth.token.isModerator !== true) {
+exports.addModerator = functions.https.onCall(async (username, context) => {
+  const user = await getUser(context.auth.uid);
+
+  if (user.isModerator !== true) {
     return {
       error:
         "Request not authorized. User must be a moderator to fulfill request.",
     };
   }
 
-  return grantModeratorRole(username).then(() => {
+  return grantModeratorRole(username).then((result) => {
+    if (result) {
+      return result;
+    }
     return {
       result: `Request fulfilled! ${username} is now a moderator.`,
     };
@@ -80,35 +189,40 @@ async function revokeModeratorRole(username) {
     .get();
 
   if (!snapshot.docs.length) {
-    return;
+    return {
+      error: "User not found.",
+    };
   }
 
-  const user = await admin.auth().getUser(snapshot.docs[0].id);
+  const user = await getUser(snapshot.docs[0].id);
 
   // If the user is not a mod already
-  if (!user.customClaims || !user.customClaims.isModerator) {
-    return;
-  }
-  // If the user is trying to demod himself
-  if (user.displayName === username) {
-    return;
+  if (!user.isModerator) {
+    return {
+      error: "User is not a moderator.",
+    };
   }
 
-  await admin.auth().setCustomUserClaims(user.uid, {
-    isModerator: false,
-  });
-  await db.collection("users").doc(user.uid).update({ isModerator: false });
+  await db
+    .collection("users")
+    .doc(snapshot.docs[0].id)
+    .update({ isModerator: false });
 }
 
-exports.removeModerator = functions.https.onCall((username, context) => {
-  if (context.auth.token.isModerator !== true) {
+exports.removeModerator = functions.https.onCall(async (username, context) => {
+  const user = await getUser(context.auth.uid);
+
+  if (user.isModerator !== true) {
     return {
       error:
         "Request not authorized. User must be a moderator to fulfill request.",
     };
   }
 
-  return revokeModeratorRole(username).then(() => {
+  return revokeModeratorRole(username).then((result) => {
+    if (result) {
+      return result;
+    }
     return {
       result: `Request fulfilled! ${username} is no longer a moderator.`,
     };
@@ -167,6 +281,10 @@ exports.signUp = functions.https.onCall(async (data, context) => {
 });
 
 exports.sendWelcomeEmail = functions.auth.user().onCreate((user) => {
+  db.collection("users")
+    .doc(user.uid)
+    .set({ isBanned: false, isModerator: false });
+
   if (user.email) {
     // Admin SDK API to generate the email verification link.
     return admin
@@ -286,7 +404,6 @@ exports.onUserStatusChanged = functions.database
   .onUpdate(async (change, context) => {
     // Get the data written to Realtime Database
     const eventStatus = change.after.val();
-
     // Then use other event data to create a reference to the
     // corresponding Firestore document.
     const userStatusFirestoreRef = db.doc(
@@ -416,4 +533,43 @@ exports.getOembed = functions.https.onCall(async (data, context) => {
         };
       }
     });
+});
+
+exports.uploadFile = functions.https.onCall(async (data, context) => {
+  if (!context.auth.uid) {
+    return { error: "Must be logged in." };
+  }
+
+  // 10 Megabytes
+  const sizeLimit = 10 * 1024 * 1024;
+  const allowedTypes = ["image/jpeg", "image/jpeg", "image/png", "image/gif"];
+
+  const { base64FileString, extension } = data;
+  const bucket = admin.storage().bucket();
+  // NOTE: Must cut off the metadata that browsers put at the beginning
+  //       https://stackoverflow.com/questions/67671971/error-loading-preview-on-firebase-storage-with-images-uploaded-from-firebase-ad
+  const imageBuffer = Buffer.from(
+    base64FileString.split(";base64,")[1],
+    "base64"
+  );
+
+  if (imageBuffer.byteLength > sizeLimit) {
+    return { error: "File too large." };
+  }
+
+  const type = await fileTypeFromBuffer(imageBuffer);
+  if (!type || !allowedTypes.includes(type.mime)) {
+    return { error: "Filetype not supported." };
+  }
+
+  const imageByteArray = new Uint8Array(imageBuffer);
+  const uuid = crypto.randomBytes(16).toString("hex");
+  const file = bucket.file(`${context.auth.uid}/${uuid}.${extension}`);
+
+  // const options = { resumable: false, metadata: { contentType: "image/jpg" } };
+  const options = { resumable: false, public: true };
+  //options may not be necessary
+
+  await file.save(imageByteArray, options);
+  return { url: await file.publicUrl() };
 });
