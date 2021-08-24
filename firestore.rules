@@ -4,32 +4,36 @@ service cloud.firestore {
     match /{document=**} {
       allow read, write: if false;
     }
-  
+
+    function currentUser() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
     match /messages/{docId} {
-      allow read: if request.auth.uid != null && (resource.data.isDeleted == false || request.auth.token.isModerator == true);
+      allow read: if request.auth.uid != null && (resource.data.isDeleted == false || currentUser().isModerator == true);
       allow create: if canCreateMessage();
-      allow update: if request.auth.token.isModerator == true && 
+      allow update: if currentUser().isModerator == true && 
                       // If the request only has the isDeleted field
                       // https://firebase.google.com/docs/firestore/security/rules-fields#allowing_only_certain_fields_to_be_changed
                       (request.resource.data.diff(resource.data).affectedKeys()
                       .hasOnly(['isDeleted']));
     }
   
-    match /bannedUsers/{docId} {
-      allow create: if request.auth.token.isModerator == true;
-    }
+    // match /bannedUsers/{docId} {
+    //   allow create: if request.auth.token.isModerator == true;
+    // }
 
     function canCreateMessage() {
       let isSignedIn = request.auth.uid != null;
       let isOwner = request.auth.uid == request.resource.data.uid;
+      let isNotBanned = !currentUser().isBanned;
 
-      let isNotBanned = exists(
-        /databases/$(database)/documents/bannedUsers/$(request.auth.uid)
-      ) == false;
+      // let isNotBanned = exists(
+      //   /databases/$(database)/documents/bannedUsers/$(request.auth.uid)
+      // ) == false;
 
       return isSignedIn && isOwner && isNotBanned;
     }
-    
   
     match /userPresences/{docId} {
       allow create: if true;
@@ -38,11 +42,17 @@ service cloud.firestore {
       allow delete: if true;
     }
   
+    match /reauthentications/{docId} {
+      allow read: if true;
+    }
+  
     match /users/{docId} {
       allow create: if isDocOwner(docId);
-      allow read: if isDocOwner(docId);
+      allow read: if true;
       allow update: if isDocOwner(docId) && 
-                    (!request.resource.data.keys().hasAny(['isModerator']));
+                    // NOTE: Don't allow updating these keys
+                    (!request.resource.data.diff(resource.data).affectedKeys()
+                    .hasAny(['isModerator', 'isBanned']));
     }
 
     function isDocOwner(docId) {
@@ -51,10 +61,6 @@ service cloud.firestore {
       let isOwner = request.auth.uid == docId;
 
       return isSignedIn && isOwner;
-    }
-    
-    match /users/{docId} {
-      allow read: if true;
     }
   
     match /oembedProviders/{docId} {

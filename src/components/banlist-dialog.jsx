@@ -1,24 +1,21 @@
 import CloseIcon from "@material-ui/icons/Close";
-import firebase from "firebase/app";
 import React, { useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
-import { usersRef as usersRef } from "../app";
+import { usersRef as usersRef, banUser, unbanUser } from "../app";
 import styles from "../css/chat-room.module.css";
 
-export function ModeratorsDialog(props) {
+export function BanlistDialog(props) {
   const [username, setUsername] = useState("");
-  const addModerator = firebase.functions().httpsCallable("addModerator");
-  const removeModerator = firebase.functions().httpsCallable("removeModerator");
 
-  let query = usersRef.orderBy("username").where("isModerator", "==", true);
+  const query = usersRef.orderBy("username").where("isBanned", "==", true);
 
-  const [mods] = useCollectionData(query, { idField: "id" });
+  const [bannedUsers] = useCollectionData(query, { idField: "id" });
 
   return (
     props.open && (
       <div className={styles["dialog"] + " " + styles["moderators"]}>
         <header>
-          Moderators
+          Banlist
           <CloseIcon
             onClick={() => {
               props.requestClose();
@@ -26,16 +23,16 @@ export function ModeratorsDialog(props) {
           />
         </header>
         <main>
-          {mods &&
-            mods.map((mod) => {
+          {bannedUsers &&
+            bannedUsers.map((user) => {
               return (
                 <div>
-                  {mod.username}{" "}
+                  {user.username}{" "}
                   <a
                     href="#"
                     onClick={async (e) => {
                       e.preventDefault();
-                      console.log(await removeModerator(mod.username));
+                      console.log(await unbanUser(user.username));
                     }}
                   >
                     remove
@@ -43,12 +40,12 @@ export function ModeratorsDialog(props) {
                 </div>
               );
             })}
-          Add moderator{" "}
+          Ban user{" "}
           <form
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
               if (username) {
-                addModerator(username);
+                console.log(await banUser(username));
               }
             }}
           >

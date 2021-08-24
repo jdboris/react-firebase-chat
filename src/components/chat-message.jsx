@@ -1,15 +1,14 @@
-import React, { useState, useEffect, useMemo } from "react";
-import isImageUrl from "is-image-url";
-import PersonIcon from "@material-ui/icons/Person";
 import BlockIcon from "@material-ui/icons/Block";
+import PersonIcon from "@material-ui/icons/Person";
+import firebase from "firebase/app";
+import isImageUrl from "is-image-url";
+import React, { useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import gfm from "remark-gfm";
+import { auth, banUser, messagesRef } from "../app";
+import { hexToRgb } from "../color";
 import styles from "../css/chat-room.module.css";
 import "../css/oembed.css";
-import firebase from "firebase/app";
-
-import { auth, messagesRef, bannedUsersRef } from "../app";
-import { hexToRgb } from "../color";
 
 function Link(props) {
   const [children, setChildren] = useState(props.href);
@@ -94,8 +93,7 @@ export function ChatMessage(props) {
     msgBgPosition,
     msgBgImgTransparency,
   } = props.message;
-  const { userStyles } = props;
-  const { claims } = props.idToken;
+  const { currentUser, userStyles } = props;
   const messageClass = uid === auth.currentUser.uid ? "sent" : "received";
 
   let mouseDownSpot = null;
@@ -109,10 +107,6 @@ export function ChatMessage(props) {
     new RegExp(`@${auth.currentUser.displayName}\\b`, "g"),
     `**@${auth.currentUser.displayName}**`
   );
-
-  function banUser() {
-    bannedUsersRef.doc(props.message.uid).set({});
-  }
 
   function deleteMessage() {
     messagesRef.doc(props.message.id).update({ isDeleted: true });
@@ -175,12 +169,30 @@ export function ChatMessage(props) {
           <span className={styles["message-timestamp"]}>
             {createdAt && createdAt.toDate().toLocaleString()}
           </span>
-          {claims.isModerator && (
-            <button onClick={banUser}>
+          {currentUser.isModerator && (
+            <button
+              onClick={() => {
+                banUser(username);
+              }}
+              // NOTE: Must stop propagation so clicking a link won't @ the poster
+              onMouseUp={(e) => {
+                e.stopPropagation();
+              }}
+            >
               <BlockIcon />
             </button>
           )}
-          {claims.isModerator && <button onClick={deleteMessage}>X</button>}
+          {currentUser.isModerator && (
+            <button
+              onClick={deleteMessage}
+              // NOTE: Must stop propagation so clicking a link won't @ the poster
+              onMouseUp={(e) => {
+                e.stopPropagation();
+              }}
+            >
+              X
+            </button>
+          )}
         </span>
         <div>
           <span
