@@ -10,13 +10,20 @@ service cloud.firestore {
     }
 
     match /messages/{docId} {
-      allow read: if request.auth.uid != null && (resource.data.isDeleted == false || currentUser().isModerator == true);
+      allow read: if request.auth.uid != null && (resource.data.isDeleted == false || currentUser().isModerator == true || currentUser().isAdmin == true);
       allow create: if canCreateMessage();
-      allow update: if currentUser().isModerator == true && 
+      allow update: if (currentUser().isModerator == true || currentUser().isAdmin == true) && 
                       // If the request only has the isDeleted field
                       // https://firebase.google.com/docs/firestore/security/rules-fields#allowing_only_certain_fields_to_be_changed
                       (request.resource.data.diff(resource.data).affectedKeys()
                       .hasOnly(['isDeleted']));
+    }
+
+    match /modActionLog/{docId} {
+      allow read: if request.auth.uid != null && currentUser().isAdmin == true;
+      allow create: if request.auth.uid != null && currentUser().isAdmin == true;
+      allow update: if request.auth.uid != null && currentUser().isAdmin == true;
+      allow delete: if request.auth.uid != null && currentUser().isAdmin == true;
     }
   
     // match /bannedUsers/{docId} {
@@ -52,7 +59,7 @@ service cloud.firestore {
       allow update: if isDocOwner(docId) && 
                     // NOTE: Don't allow updating these keys
                     (!request.resource.data.diff(resource.data).affectedKeys()
-                    .hasAny(['isModerator', 'isBanned']));
+                    .hasAny(['isAdmin', 'isModerator', 'isBanned']));
     }
 
     function isDocOwner(docId) {

@@ -1,6 +1,6 @@
 import CameraIcon from "@material-ui/icons/CameraAlt";
-import TextFormatIcon from "@material-ui/icons/TextFormat";
 import SmileIcon from "@material-ui/icons/SentimentVerySatisfied";
+import TextFormatIcon from "@material-ui/icons/TextFormat";
 import React, { useRef } from "react";
 import { hexToRgb } from "../color";
 import styles from "../css/chat-room.module.css";

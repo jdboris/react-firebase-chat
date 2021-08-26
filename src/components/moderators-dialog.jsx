@@ -1,9 +1,11 @@
 import CloseIcon from "@material-ui/icons/Close";
 import firebase from "firebase/app";
-import React, { useState } from "react";
+import { default as React, useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
+import ReactPaginate from "react-paginate";
 import { usersRef as usersRef } from "../app";
 import styles from "../css/chat-room.module.css";
+import paginationStyles from "../css/pagination-controls.module.css";
 
 export function ModeratorsDialog(props) {
   const [username, setUsername] = useState("");
@@ -13,6 +15,10 @@ export function ModeratorsDialog(props) {
   let query = usersRef.orderBy("username").where("isModerator", "==", true);
 
   const [mods] = useCollectionData(query, { idField: "id" });
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 10;
+  const start = (page - 1) * itemsPerPage;
+  const end = page * itemsPerPage;
 
   return (
     props.open && (
@@ -27,7 +33,7 @@ export function ModeratorsDialog(props) {
         </header>
         <main>
           {mods &&
-            mods.map((mod) => {
+            mods.slice(start, end).map((mod) => {
               return (
                 <div>
                   {mod.username}{" "}
@@ -62,6 +68,16 @@ export function ModeratorsDialog(props) {
             />{" "}
             <button>Add</button>
           </form>
+          <footer className={paginationStyles["pagination-controls"]}>
+            <ReactPaginate
+              pageCount={Math.ceil(mods.length / itemsPerPage)}
+              pageRangeDisplayed={10}
+              marginPagesDisplayed={2}
+              onPageChange={(item) => {
+                setPage(item.selected + 1);
+              }}
+            />
+          </footer>
         </main>
       </div>
     )
