@@ -1,33 +1,30 @@
+import CloseIcon from "@material-ui/icons/Close";
 import PencilIcon from "@material-ui/icons/Create";
+import GavelIcon from "@material-ui/icons/Gavel";
 import MenuIcon from "@material-ui/icons/Menu";
 import PersonIcon from "@material-ui/icons/Person";
-import CloseIcon from "@material-ui/icons/Close";
-import GavelIcon from "@material-ui/icons/Gavel";
 import firebase from "firebase/app";
 import React, { useEffect, useRef, useState } from "react";
-import {
-  useCollectionData,
-  useDocument,
-  useDocumentData,
-} from "react-firebase-hooks/firestore";
-import { auth, firestore, messagesRef, usersRef as usersRef } from "../app";
+import { useCollectionData, useDocument } from "react-firebase-hooks/firestore";
+import { auth, messagesRef, usersRef as usersRef } from "../app";
 import styles from "../css/chat-room.module.css";
 import { fonts } from "../fonts";
 import { toggleSelectionMarkup } from "../markdown";
 import { presence } from "../presence";
 import { uploadFile } from "../storage";
+import { insertIntoInput } from "../utils";
+import { BanlistDialog } from "./banlist-dialog";
 // import { getProviders } from "../oembed";
 import { ChatMessage } from "./chat-message";
 import { ColorInput } from "./color-input";
+import { EmojiSelector } from "./emoji-selector";
+import { MenuWithButton } from "./menu-with-button";
 import { MessageInputForm } from "./message-input-form";
 import { MessageList } from "./message-list";
+import { ModActionLogDialog } from "./mod-action-log-dialog";
+import { ModeratorsDialog } from "./moderators-dialog";
 import { SliderInput } from "./slider-input";
 import { UserStyleControls } from "./user-style-controls";
-import { EmojiSelector } from "./emoji-selector";
-import { insertIntoInput } from "../utils";
-import { MenuWithButton } from "./menu-with-button";
-import { ModeratorsDialog } from "./moderators-dialog";
-import { BanlistDialog } from "./banlist-dialog";
 
 export function ChatRoom(props) {
   // Fetch the current user's ID from Firebase Authentication.
@@ -76,6 +73,7 @@ export function ChatRoom(props) {
   const [isUsersOpen, setUsersOpen] = useState(false);
   const [isBanlistOpen, setBanlistOpen] = useState(false);
   const [isModsOpen, setModsOpen] = useState(false);
+  const [isModActionLogOpen, setModActionLogOpen] = useState(false);
   const [menuOpenKey, setMenuOpenKey] = useState(0);
   const [isEmojisOpen, setEmojisOpen] = useState(false);
   const [isFormatOpen, setFormatOpen] = useState(false);
@@ -259,6 +257,13 @@ export function ChatRoom(props) {
               Banlist: () => {
                 setBanlistOpen(!isBanlistOpen);
               },
+              ...(user.isAdmin
+                ? {
+                    "Mod Action Log": () => {
+                      setModActionLogOpen(!isModActionLogOpen);
+                    },
+                  }
+                : {}),
             }}
           />
         )}
@@ -395,7 +400,6 @@ export function ChatRoom(props) {
                   type="checkbox"
                   onChange={async (e) => {
                     const checked = e.target.checked;
-                    console.log(checked);
                     await usersRef.doc(user.uid).update({
                       msgBgRepeat: checked ? "repeat" : "no-repeat",
                     });
@@ -497,6 +501,13 @@ export function ChatRoom(props) {
         open={isBanlistOpen}
         requestClose={() => {
           setBanlistOpen(false);
+        }}
+      />
+
+      <ModActionLogDialog
+        open={isModActionLogOpen}
+        requestClose={() => {
+          setModActionLogOpen(false);
         }}
       />
 

@@ -218,6 +218,12 @@ svg.gavel-icon {
   justify-content: space-between;
 }
 
+.mod-action-log main > div {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;
+}
+
 .message-style-editor > label:not(.button) {
   display: flex;
   justify-content: space-between;

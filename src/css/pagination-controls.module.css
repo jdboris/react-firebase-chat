@@ -1,0 +1,19 @@
+.pagination-controls {
+  display: block;
+}
+
+.pagination-controls ul {
+  display: flex;
+  justify-content: center;
+  padding: 0;
+}
+
+.pagination-controls .selected {
+  font-weight: bold;
+}
+
+.pagination-controls .disabled a {
+  color: gray;
+  cursor: default;
+  text-decoration: none;
+}
