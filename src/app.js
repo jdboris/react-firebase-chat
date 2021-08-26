@@ -1,18 +1,15 @@
-import React, { useEffect } from "react";
-import styles from "./css/chat-room.module.css";
-
-import firebase from "firebase/app";
-import "firebase/storage";
-import "firebase/firestore";
-import "firebase/auth";
 import "firebase/analytics";
+import firebase from "firebase/app";
+import "firebase/auth";
+import "firebase/firestore";
 import "firebase/functions";
-
+import "firebase/storage";
+import React from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
-
 import { ChatRoom } from "./components/chat-room";
 import { SignInForm } from "./components/sign-in-form";
-import { useDocument, useDocumentData } from "react-firebase-hooks/firestore";
+import styles from "./css/chat-room.module.css";
+
 // import { SignOutButton } from "./components/sign-out-button";
 
 let databaseUrl = "https://stream-site-9ebd9-default-rtdb.firebaseio.com";
@@ -52,8 +49,8 @@ if (window.location.hostname == "localhost") {
 }
 
 export const messagesRef = firestore.collection("messages");
-export const reauthenticationsRef = firestore.collection("reauthentications");
 export const usersRef = firestore.collection("users");
+export const modActionLogRef = firestore.collection("modActionLog");
 
 export const banUser = firebase.functions().httpsCallable("banUser");
 export const unbanUser = firebase.functions().httpsCallable("unbanUser");

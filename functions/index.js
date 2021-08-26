@@ -9,7 +9,6 @@ const { fromBuffer: fileTypeFromBuffer } = require("file-type");
 admin.initializeApp();
 
 const db = admin.firestore();
-
 const OEMBED_PROVIDER_WHITELIST = ["YouTube", "Twitter"];
 
 // async function logoutUser(user) {
@@ -72,14 +71,20 @@ exports.banUser = functions.https.onCall(async (username, context) => {
     };
   }
 
-  return markUserBanned(username).then((result) => {
-    if (result) {
-      return result;
-    }
-    return {
-      result: `Request fulfilled! ${username} is now banned.`,
-    };
+  const result = await markUserBanned(username);
+  if (result) {
+    return result;
+  }
+
+  await db.collection("modActionLog").add({
+    uid: context.auth.uid,
+    action: user.username + " banned " + username,
+    date: admin.firestore.FieldValue.serverTimestamp(),
   });
+
+  return {
+    result: `Request fulfilled! ${username} is now banned.`,
+  };
 });
 
 async function markUserUnbanned(username) {
@@ -119,14 +124,20 @@ exports.unbanUser = functions.https.onCall(async (username, context) => {
     };
   }
 
-  return markUserUnbanned(username).then((result) => {
-    if (result) {
-      return result;
-    }
-    return {
-      result: `Request fulfilled! ${username} is no longer banned.`,
-    };
+  const result = await markUserUnbanned(username);
+  if (result) {
+    return result;
+  }
+
+  await db.collection("modActionLog").add({
+    uid: context.auth.uid,
+    action: user.username + " unbanned " + username,
+    date: admin.firestore.FieldValue.serverTimestamp(),
   });
+
+  return {
+    result: `Request fulfilled! ${username} is no longer banned.`,
+  };
 });
 
 async function grantModeratorRole(username) {
@@ -172,14 +183,20 @@ exports.addModerator = functions.https.onCall(async (username, context) => {
     };
   }
 
-  return grantModeratorRole(username).then((result) => {
-    if (result) {
-      return result;
-    }
-    return {
-      result: `Request fulfilled! ${username} is now a moderator.`,
-    };
+  const result = await grantModeratorRole(username);
+  if (result) {
+    return result;
+  }
+
+  await db.collection("modActionLog").add({
+    uid: context.auth.uid,
+    action: user.username + " modded " + username,
+    date: admin.firestore.FieldValue.serverTimestamp(),
   });
+
+  return {
+    result: `Request fulfilled! ${username} is now a moderator.`,
+  };
 });
 
 async function revokeModeratorRole(username) {
@@ -219,14 +236,20 @@ exports.removeModerator = functions.https.onCall(async (username, context) => {
     };
   }
 
-  return revokeModeratorRole(username).then((result) => {
-    if (result) {
-      return result;
-    }
-    return {
-      result: `Request fulfilled! ${username} is no longer a moderator.`,
-    };
+  const result = await revokeModeratorRole(username);
+  if (result) {
+    return result;
+  }
+
+  await db.collection("modActionLog").add({
+    uid: context.auth.uid,
+    action: user.username + " unmodded " + username,
+    date: admin.firestore.FieldValue.serverTimestamp(),
   });
+
+  return {
+    result: `Request fulfilled! ${username} is no longer a moderator.`,
+  };
 });
 
 exports.signUp = functions.https.onCall(async (data, context) => {
@@ -252,6 +275,9 @@ exports.signUp = functions.https.onCall(async (data, context) => {
       // NOTE: Must create the document now to allow calling .update() later
       db.doc(`users/${userRecord.uid}`).set({
         username: userRecord.displayName,
+        isBanned: false,
+        isModerator: false,
+        isAdmin: false,
       });
 
       // See the UserRecord reference doc for the contents of userRecord.
@@ -281,10 +307,6 @@ exports.signUp = functions.https.onCall(async (data, context) => {
 });
 
 exports.sendWelcomeEmail = functions.auth.user().onCreate((user) => {
-  db.collection("users")
-    .doc(user.uid)
-    .set({ isBanned: false, isModerator: false });
-
   if (user.email) {
     // Admin SDK API to generate the email verification link.
     return admin
