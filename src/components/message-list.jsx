@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import styles from "../css/chat-room.module.css";
 import { ChatMessage } from "./chat-message";
 
@@ -8,8 +8,6 @@ export function MessageList(props) {
   useEffect(() => {
     messageList.current.scrollTop = 0;
   }, [props.sentMsgCount]);
-
-  console.log(props.currentUser);
 
   return (
     <section ref={messageList} className={styles["messages-section"]}>

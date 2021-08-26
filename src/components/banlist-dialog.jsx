@@ -1,15 +1,19 @@
 import CloseIcon from "@material-ui/icons/Close";
-import React, { useState } from "react";
+import { default as React, useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
-import { usersRef as usersRef, banUser, unbanUser } from "../app";
+import ReactPaginate from "react-paginate";
+import { banUser, unbanUser, usersRef as usersRef } from "../app";
 import styles from "../css/chat-room.module.css";
+import paginationStyles from "../css/pagination-controls.module.css";
 
 export function BanlistDialog(props) {
   const [username, setUsername] = useState("");
-
   const query = usersRef.orderBy("username").where("isBanned", "==", true);
-
   const [bannedUsers] = useCollectionData(query, { idField: "id" });
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 10;
+  const start = (page - 1) * itemsPerPage;
+  const end = page * itemsPerPage;
 
   return (
     props.open && (
@@ -24,7 +28,7 @@ export function BanlistDialog(props) {
         </header>
         <main>
           {bannedUsers &&
-            bannedUsers.map((user) => {
+            bannedUsers.slice(start, end).map((user) => {
               return (
                 <div>
                   {user.username}{" "}
@@ -60,6 +64,16 @@ export function BanlistDialog(props) {
             <button>Add</button>
           </form>
         </main>
+        <footer className={paginationStyles["pagination-controls"]}>
+          <ReactPaginate
+            pageCount={Math.ceil(bannedUsers.length / itemsPerPage)}
+            pageRangeDisplayed={10}
+            marginPagesDisplayed={2}
+            onPageChange={(item) => {
+              setPage(item.selected + 1);
+            }}
+          />
+        </footer>
       </div>
     )
   );
