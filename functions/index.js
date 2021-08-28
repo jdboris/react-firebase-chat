@@ -5,6 +5,8 @@ const nodemailer = require("nodemailer");
 const fetch = require("node-fetch");
 const crypto = require("crypto");
 const { fromBuffer: fileTypeFromBuffer } = require("file-type");
+const { user } = require("firebase-functions/lib/providers/auth");
+const { CollectionsBookmarkOutlined } = require("@material-ui/icons");
 
 admin.initializeApp();
 
@@ -253,35 +255,65 @@ exports.removeModerator = functions.https.onCall(async (username, context) => {
 });
 
 exports.signUp = functions.https.onCall(async (data, context) => {
-  // Require username to be unique
-  const query = db.collection("users").where("username", "==", data.username);
-  const snapshot = await query.get();
-  const docs = await snapshot.docs;
-  if (docs.length > 0) {
-    return { success: false, message: "Username taken." };
+  let anonSuffix;
+
+  if (!data.anonymous) {
+    if (data.username.match(/^anon\d+$/g)) {
+      return { success: false, message: "Invalid username." };
+    }
+
+    // Require username to be unique
+    const query = db.collection("users").where("username", "==", data.username);
+    const snapshot = await query.get();
+    const docs = await snapshot.docs;
+    if (docs.length > 0) {
+      return { success: false, message: "Username taken." };
+    }
+  } else {
+    // Select users whose names start with "anon"
+    const query = db
+      .collection("users")
+      .where("anonSuffix", ">=", 0)
+      .orderBy("anonSuffix", "desc")
+      .limit(1);
+
+    const snapshot = await query.get();
+    const docs = await snapshot.docs;
+    anonSuffix = docs.length ? docs[0].data().anonSuffix + 1 : 0;
+    user.username = "anon" + anonSuffix;
   }
 
   return admin
     .auth()
-    .createUser({
-      email: data.email,
-      emailVerified: false,
-      password: data.password,
-      displayName: data.username,
-      // photoURL: "http://www.example.com/12345678/photo.png",
-      disabled: false,
-    })
-    .then(function (userRecord) {
+    .createUser(
+      data.anonymous
+        ? { displayName: user.username }
+        : {
+            email: data.email,
+            emailVerified: false,
+            password: data.password,
+            displayName: data.username,
+            // photoURL: "http://www.example.com/12345678/photo.png",
+            disabled: false,
+          }
+    )
+    .then(async (userRecord) => {
       // NOTE: Must create the document now to allow calling .update() later
       db.doc(`users/${userRecord.uid}`).set({
         username: userRecord.displayName,
         isBanned: false,
         isModerator: false,
         isAdmin: false,
+        ...(data.anonymous ? { anonSuffix: anonSuffix } : {}),
       });
 
+      const token = await admin.auth().createCustomToken(userRecord.uid);
+
       // See the UserRecord reference doc for the contents of userRecord.
-      return { success: true };
+      return {
+        success: true,
+        ...(data.anonymous ? { token } : {}),
+      };
     })
     .catch(function (error) {
       console.error("Error creating new user:", error);
@@ -290,20 +322,6 @@ exports.signUp = functions.https.onCall(async (data, context) => {
         message: "Something went wrong. Please try again.",
       };
     });
-
-  // return admin
-  //   .auth()
-  //   .createUserWithEmailAndPassword(data.email, data.password)
-  //   .then((userCredential) => {
-  //     let user = userCredential.user;
-  //     console.log(user);
-  //   })
-  //   .catch((error) => {
-  //     let errorCode = error.code;
-  //     let errorMessage = error.message;
-  //     console.error(errorCode);
-  //     console.error(errorMessage);
-  //   });
 });
 
 exports.sendWelcomeEmail = functions.auth.user().onCreate((user) => {
