@@ -17,7 +17,7 @@ export function SignInForm(props) {
       onSubmit={(e) => {
         e.preventDefault();
         if (isNewUser) {
-          let signUp = firebase.functions().httpsCallable("signUp");
+          const signUp = firebase.functions().httpsCallable("signUp");
           signUp({ email: email, password: password, username: username }).then(
             (result) => {
               if (result.data.success) {
@@ -92,8 +92,14 @@ export function SignInForm(props) {
 
       <button
         className={styles["sign-in"]}
-        onClick={() => {
-          auth.signInAnonymously();
+        onClick={(e) => {
+          e.preventDefault();
+          const signUp = firebase.functions().httpsCallable("signUp");
+          signUp({ anonymous: true }).then((result) => {
+            if (result.data.success) {
+              auth.signInWithCustomToken(result.data.token);
+            }
+          });
         }}
       >
         Chat Anonymously
