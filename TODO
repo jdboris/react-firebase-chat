@@ -2,14 +2,15 @@
 -private messages
 -premium
 -input validation, error messages
+-add security logic to cloud functions (i.e. ensuring the user is authenticated)
 -auto announcement
--shorten image urls https://firebase.google.com/docs/dynamic-links/rest
--consider specifying "function location" to reduce latency (i.e. between functions and storage)
-    -https://firebase.google.com/docs/functions/locations
+-optimization to reduce firestore reads (prevent dialogs from querying until they're opened)
 -consider resizing images, and/or make thumbnails
     -https://firebase.google.com/docs/storage/extend-with-functions#example_image_transformation
--add security logic to cloud functions (i.e. ensuring the user is authenticated)
 -give list items key attributes to shut the warnings up
 -fix this:
     -Can't perform a React state update on an unmounted component. This is a no-op, but it indicates a memory leak in your application. 
      To fix, cancel all subscriptions and asynchronous tasks in a useEffect cleanup function. at ChatRoom
+-shorten image urls https://firebase.google.com/docs/dynamic-links/rest
+-consider specifying "function location" to reduce latency (i.e. between functions and storage)
+    -https://firebase.google.com/docs/functions/locations
