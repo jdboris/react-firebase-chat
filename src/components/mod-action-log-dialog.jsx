@@ -8,15 +8,12 @@ import ReactPaginate from "react-paginate";
 import { useState } from "react";
 
 export function ModActionLogDialog(props) {
-  const query = modActionLogRef.orderBy("date", "desc");
+  const query = props.open ? modActionLogRef.orderBy("date", "desc") : null;
   const [modActions] = useCollectionData(query, { idField: "id" });
   const [page, setPage] = useState(1);
   const itemsPerPage = 5;
   const start = (page - 1) * itemsPerPage;
   const end = page * itemsPerPage;
-  console.log(start);
-  console.log(end);
-  console.log(modActions && modActions.slice(start, end));
 
   return (
     props.open && (
@@ -44,14 +41,16 @@ export function ModActionLogDialog(props) {
           )}
         </main>
         <footer className={paginationStyles["pagination-controls"]}>
-          <ReactPaginate
-            pageCount={Math.ceil(modActions.length / itemsPerPage)}
-            pageRangeDisplayed={5}
-            marginPagesDisplayed={2}
-            onPageChange={(item) => {
-              setPage(item.selected + 1);
-            }}
-          />
+          {modActions && (
+            <ReactPaginate
+              pageCount={Math.ceil(modActions.length / itemsPerPage)}
+              pageRangeDisplayed={5}
+              marginPagesDisplayed={2}
+              onPageChange={(item) => {
+                setPage(item.selected + 1);
+              }}
+            />
+          )}
         </footer>
       </div>
     )

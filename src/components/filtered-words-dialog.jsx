@@ -2,16 +2,17 @@ import CloseIcon from "@material-ui/icons/Close";
 import { default as React, useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import ReactPaginate from "react-paginate";
-import { banUser, unbanUser, usersRef as usersRef } from "../app";
+import { filteredWordsRef } from "../app";
 import styles from "../css/chat-room.module.css";
 import paginationStyles from "../css/pagination-controls.module.css";
 
-export function BanlistDialog(props) {
-  const [username, setUsername] = useState("");
-  const query = props.open
-    ? usersRef.orderBy("username").where("isBanned", "==", true)
-    : null;
-  const [bannedUsers] = useCollectionData(query, { idField: "id" });
+export function FilteredWordsDialog(props) {
+  const filterWord = firebase.functions().httpsCallable("filterWord");
+  const unfilterWord = firebase.functions().httpsCallable("unfilterWord");
+
+  const [word, setWord] = useState("");
+  const query = props.open ? filteredWordsRef.orderBy("word") : null;
+  const [filteredWords] = useCollectionData(query, { idField: "id" });
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;
   const start = (page - 1) * itemsPerPage;
@@ -19,9 +20,9 @@ export function BanlistDialog(props) {
 
   return (
     props.open && (
-      <div className={styles["dialog"] + " " + styles["moderators"]}>
+      <div className={styles["dialog"] + " " + styles["filtered-words"]}>
         <header>
-          Banlist
+          Filtered words
           <CloseIcon
             onClick={() => {
               props.requestClose();
@@ -29,16 +30,16 @@ export function BanlistDialog(props) {
           />
         </header>
         <main>
-          {bannedUsers &&
-            bannedUsers.slice(start, end).map((user) => {
+          {filteredWords &&
+            filteredWords.slice(start, end).map((word) => {
               return (
                 <div>
-                  {user.username}{" "}
+                  {word}{" "}
                   <a
                     href="#"
                     onClick={async (e) => {
                       e.preventDefault();
-                      console.log(await unbanUser(user.username));
+                      console.log(await unfilterWord(word));
                     }}
                   >
                     remove
@@ -46,30 +47,30 @@ export function BanlistDialog(props) {
                 </div>
               );
             })}
-          Ban user{" "}
+          Filter word{" "}
           <form
             onSubmit={async (e) => {
               e.preventDefault();
-              if (username) {
-                console.log(await banUser(username));
+              if (word) {
+                console.log(await filterWord(word));
               }
             }}
           >
             <input
               type="text"
-              placeholder="Username"
+              placeholder="word to filter"
               onInput={(e) => {
-                setUsername(e.target.value);
+                setWord(e.target.value);
               }}
-              value={username}
+              value={word}
             />{" "}
             <button>Add</button>
           </form>
         </main>
         <footer className={paginationStyles["pagination-controls"]}>
-          {bannedUsers && (
+          {filteredWords && (
             <ReactPaginate
-              pageCount={Math.ceil(bannedUsers.length / itemsPerPage)}
+              pageCount={Math.ceil(filteredWords.length / itemsPerPage)}
               pageRangeDisplayed={10}
               marginPagesDisplayed={2}
               onPageChange={(item) => {
