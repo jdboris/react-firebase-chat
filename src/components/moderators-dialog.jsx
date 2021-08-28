@@ -12,7 +12,9 @@ export function ModeratorsDialog(props) {
   const addModerator = firebase.functions().httpsCallable("addModerator");
   const removeModerator = firebase.functions().httpsCallable("removeModerator");
 
-  let query = usersRef.orderBy("username").where("isModerator", "==", true);
+  let query = props.open
+    ? usersRef.orderBy("username").where("isModerator", "==", true)
+    : null;
 
   const [mods] = useCollectionData(query, { idField: "id" });
   const [page, setPage] = useState(1);
@@ -69,14 +71,16 @@ export function ModeratorsDialog(props) {
             <button>Add</button>
           </form>
           <footer className={paginationStyles["pagination-controls"]}>
-            <ReactPaginate
-              pageCount={Math.ceil(mods.length / itemsPerPage)}
-              pageRangeDisplayed={10}
-              marginPagesDisplayed={2}
-              onPageChange={(item) => {
-                setPage(item.selected + 1);
-              }}
-            />
+            {mods && (
+              <ReactPaginate
+                pageCount={Math.ceil(mods.length / itemsPerPage)}
+                pageRangeDisplayed={10}
+                marginPagesDisplayed={2}
+                onPageChange={(item) => {
+                  setPage(item.selected + 1);
+                }}
+              />
+            )}
           </footer>
         </main>
       </div>
