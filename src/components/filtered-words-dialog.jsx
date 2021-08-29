@@ -1,18 +1,20 @@
 import CloseIcon from "@material-ui/icons/Close";
+import firebase from "firebase/app";
 import { default as React, useState } from "react";
-import { useCollectionData } from "react-firebase-hooks/firestore";
+import {
+  useCollectionData,
+  useDocument,
+  useDocumentData,
+} from "react-firebase-hooks/firestore";
 import ReactPaginate from "react-paginate";
-import { filteredWordsRef } from "../app";
+import { settingsRef } from "../app";
 import styles from "../css/chat-room.module.css";
 import paginationStyles from "../css/pagination-controls.module.css";
 
 export function FilteredWordsDialog(props) {
-  const filterWord = firebase.functions().httpsCallable("filterWord");
-  const unfilterWord = firebase.functions().httpsCallable("unfilterWord");
-
   const [word, setWord] = useState("");
-  const query = props.open ? filteredWordsRef.orderBy("word") : null;
-  const [filteredWords] = useCollectionData(query, { idField: "id" });
+  const query = props.open ? settingsRef.doc("filteredWords") : null;
+  const [filteredWords, loading, error] = useDocumentData(query);
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;
   const start = (page - 1) * itemsPerPage;
@@ -31,7 +33,7 @@ export function FilteredWordsDialog(props) {
         </header>
         <main>
           {filteredWords &&
-            filteredWords.slice(start, end).map((word) => {
+            filteredWords.list.slice(start, end).map((word) => {
               return (
                 <div>
                   {word}{" "}
@@ -39,7 +41,9 @@ export function FilteredWordsDialog(props) {
                     href="#"
                     onClick={async (e) => {
                       e.preventDefault();
-                      console.log(await unfilterWord(word));
+                      settingsRef.doc("filteredWords").update({
+                        list: firebase.firestore.FieldValue.arrayRemove(word),
+                      });
                     }}
                   >
                     remove
@@ -47,12 +51,24 @@ export function FilteredWordsDialog(props) {
                 </div>
               );
             })}
-          Filter word{" "}
           <form
             onSubmit={async (e) => {
               e.preventDefault();
               if (word) {
-                console.log(await filterWord(word));
+                settingsRef.doc("filteredWords").update({
+                  list: firebase.firestore.FieldValue.arrayUnion(word),
+                  regex: new RegExp(
+                    [...new Set([...filteredWords.list, word])]
+                      // Escape special characters
+                      .map((s) =>
+                        s.replace(/[()[\]{}*+?^$|#.,\/\\\s-]/g, "\\$&")
+                      )
+                      // Sort for maximal munch
+                      .sort((a, b) => b.length - a.length)
+                      .join("|"),
+                    "gi"
+                  ).source,
+                });
               }
             }}
           >

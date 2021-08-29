@@ -51,7 +51,7 @@ if (window.location.hostname == "localhost") {
 export const messagesRef = firestore.collection("messages");
 export const usersRef = firestore.collection("users");
 export const modActionLogRef = firestore.collection("modActionLog");
-export const filteredWordsRef = firestore.collection("filteredWords");
+export const settingsRef = firestore.collection("settings");
 
 export const banUser = firebase.functions().httpsCallable("banUser");
 export const unbanUser = firebase.functions().httpsCallable("unbanUser");

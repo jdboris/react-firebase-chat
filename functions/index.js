@@ -254,6 +254,26 @@ exports.removeModerator = functions.https.onCall(async (username, context) => {
   };
 });
 
+async function filterWords(text) {
+  const filteredWords = await db
+    .collection("settings")
+    .doc("filteredWords")
+    .get();
+
+  return text.replace(
+    new RegExp(filteredWords.data().regex, "gi"),
+    "[redacted]"
+  );
+}
+
+exports.sendMessage = functions.https.onCall(async (data, context) => {
+  data.text = await filterWords(data.text);
+
+  return db
+    .collection("messages")
+    .add({ ...data, createdAt: admin.firestore.FieldValue.serverTimestamp() });
+});
+
 exports.signUp = functions.https.onCall(async (data, context) => {
   let anonSuffix;
 

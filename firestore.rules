@@ -22,13 +22,15 @@ service cloud.firestore {
     match /modActionLog/{docId} {
       allow read: if request.auth.uid != null && currentUser().isAdmin == true;
       allow create: if request.auth.uid != null && currentUser().isAdmin == true;
+      allow delete: if request.auth.uid != null && currentUser().isAdmin == true;
+    }
+
+    match /settings/filteredWords {
+      allow read: if request.auth.uid != null && currentUser().isAdmin == true;
+      allow create: if request.auth.uid != null && currentUser().isAdmin == true;
       allow update: if request.auth.uid != null && currentUser().isAdmin == true;
       allow delete: if request.auth.uid != null && currentUser().isAdmin == true;
     }
-  
-    // match /bannedUsers/{docId} {
-    //   allow create: if request.auth.token.isModerator == true;
-    // }
 
     function canCreateMessage() {
       let isSignedIn = request.auth.uid != null;

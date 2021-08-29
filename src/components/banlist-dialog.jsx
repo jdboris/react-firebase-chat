@@ -46,7 +46,6 @@ export function BanlistDialog(props) {
                 </div>
               );
             })}
-          Ban user{" "}
           <form
             onSubmit={async (e) => {
               e.preventDefault();
@@ -63,7 +62,7 @@ export function BanlistDialog(props) {
               }}
               value={username}
             />{" "}
-            <button>Add</button>
+            <button>Ban</button>
           </form>
         </main>
         <footer className={paginationStyles["pagination-controls"]}>
