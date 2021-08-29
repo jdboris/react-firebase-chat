@@ -51,7 +51,6 @@ export function ModeratorsDialog(props) {
                 </div>
               );
             })}
-          Add moderator{" "}
           <form
             onSubmit={(e) => {
               e.preventDefault();
