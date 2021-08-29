@@ -11,7 +11,6 @@ service cloud.firestore {
 
     match /messages/{docId} {
       allow read: if request.auth.uid != null && (resource.data.isDeleted == false || currentUser().isModerator == true || currentUser().isAdmin == true);
-      allow create: if canCreateMessage();
       allow update: if (currentUser().isModerator == true || currentUser().isAdmin == true) && 
                       // If the request only has the isDeleted field
                       // https://firebase.google.com/docs/firestore/security/rules-fields#allowing_only_certain_fields_to_be_changed
@@ -30,18 +29,6 @@ service cloud.firestore {
       allow create: if request.auth.uid != null && currentUser().isAdmin == true;
       allow update: if request.auth.uid != null && currentUser().isAdmin == true;
       allow delete: if request.auth.uid != null && currentUser().isAdmin == true;
-    }
-
-    function canCreateMessage() {
-      let isSignedIn = request.auth.uid != null;
-      let isOwner = request.auth.uid == request.resource.data.uid;
-      let isNotBanned = !currentUser().isBanned;
-
-      // let isNotBanned = exists(
-      //   /databases/$(database)/documents/bannedUsers/$(request.auth.uid)
-      // ) == false;
-
-      return isSignedIn && isOwner && isNotBanned;
     }
   
     match /userPresences/{docId} {

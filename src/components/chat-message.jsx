@@ -93,7 +93,7 @@ export function ChatMessage(props) {
     msgBgPosition,
     msgBgImgTransparency,
   } = props.message;
-  const { currentUser, userStyles } = props;
+  const { currentUser, stylesEnabled } = props;
   const messageClass = uid === auth.currentUser.uid ? "sent" : "received";
 
   let mouseDownSpot = null;
@@ -140,7 +140,7 @@ export function ChatMessage(props) {
           }
         }}
         style={
-          userStyles
+          stylesEnabled
             ? {
                 backgroundColor: `rgba(${hexToRgb(bgColor)},${bgTransparency})`,
               }
@@ -150,7 +150,7 @@ export function ChatMessage(props) {
         <div
           className={styles["message-background-image"]}
           style={
-            userStyles
+            stylesEnabled
               ? {
                   backgroundImage: `url(${backgroundImage})`,
                   backgroundRepeat: msgBgRepeat,
@@ -197,7 +197,7 @@ export function ChatMessage(props) {
         <div>
           <span
             className={styles["message-username"]}
-            style={{ color: nameColor }}
+            style={stylesEnabled ? { color: nameColor } : {}}
           >
             {username}
           </span>
@@ -205,7 +205,7 @@ export function ChatMessage(props) {
           <span
             className={styles["message-contents"]}
             style={
-              userStyles
+              stylesEnabled
                 ? {
                     fontSize: fontSize + "px",
                     color: fontColor,
