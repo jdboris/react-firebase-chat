@@ -13,10 +13,7 @@ import { MenuWithButton } from "./menu-with-button";
 export function UserStyleControls(props) {
   const { uid } = auth.currentUser;
 
-  const [enabled, setEnabled] = useState(props.enabled);
-  const [isFontOpen, setFontOpen] = useState(false);
-  const [isFontSizeOpen, setFontSizeOpen] = useState(false);
-  const [isFontColorOpen, setFontColorOpen] = useState(false);
+  const enabled = props.stylesEnabled;
 
   return (
     <>
@@ -27,9 +24,9 @@ export function UserStyleControls(props) {
               const newValue = !enabled;
               usersRef
                 .doc(uid)
-                .update({ enabled: newValue })
+                .update({ stylesEnabled: newValue })
                 .then(() => {
-                  setEnabled(newValue);
+                  props.setStylesEnabled(newValue);
                 });
             }}
           >

@@ -267,11 +267,25 @@ async function filterWords(text) {
 }
 
 exports.sendMessage = functions.https.onCall(async (data, context) => {
+  if (!context.auth.uid) {
+    return { error: "Please login." };
+  }
+
+  const user = await getUser(context.auth.uid);
+
+  if (user.isBanned) {
+    return { error: "You are banned." };
+  }
+
   data.text = await filterWords(data.text);
 
-  return db
-    .collection("messages")
-    .add({ ...data, createdAt: admin.firestore.FieldValue.serverTimestamp() });
+  return db.collection("messages").add({
+    ...data,
+    uid: context.auth.uid,
+    username: user.username,
+    photoUrl: user.phoroUrl || "",
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
 });
 
 exports.signUp = functions.https.onCall(async (data, context) => {
