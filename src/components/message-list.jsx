@@ -17,7 +17,7 @@ export function MessageList(props) {
           <ChatMessage
             key={msg.id}
             message={msg}
-            userStyles={props.userStyles}
+            stylesEnabled={props.stylesEnabled}
             onClick={props.onMessageClick}
             currentUser={props.currentUser}
           />

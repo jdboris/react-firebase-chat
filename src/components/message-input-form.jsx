@@ -18,13 +18,15 @@ export function MessageInputForm(props) {
         <input
           type="file"
           onChange={async (e) => {
-            const file = e.target.files[0];
-            const url = await uploadFile(file);
-            if (url) {
-              messageInput.focus();
-              props.setMessageValue(props.messageValue + " " + url + " ");
+            if (e.target.files.length) {
+              const file = e.target.files[0];
+              const url = await uploadFile(file);
+              if (url) {
+                messageInput.focus();
+                props.setMessageValue(props.messageValue + " " + url + " ");
+              }
+              e.target.value = "";
             }
-            e.target.value = "";
           }}
         />
       </label>
@@ -32,19 +34,21 @@ export function MessageInputForm(props) {
       <div
         className={styles["input-wrapper"]}
         style={
-          props.userStyles
+          props.stylesEnabled
             ? {
                 backgroundColor: `rgba(${hexToRgb(props.msgBgColor)},${
                   props.msgBgTransparency
                 })`,
               }
-            : {}
+            : {
+                backgroundColor: `white`,
+              }
         }
       >
         <div
           className={styles["message-background-image"]}
           style={
-            props.userStyles
+            props.stylesEnabled
               ? {
                   backgroundImage: `url(${props.msgBgImg})`,
                   backgroundRepeat: props.msgBgRepeat,
@@ -76,7 +80,7 @@ export function MessageInputForm(props) {
             }
           }}
           style={
-            props.userStyles
+            props.stylesEnabled
               ? {
                   fontFamily: props.font.style,
                   fontSize: props.fontSize,

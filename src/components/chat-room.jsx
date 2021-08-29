@@ -71,7 +71,7 @@ export function ChatRoom(props) {
   const [msgBgPosition, setMsgBgPosition] = useState("left");
   const [msgBgImgTransparency, setMsgBgImgTransparency] = useState(1);
 
-  const [userStyles, setUserStyles] = useState(true);
+  const [stylesEnabled, setStylesEnabled] = useState(true);
 
   const [isUsersOpen, setUsersOpen] = useState(false);
   const [isBanlistOpen, setBanlistOpen] = useState(false);
@@ -96,24 +96,19 @@ export function ChatRoom(props) {
       const text = messageValue;
       setMessageValue("");
 
-      const { uid, photoURL, displayName } = auth.currentUser;
-
       await sendMessageCloud({
-        text: text,
-        username: displayName,
-        uid,
-        photoURL,
+        text,
         isDeleted: false,
-        font: font,
-        fontSize: fontSize,
-        fontColor: fontColor,
+        font,
+        fontSize,
+        fontColor,
         backgroundImage: msgBgImg,
         bgColor: msgBgColor,
-        nameColor: nameColor,
+        nameColor,
         bgTransparency: msgBgTransparency,
-        msgBgRepeat: msgBgRepeat,
-        msgBgPosition: msgBgPosition,
-        msgBgImgTransparency: msgBgImgTransparency,
+        msgBgRepeat,
+        msgBgPosition,
+        msgBgImgTransparency,
       });
 
       setSentMsgCount(sentMsgCount + 1);
@@ -143,8 +138,8 @@ export function ChatRoom(props) {
           if ("fontSize" in preferences) setFontSize(preferences.fontSize);
           if ("fontColor" in preferences) setFontColor(preferences.fontColor);
           if ("font" in preferences) setFont(preferences.font);
-          if ("userStyles" in preferences)
-            setUserStyles(preferences.userStyles);
+          if ("stylesEnabled" in preferences)
+            setStylesEnabled(preferences.stylesEnabled);
           if ("msgBgImg" in preferences) setMsgBgImg(preferences.msgBgImg);
           if ("nameColor" in preferences) setNameColor(preferences.nameColor);
           if ("msgBgColor" in preferences)
@@ -187,7 +182,7 @@ export function ChatRoom(props) {
       <MessageList
         messages={messages}
         scrollToBottom={true}
-        userStyles={userStyles}
+        stylesEnabled={stylesEnabled}
         onMessageClick={(targetUsername) => {
           setMessageValue(messageValue + " @" + targetUsername + " ");
           messageInput.focus();
@@ -200,7 +195,8 @@ export function ChatRoom(props) {
         open={isFormatOpen}
         menuOpenKey={menuOpenKey}
         setMenuOpenKey={setMenuOpenKey}
-        enabled={userStyles}
+        stylesEnabled={stylesEnabled}
+        setStylesEnabled={setStylesEnabled}
         font={font}
         setFont={setFont}
         fontSize={fontSize}
@@ -224,7 +220,7 @@ export function ChatRoom(props) {
         }}
         messageValue={messageValue}
         setMessageValue={setMessageValue}
-        userStyles={userStyles}
+        stylesEnabled={stylesEnabled}
         font={font}
         fontSize={fontSize}
         fontColor={fontColor}
@@ -322,7 +318,7 @@ export function ChatRoom(props) {
                 msgBgPosition: msgBgPosition,
                 msgBgImgTransparency: msgBgImgTransparency,
               }}
-              userStyles={userStyles}
+              stylesEnabled={stylesEnabled}
               onClick={() => {}}
               currentUser={user}
             />
@@ -376,13 +372,15 @@ export function ChatRoom(props) {
             <input
               type="file"
               onChange={async (e) => {
-                const file = e.target.files[0];
-                const url = await uploadFile(file);
-                if (url) {
-                  await usersRef.doc(user.uid).update({
-                    msgBgImg: url,
-                  });
-                  setMsgBgImg(url);
+                if (e.target.files.length) {
+                  const file = e.target.files[0];
+                  const url = await uploadFile(file);
+                  if (url) {
+                    await usersRef.doc(user.uid).update({
+                      msgBgImg: url,
+                    });
+                    setMsgBgImg(url);
+                  }
                 }
               }}
             />
@@ -575,11 +573,13 @@ export function ChatRoom(props) {
               <input
                 type="file"
                 onChange={async (e) => {
-                  const file = e.target.files[0];
-                  const url = await uploadFile(file);
-                  if (url) {
-                    await auth.currentUser.updateProfile({ photoURL: url });
-                    setPhotoURL(url);
+                  if (e.target.files.length) {
+                    const file = e.target.files[0];
+                    const url = await uploadFile(file);
+                    if (url) {
+                      await auth.currentUser.updateProfile({ photoURL: url });
+                      setPhotoURL(url);
+                    }
                   }
                 }}
               />
