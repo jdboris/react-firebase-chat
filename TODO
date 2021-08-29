@@ -2,8 +2,8 @@
 -private messages
 -premium
 -input validation, error messages
--add security logic to cloud functions (i.e. ensuring the user is authenticated)
 -auto announcement
+-add security logic to cloud functions (i.e. ensuring the user is authenticated)
 -optimization to reduce firestore reads (prevent dialogs from querying until they're opened)
 -consider resizing images, and/or make thumbnails
     -https://firebase.google.com/docs/storage/extend-with-functions#example_image_transformation

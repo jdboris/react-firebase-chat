@@ -18,6 +18,7 @@ import { BanlistDialog } from "./banlist-dialog";
 import { ChatMessage } from "./chat-message";
 import { ColorInput } from "./color-input";
 import { EmojiSelector } from "./emoji-selector";
+import { FilteredWordsDialog } from "./filtered-words-dialog";
 import { MenuWithButton } from "./menu-with-button";
 import { MessageInputForm } from "./message-input-form";
 import { MessageList } from "./message-list";
@@ -27,6 +28,8 @@ import { SliderInput } from "./slider-input";
 import { UserStyleControls } from "./user-style-controls";
 
 export function ChatRoom(props) {
+  const sendMessageCloud = firebase.functions().httpsCallable("sendMessage");
+
   // Fetch the current user's ID from Firebase Authentication.
   const authUser = props.user;
   const [userSnapshot, isLoadingUser, error] = useDocument(
@@ -74,6 +77,8 @@ export function ChatRoom(props) {
   const [isBanlistOpen, setBanlistOpen] = useState(false);
   const [isModsOpen, setModsOpen] = useState(false);
   const [isModActionLogOpen, setModActionLogOpen] = useState(false);
+  const [isFilteredWordsOpen, setFilteredWordsOpen] = useState(false);
+
   const [menuOpenKey, setMenuOpenKey] = useState(0);
   const [isEmojisOpen, setEmojisOpen] = useState(false);
   const [isFormatOpen, setFormatOpen] = useState(false);
@@ -93,9 +98,8 @@ export function ChatRoom(props) {
 
       const { uid, photoURL, displayName } = auth.currentUser;
 
-      await messagesRef.add({
+      await sendMessageCloud({
         text: text,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         username: displayName,
         uid,
         photoURL,
@@ -261,6 +265,9 @@ export function ChatRoom(props) {
                 ? {
                     "Mod Action Log": () => {
                       setModActionLogOpen(!isModActionLogOpen);
+                    },
+                    "Filtered words": () => {
+                      setFilteredWordsOpen(!isFilteredWordsOpen);
                     },
                   }
                 : {}),
@@ -508,6 +515,13 @@ export function ChatRoom(props) {
         open={isModActionLogOpen}
         requestClose={() => {
           setModActionLogOpen(false);
+        }}
+      />
+
+      <FilteredWordsDialog
+        open={isFilteredWordsOpen}
+        requestClose={() => {
+          setFilteredWordsOpen(false);
         }}
       />
 
