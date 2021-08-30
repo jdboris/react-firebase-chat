@@ -41,8 +41,22 @@ export function FilteredWordsDialog(props) {
                     href="#"
                     onClick={async (e) => {
                       e.preventDefault();
+                      const newWords = [...filteredWords.list];
+                      newWords.splice(newWords.indexOf(word));
+
                       settingsRef.doc("filteredWords").update({
                         list: firebase.firestore.FieldValue.arrayRemove(word),
+                        regex: new RegExp(
+                          newWords
+                            // Escape special characters
+                            .map((s) =>
+                              s.replace(/[()[\]{}*+?^$|#.,\/\\\s-]/g, "\\$&")
+                            )
+                            // Sort for maximal munch
+                            .sort((a, b) => b.length - a.length)
+                            .join("|"),
+                          "gi"
+                        ).source,
                       });
                     }}
                   >
