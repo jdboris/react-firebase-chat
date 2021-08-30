@@ -68,7 +68,7 @@ export function ChatRoom(props) {
   const [msgBgColor, setMsgBgColor] = useState("#FFFFFF");
   const [msgBgTransparency, setMsgBgTransparency] = useState(1);
   const [msgBgRepeat, setMsgBgRepeat] = useState("no-repeat");
-  const [msgBgPosition, setMsgBgPosition] = useState("left");
+  const [msgBgPosition, setMsgBgPosition] = useState("left 0px top 0px");
   const [msgBgImgTransparency, setMsgBgImgTransparency] = useState(1);
 
   const [stylesEnabled, setStylesEnabled] = useState(true);
@@ -425,14 +425,14 @@ export function ChatRoom(props) {
                   <input
                     type="radio"
                     name="msgBgPosition"
-                    defaultChecked={msgBgPosition == "left"}
+                    defaultChecked={msgBgPosition == "left 0px top 0px"}
                     onChange={async (e) => {
                       const checked = e.target.checked;
                       if (checked) {
                         await usersRef.doc(user.uid).update({
-                          msgBgPosition: "left",
+                          msgBgPosition: "left 0px top 0px",
                         });
-                        setMsgBgPosition("left");
+                        setMsgBgPosition("left 0px top 0px");
                       }
                     }}
                   />
@@ -442,14 +442,14 @@ export function ChatRoom(props) {
                   <input
                     type="radio"
                     name="msgBgPosition"
-                    defaultChecked={msgBgPosition == "right"}
+                    defaultChecked={msgBgPosition == "right 0px top 0px"}
                     onChange={async (e) => {
                       const checked = e.target.checked;
                       if (checked) {
                         await usersRef.doc(user.uid).update({
-                          msgBgPosition: "right",
+                          msgBgPosition: "right 0px top 0px",
                         });
-                        setMsgBgPosition("right");
+                        setMsgBgPosition("right 0px top 0px");
                       }
                     }}
                   />
