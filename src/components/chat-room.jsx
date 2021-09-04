@@ -3,10 +3,11 @@ import PencilIcon from "@material-ui/icons/Create";
 import GavelIcon from "@material-ui/icons/Gavel";
 import MenuIcon from "@material-ui/icons/Menu";
 import PersonIcon from "@material-ui/icons/Person";
+import ChatBubbleIcon from "@material-ui/icons/ChatBubble";
 import firebase from "firebase/app";
 import React, { useEffect, useRef, useState } from "react";
 import { useCollectionData, useDocument } from "react-firebase-hooks/firestore";
-import { auth, messagesRef, usersRef as usersRef } from "../app";
+import { auth, usersRef as usersRef } from "../app";
 import styles from "../css/chat-room.module.css";
 import { fonts } from "../fonts";
 import { toggleSelectionMarkup } from "../markdown";
@@ -18,6 +19,7 @@ import { BanlistDialog } from "./banlist-dialog";
 import { ChatMessage } from "./chat-message";
 import { ColorInput } from "./color-input";
 import { EmojiSelector } from "./emoji-selector";
+import { DmsDialog } from "./dms-dialog";
 import { FilteredWordsDialog } from "./filtered-words-dialog";
 import { MenuWithButton } from "./menu-with-button";
 import { MessageInputForm } from "./message-input-form";
@@ -29,6 +31,7 @@ import { UserStyleControls } from "./user-style-controls";
 
 export function ChatRoom(props) {
   const sendMessageCloud = firebase.functions().httpsCallable("sendMessage");
+  const messagesRef = props.messagesRef;
 
   // Fetch the current user's ID from Firebase Authentication.
   const authUser = props.user;
@@ -49,12 +52,7 @@ export function ChatRoom(props) {
         email: authUser.email,
       };
 
-  // const [uid, setUid] = useState(user.uid);
-  // const [displayName, setDisplayName] = useState(user.displayName);
   const [photoURL, setPhotoURL] = useState(user.photoURL);
-  // uid != user.uid && setUid(user.uid);
-  // displayName != user.displayName && setDisplayName(user.displayName);
-  // photoURL != user.photoURL && setPhotoURL(user.photoURL);
 
   const [isOnline, setIsOnline] = useState(true);
   const [messageValue, setMessageValue] = useState("");
@@ -73,6 +71,7 @@ export function ChatRoom(props) {
 
   const [stylesEnabled, setStylesEnabled] = useState(true);
 
+  const [isDmsOpen, setDmsOpen] = useState(false);
   const [isUsersOpen, setUsersOpen] = useState(false);
   const [isBanlistOpen, setBanlistOpen] = useState(false);
   const [isModsOpen, setModsOpen] = useState(false);
@@ -97,6 +96,9 @@ export function ChatRoom(props) {
       setMessageValue("");
 
       await sendMessageCloud({
+        conversationId: messagesRef.parent
+          ? messagesRef.parent.id
+          : messagesRef.id,
         text,
         isDeleted: false,
         font,
@@ -129,6 +131,10 @@ export function ChatRoom(props) {
   console.log("RE-RENDER");
 
   useEffect(() => {
+    if (isLoadingUser) {
+      return;
+    }
+
     usersRef
       .doc(user.uid)
       .get()
@@ -155,7 +161,7 @@ export function ChatRoom(props) {
         }
       });
 
-    presence(setIsOnline);
+    presence(user, setIsOnline);
 
     firebase
       .firestore()
@@ -168,7 +174,7 @@ export function ChatRoom(props) {
           })
         );
       });
-  }, []);
+  }, [isLoadingUser]);
 
   useEffect(() => {
     if (!selection) return;
@@ -179,6 +185,17 @@ export function ChatRoom(props) {
 
   return (
     <section className={styles["chat-section"]} onClickCapture={closeMenus}>
+      <header>
+        {props.header}{" "}
+        {props.dms && (
+          <CloseIcon
+            className={styles["pointer"]}
+            onClick={() => {
+              props.setDmMessagesRef(null);
+            }}
+          />
+        )}
+      </header>
       <MessageList
         messages={messages}
         scrollToBottom={true}
@@ -189,6 +206,7 @@ export function ChatRoom(props) {
         }}
         sentMsgCount={sentMsgCount}
         currentUser={user}
+        messagesRef={messagesRef}
       />
 
       <UserStyleControls
@@ -237,6 +255,15 @@ export function ChatRoom(props) {
       />
 
       <div className={styles["chat-controls"]}>
+        <span className={styles["badge"]}>
+          <ChatBubbleIcon
+            className={styles["pointer"]}
+            onClick={() => {
+              setDmsOpen(!isDmsOpen);
+            }}
+          />
+        </span>
+
         <span
           className={styles["pointer"] + " " + styles["user-count"]}
           onClick={() => {
@@ -306,10 +333,10 @@ export function ChatRoom(props) {
                   1626757369,
                   337000000
                 ),
-                username: auth.currentUser.displayName,
-                fontSize: fontSize,
-                fontColor: fontColor,
-                font: font,
+                username: user.username,
+                fontSize,
+                fontColor,
+                font,
                 backgroundImage: msgBgImg,
                 nameColor: nameColor,
                 bgColor: msgBgColor,
@@ -321,6 +348,7 @@ export function ChatRoom(props) {
               stylesEnabled={stylesEnabled}
               onClick={() => {}}
               currentUser={user}
+              messagesRef={messagesRef}
             />
           </div>
           <label>
@@ -494,6 +522,16 @@ export function ChatRoom(props) {
           </ul>
         </div>
       )}
+
+      <DmsDialog
+        open={isDmsOpen}
+        username={user.username}
+        uid={user.uid}
+        setDmMessagesRef={props.setDmMessagesRef}
+        requestClose={() => {
+          setDmsOpen(false);
+        }}
+      />
 
       <ModeratorsDialog
         open={isModsOpen}

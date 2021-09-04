@@ -2,8 +2,8 @@ import firebase from "firebase/app";
 import "firebase/database";
 import { auth } from "./app";
 
-export function presence(setIsOnline) {
-  let { uid, displayName } = auth.currentUser;
+export function presence(user, setIsOnline) {
+  let { uid, username } = user;
   let offlineTimeout = null;
   let disconnectRef = null;
   let removeSnapshotListener = null;
@@ -13,25 +13,25 @@ export function presence(setIsOnline) {
   const isOfflineForDatabase = {
     isOnline: false,
     lastChanged: firebase.database.ServerValue.TIMESTAMP,
-    username: displayName,
+    username,
   };
 
   const isOnlineForDatabase = {
     isOnline: true,
     lastChanged: firebase.database.ServerValue.TIMESTAMP,
-    username: displayName,
+    username,
   };
 
   const isOfflineForFirestore = {
     isOnline: false,
     lastChanged: firebase.firestore.FieldValue.serverTimestamp(),
-    username: displayName,
+    username,
   };
 
   const isOnlineForFirestore = {
     isOnline: true,
     lastChanged: firebase.firestore.FieldValue.serverTimestamp(),
-    username: displayName,
+    username,
   };
 
   if (uid) {

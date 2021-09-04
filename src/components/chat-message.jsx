@@ -5,7 +5,7 @@ import isImageUrl from "is-image-url";
 import React, { useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import gfm from "remark-gfm";
-import { auth, banUser, messagesRef } from "../app";
+import { auth, banUser } from "../app";
 import { hexToRgb } from "../color";
 import styles from "../css/chat-room.module.css";
 import "../css/oembed.css";
@@ -93,20 +93,14 @@ export function ChatMessage(props) {
     msgBgPosition,
     msgBgImgTransparency,
   } = props.message;
-  const { currentUser, stylesEnabled } = props;
+  const { currentUser, stylesEnabled, messagesRef } = props;
   const messageClass = uid === auth.currentUser.uid ? "sent" : "received";
 
   let mouseDownSpot = null;
 
-  const doesMentionCurrentUser = new RegExp(
-    `@${auth.currentUser.displayName}\\b`,
-    "g"
-  ).test(text);
+  const doesMentionCurrentUser = new RegExp(`@${username}\\b`, "g").test(text);
 
-  text = text.replace(
-    new RegExp(`@${auth.currentUser.displayName}\\b`, "g"),
-    `**@${auth.currentUser.displayName}**`
-  );
+  text = text.replace(new RegExp(`@${username}\\b`, "g"), `**@${username}**`);
 
   function deleteMessage() {
     messagesRef.doc(props.message.id).update({ isDeleted: true });

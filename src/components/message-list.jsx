@@ -20,6 +20,7 @@ export function MessageList(props) {
             stylesEnabled={props.stylesEnabled}
             onClick={props.onMessageClick}
             currentUser={props.currentUser}
+            messagesRef={props.messagesRef}
           />
         ))}
     </section>
