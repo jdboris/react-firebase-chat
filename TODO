@@ -5,6 +5,7 @@
 -optimization to reduce firestore reads (prevent dialogs from querying until they're opened)
 -add latency compensation everywhere
 -give list items key attributes to shut the warnings up
+-optimization to reduce re-renders
 -fix this:
     -Can't perform a React state update on an unmounted component. This is a no-op, but it indicates a memory leak in your application. 
      To fix, cancel all subscriptions and asynchronous tasks in a useEffect cleanup function. at ChatRoom
@@ -19,3 +20,5 @@
     (node:3492) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 log listeners added to [EventEmitter]. Use emitter.setMaxListeners() to increase limit
     i  functions: Beginning execution of "us-central1-onUserStatusChanged"
     i  functions: Finished "us-central1-onUserStatusChanged" in ~1
+-security audit
+    -prevent updating

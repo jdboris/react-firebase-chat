@@ -4,7 +4,7 @@ import "firebase/auth";
 import "firebase/firestore";
 import "firebase/functions";
 import "firebase/storage";
-import React from "react";
+import React, { useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { ChatRoom } from "./components/chat-room";
 import { SignInForm } from "./components/sign-in-form";
@@ -48,10 +48,11 @@ if (window.location.hostname == "localhost") {
   storage.useEmulator("localhost", 9199);
 }
 
-export const messagesRef = firestore.collection("messages");
+export const conversationsRef = firestore.collection("conversations");
 export const usersRef = firestore.collection("users");
 export const modActionLogRef = firestore.collection("modActionLog");
 export const settingsRef = firestore.collection("settings");
+const messagesRef = firestore.collection("messages");
 
 export const banUser = firebase.functions().httpsCallable("banUser");
 export const unbanUser = firebase.functions().httpsCallable("unbanUser");
@@ -59,11 +60,28 @@ export const unbanUser = firebase.functions().httpsCallable("unbanUser");
 function App() {
   const [user] = useAuthState(auth);
   const email = user && !user.isAnonymous ? user.email : "";
+  const [dmMessagesRef, setDmMessagesRef] = useState( null );
+
+  // NOTE: This is a safe usage of displayName
+  const header = (dmMessagesRef && user) ? dmMessagesRef.parent.id
+                .split(":")
+                .filter((e) => e !== user.displayName)
+                .toString() : "";
 
   return (
     <div className={styles["chat-app"]}>
-      <header>{/* <SignOutButton /> */}</header>
-      {user ? <ChatRoom user={user} /> : <SignInForm email={email} />}
+      {user ? (
+        <>
+          {dmMessagesRef ? 
+            <ChatRoom user={user} messagesRef={dmMessagesRef} setDmMessagesRef={setDmMessagesRef} header={header} dms={true} /> 
+            :
+            <ChatRoom user={user} messagesRef={messagesRef} setDmMessagesRef={setDmMessagesRef} />
+          }
+        </>
+      ) : (
+        <SignInForm email={email} />
+      )}
+
     </div>
   );
 }

@@ -105,6 +105,15 @@ label [type="file"] {
   width: 100%;
 }
 
+.chat-section > header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.chat-section > header > * {
+  vertical-align: middle;
+}
+
 .messages-section {
   overflow-y: scroll;
   display: flex;

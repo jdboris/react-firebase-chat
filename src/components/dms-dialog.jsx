@@ -2,26 +2,34 @@ import CloseIcon from "@material-ui/icons/Close";
 import { default as React, useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import ReactPaginate from "react-paginate";
-import { banUser, unbanUser, usersRef as usersRef } from "../app";
+import { conversationsRef, firestore, usersRef } from "../app";
 import styles from "../css/chat-room.module.css";
 import paginationStyles from "../css/pagination-controls.module.css";
 
-export function BanlistDialog(props) {
+export function DmsDialog(props) {
   const [username, setUsername] = useState("");
   const query = props.open
-    ? usersRef.orderBy("username").where("isBanned", "==", true)
+    ? conversationsRef.where("users", "array-contains", props.uid)
     : null;
-  const [bannedUsers] = useCollectionData(query, { idField: "id" });
+  const [conversations, loading, error] = useCollectionData(query, {
+    idField: "id",
+  });
+
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;
   const start = (page - 1) * itemsPerPage;
   const end = page * itemsPerPage;
 
+  const combineStrings = (strings) => {
+    strings.sort();
+    return strings.join(":");
+  };
+
   return (
     props.open && (
-      <div className={styles["dialog"] + " " + styles["moderators"]}>
+      <div className={styles["dialog"] + " " + styles["filtered-words"]}>
         <header>
-          Banlist
+          Direct Messages
           <CloseIcon
             onClick={() => {
               props.requestClose();
@@ -29,19 +37,26 @@ export function BanlistDialog(props) {
           />
         </header>
         <main>
-          {bannedUsers &&
-            bannedUsers.slice(start, end).map((user) => {
+          {conversations &&
+            conversations.slice(start, end).map((conversation) => {
               return (
                 <div>
-                  {user.username}{" "}
                   <a
                     href="#"
                     onClick={async (e) => {
                       e.preventDefault();
-                      console.log(await unbanUser(user.username));
+                      props.setDmMessagesRef(
+                        firestore
+                          .collection("conversations")
+                          .doc(conversation.id)
+                          .collection("messages")
+                      );
                     }}
                   >
-                    remove
+                    {conversation.id
+                      .split(":")
+                      .filter((e) => e !== props.username)
+                      .toString()}
                   </a>
                 </div>
               );
@@ -50,25 +65,43 @@ export function BanlistDialog(props) {
             onSubmit={async (e) => {
               e.preventDefault();
               if (username) {
-                console.log(await banUser(username));
+                const snapshot = await usersRef
+                  .where("username", "==", username)
+                  .get();
+
+                if (!snapshot.docs.length) {
+                  // Error: User not found
+                  return;
+                }
+
+                await conversationsRef
+                  .doc(combineStrings([props.username, username]))
+                  .set(
+                    { users: [props.uid, snapshot.docs[0].id] },
+                    { merge: true }
+                  );
+
+                conversationsRef
+                  .doc(combineStrings([props.username, username]))
+                  .collection("messages");
               }
             }}
           >
             <input
               type="text"
-              placeholder="Username"
+              placeholder="username"
               onInput={(e) => {
                 setUsername(e.target.value);
               }}
               value={username}
             />{" "}
-            <button>Ban</button>
+            <button>Send Message</button>
           </form>
         </main>
         <footer className={paginationStyles["pagination-controls"]}>
-          {bannedUsers && (
+          {conversations && (
             <ReactPaginate
-              pageCount={Math.ceil(bannedUsers.length / itemsPerPage)}
+              pageCount={Math.ceil(conversations.length / itemsPerPage)}
               pageRangeDisplayed={10}
               marginPagesDisplayed={2}
               onPageChange={(item) => {
