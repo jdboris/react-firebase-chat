@@ -260,10 +260,12 @@ async function filterWords(text) {
     .doc("filteredWords")
     .get();
 
-  return text.replace(
+  const data = filteredWords.data();
+
+  return data ? text.replace(
     new RegExp(filteredWords.data().regex, "gi"),
     "[redacted]"
-  );
+  ) : text;
 }
 
 exports.sendMessage = functions.https.onCall(async (data, context) => {
@@ -279,19 +281,30 @@ exports.sendMessage = functions.https.onCall(async (data, context) => {
 
   data.text = await filterWords(data.text);
 
-  return db.collection("messages").add({
+  const contents = {
     ...data,
     uid: context.auth.uid,
     username: user.username,
     photoUrl: user.phoroUrl || "",
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
-  });
+  };
+
+  if( data.conversationId != "messages" ){
+    console.log(data.conversationId);
+    return db.collection("conversations").doc(data.conversationId).collection("messages").add(contents)
+  } else {
+    return db.collection("messages").add(contents);
+  }
 });
 
 exports.signUp = functions.https.onCall(async (data, context) => {
   let anonSuffix;
 
   if (!data.anonymous) {
+    if (data.username.match(/^anon\d+$/g)) {
+      return { success: false, message: "Invalid username." };
+    }
+
     if (data.username.match(/^anon\d+$/g)) {
       return { success: false, message: "Invalid username." };
     }
@@ -321,7 +334,7 @@ exports.signUp = functions.https.onCall(async (data, context) => {
     .auth()
     .createUser(
       data.anonymous
-        ? { displayName: user.username }
+        ? { displayName: data.username }
         : {
             email: data.email,
             emailVerified: false,
@@ -334,7 +347,7 @@ exports.signUp = functions.https.onCall(async (data, context) => {
     .then(async (userRecord) => {
       // NOTE: Must create the document now to allow calling .update() later
       db.doc(`users/${userRecord.uid}`).set({
-        username: userRecord.displayName,
+        username: data.username,
         isBanned: false,
         isModerator: false,
         isAdmin: false,

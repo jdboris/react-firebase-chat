@@ -49,6 +49,8 @@ export function ModActionLogDialog(props) {
               onPageChange={(item) => {
                 setPage(item.selected + 1);
               }}
+              nextLabel={">"}
+              previousLabel={"<"}
             />
           )}
         </footer>
