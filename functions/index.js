@@ -262,10 +262,9 @@ async function filterWords(text) {
 
   const data = filteredWords.data();
 
-  return data ? text.replace(
-    new RegExp(filteredWords.data().regex, "gi"),
-    "[redacted]"
-  ) : text;
+  return data
+    ? text.replace(new RegExp(filteredWords.data().regex, "gi"), "[redacted]")
+    : text;
 }
 
 exports.sendMessage = functions.https.onCall(async (data, context) => {
@@ -281,17 +280,37 @@ exports.sendMessage = functions.https.onCall(async (data, context) => {
 
   data.text = await filterWords(data.text);
 
+  const timestamp = admin.firestore.FieldValue.serverTimestamp();
+
   const contents = {
     ...data,
     uid: context.auth.uid,
     username: user.username,
     photoUrl: user.phoroUrl || "",
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    createdAt: timestamp,
   };
 
-  if( data.conversationId != "messages" ){
-    console.log(data.conversationId);
-    return db.collection("conversations").doc(data.conversationId).collection("messages").add(contents)
+  if (data.conversationId != "messages") {
+    await db
+      .collection("conversations")
+      .doc(data.conversationId)
+      .set(
+        {
+          lastMessageSentAt: timestamp,
+          users: {
+            [context.auth.uid]: {
+              lastReadAt: timestamp,
+            },
+          },
+        },
+        { merge: true }
+      );
+
+    return db
+      .collection("conversations")
+      .doc(data.conversationId)
+      .collection("messages")
+      .add(contents);
   } else {
     return db.collection("messages").add(contents);
   }
@@ -302,11 +321,15 @@ exports.signUp = functions.https.onCall(async (data, context) => {
 
   if (!data.anonymous) {
     if (data.username.match(/^anon\d+$/g)) {
-      return { success: false, message: "Invalid username." };
+      return { success: false, message: "Invalid username (anonXXXX)." };
     }
 
-    if (data.username.match(/^anon\d+$/g)) {
-      return { success: false, message: "Invalid username." };
+    if (!data.username.match(/^[a-z0-9]+$/i)) {
+      return {
+        success: false,
+        message:
+          "Invalid username (may only contain alphanumeric characters and numbers).",
+      };
     }
 
     // Require username to be unique

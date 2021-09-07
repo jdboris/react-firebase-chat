@@ -80,6 +80,8 @@ export function ModeratorsDialog(props) {
                 }}
                 nextLabel={">"}
                 previousLabel={"<"}
+                disabledClassName={paginationStyles["disabled"]}
+                activeClassName={paginationStyles["selected"]}
               />
             )}
           </footer>

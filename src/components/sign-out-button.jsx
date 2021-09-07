@@ -1,7 +1,6 @@
 import React from "react";
-import styles from "../css/chat-room.module.css";
-
 import { auth } from "../app";
+import styles from "../css/chat-room.module.css";
 
 export function SignOutButton() {
   return (

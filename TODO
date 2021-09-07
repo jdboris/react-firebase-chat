@@ -1,4 +1,3 @@
--private messages
 -premium
 -input validation, error messages
 -add security logic to cloud functions (i.e. ensuring the user is authenticated)

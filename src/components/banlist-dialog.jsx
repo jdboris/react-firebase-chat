@@ -76,6 +76,8 @@ export function BanlistDialog(props) {
               }}
               nextLabel={">"}
               previousLabel={"<"}
+              disabledClassName={paginationStyles["disabled"]}
+              activeClassName={paginationStyles["selected"]}
             />
           )}
         </footer>

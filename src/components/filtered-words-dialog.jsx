@@ -1,11 +1,7 @@
 import CloseIcon from "@material-ui/icons/Close";
 import firebase from "firebase/app";
 import { default as React, useState } from "react";
-import {
-  useCollectionData,
-  useDocument,
-  useDocumentData,
-} from "react-firebase-hooks/firestore";
+import { useDocumentData } from "react-firebase-hooks/firestore";
 import ReactPaginate from "react-paginate";
 import { settingsRef } from "../app";
 import styles from "../css/chat-room.module.css";
@@ -108,6 +104,8 @@ export function FilteredWordsDialog(props) {
               }}
               nextLabel={">"}
               previousLabel={"<"}
+              disabledClassName={paginationStyles["disabled"]}
+              activeClassName={paginationStyles["selected"]}
             />
           )}
         </footer>
