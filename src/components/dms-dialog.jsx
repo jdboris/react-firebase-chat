@@ -1,22 +1,17 @@
 import CloseIcon from "@material-ui/icons/Close";
 import { default as React, useState } from "react";
-import { useCollectionData } from "react-firebase-hooks/firestore";
+import firebase from "firebase/app";
 import ReactPaginate from "react-paginate";
 import { conversationsRef, firestore, usersRef } from "../app";
 import styles from "../css/chat-room.module.css";
 import paginationStyles from "../css/pagination-controls.module.css";
 
 export function DmsDialog(props) {
-  const [username, setUsername] = useState("");
-  const query = props.open
-    ? conversationsRef.where("users", "array-contains", props.uid)
-    : null;
-  const [conversations, loading, error] = useCollectionData(query, {
-    idField: "id",
-  });
+  const { conversations } = props;
 
+  const [username, setUsername] = useState("");
   const [page, setPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = props.itemsPerPage;
   const start = (page - 1) * itemsPerPage;
   const end = page * itemsPerPage;
 
@@ -27,9 +22,9 @@ export function DmsDialog(props) {
 
   return (
     props.open && (
-      <div className={styles["dialog"] + " " + styles["filtered-words"]}>
+      <div className={styles["dialog"]}>
         <header>
-          Direct Messages
+          Conversations
           <CloseIcon
             onClick={() => {
               props.requestClose();
@@ -37,30 +32,41 @@ export function DmsDialog(props) {
           />
         </header>
         <main>
-          {conversations &&
-            conversations.slice(start, end).map((conversation) => {
-              return (
-                <div>
-                  <a
-                    href="#"
-                    onClick={async (e) => {
-                      e.preventDefault();
-                      props.setDmMessagesRef(
-                        firestore
-                          .collection("conversations")
-                          .doc(conversation.id)
-                          .collection("messages")
-                      );
-                    }}
-                  >
-                    {conversation.id
-                      .split(":")
-                      .filter((e) => e !== props.username)
-                      .toString()}
-                  </a>
-                </div>
-              );
-            })}
+          <ul>
+            {conversations &&
+              conversations.slice(start, end).map((conversation) => {
+                const lastReadAt = conversation.users[props.uid].lastReadAt;
+                let isUnread = false;
+
+                // NOTE: lastReadAt will be null from latency compensation
+                if (lastReadAt !== null) {
+                  isUnread = conversation.lastMessageSentAt > lastReadAt;
+                }
+
+                return (
+                  <li>
+                    <a
+                      className={isUnread ? styles["unread-conversation"] : ""}
+                      href="#"
+                      onClick={async (e) => {
+                        e.preventDefault();
+                        props.setDmMessagesRef(
+                          firestore
+                            .collection("conversations")
+                            .doc(conversation.id)
+                            .collection("messages")
+                        );
+                      }}
+                    >
+                      {conversation.id
+                        .split(":")
+                        .filter((e) => e !== props.username)
+                        .toString()}
+                    </a>
+                  </li>
+                );
+              })}
+          </ul>
           <form
             onSubmit={async (e) => {
               e.preventDefault();
@@ -74,16 +80,42 @@ export function DmsDialog(props) {
                   return;
                 }
 
-                await conversationsRef
-                  .doc(combineStrings([props.username, username]))
-                  .set(
-                    { users: [props.uid, snapshot.docs[0].id] },
-                    { merge: true }
-                  );
+                const conversationId = combineStrings([
+                  props.username,
+                  username,
+                ]);
 
-                conversationsRef
-                  .doc(combineStrings([props.username, username]))
-                  .collection("messages");
+                await conversationsRef.doc(conversationId).set(
+                  {
+                    lastMessageSentAt: 0,
+                    // NOTE: This insanity is required for later queries with NoSQL
+                    userIds: [props.uid, snapshot.docs[0].id],
+                    users: {
+                      [props.uid]: {
+                        lastReadAt:
+                          firebase.firestore.FieldValue.serverTimestamp(),
+                      },
+                      [snapshot.docs[0].id]: {
+                        lastReadAt:
+                          firebase.firestore.FieldValue.serverTimestamp(),
+                      },
+                    },
+                  },
+                  { merge: true }
+                );
+
+                // await conversationsRef
+                //   .doc(conversationId)
+                //   .collection("messages");
+
+                props.setDmMessagesRef(
+                  firestore
+                    .collection("conversations")
+                    .doc(conversationId)
+                    .collection("messages")
+                );
+
+                props.requestClose();
               }
             }}
           >
@@ -109,6 +141,8 @@ export function DmsDialog(props) {
               }}
               nextLabel={">"}
               previousLabel={"<"}
+              disabledClassName={paginationStyles["disabled"]}
+              activeClassName={paginationStyles["selected"]}
             />
           )}
         </footer>

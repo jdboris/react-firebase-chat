@@ -1,11 +1,10 @@
 import CloseIcon from "@material-ui/icons/Close";
-import React from "react";
+import React, { useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
+import ReactPaginate from "react-paginate";
 import { modActionLogRef } from "../app";
 import styles from "../css/chat-room.module.css";
 import paginationStyles from "../css/pagination-controls.module.css";
-import ReactPaginate from "react-paginate";
-import { useState } from "react";
 
 export function ModActionLogDialog(props) {
   const query = props.open ? modActionLogRef.orderBy("date", "desc") : null;
@@ -51,6 +50,8 @@ export function ModActionLogDialog(props) {
               }}
               nextLabel={">"}
               previousLabel={"<"}
+              disabledClassName={paginationStyles["disabled"]}
+              activeClassName={paginationStyles["selected"]}
             />
           )}
         </footer>
