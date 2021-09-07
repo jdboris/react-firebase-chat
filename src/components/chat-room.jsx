@@ -1,13 +1,13 @@
+import ChatBubbleIcon from "@material-ui/icons/ChatBubble";
 import CloseIcon from "@material-ui/icons/Close";
 import PencilIcon from "@material-ui/icons/Create";
 import GavelIcon from "@material-ui/icons/Gavel";
 import MenuIcon from "@material-ui/icons/Menu";
 import PersonIcon from "@material-ui/icons/Person";
-import ChatBubbleIcon from "@material-ui/icons/ChatBubble";
 import firebase from "firebase/app";
 import React, { useEffect, useRef, useState } from "react";
 import { useCollectionData, useDocument } from "react-firebase-hooks/firestore";
-import { auth, usersRef as usersRef } from "../app";
+import { auth, conversationsRef, usersRef as usersRef } from "../app";
 import styles from "../css/chat-room.module.css";
 import { fonts } from "../fonts";
 import { toggleSelectionMarkup } from "../markdown";
@@ -18,8 +18,8 @@ import { BanlistDialog } from "./banlist-dialog";
 // import { getProviders } from "../oembed";
 import { ChatMessage } from "./chat-message";
 import { ColorInput } from "./color-input";
-import { EmojiSelector } from "./emoji-selector";
 import { DmsDialog } from "./dms-dialog";
+import { EmojiSelector } from "./emoji-selector";
 import { FilteredWordsDialog } from "./filtered-words-dialog";
 import { MenuWithButton } from "./menu-with-button";
 import { MessageInputForm } from "./message-input-form";
@@ -35,7 +35,7 @@ export function ChatRoom(props) {
 
   // Fetch the current user's ID from Firebase Authentication.
   const authUser = props.user;
-  const [userSnapshot, isLoadingUser, error] = useDocument(
+  const [userSnapshot, isLoadingUser, errorLoadingUser] = useDocument(
     usersRef.doc(authUser.uid)
   );
 
@@ -51,6 +51,32 @@ export function ChatRoom(props) {
         photoUrl: authUser.photoURL,
         email: authUser.email,
       };
+
+  const dmsPerPage = 10;
+  let query = user
+    ? conversationsRef
+        .where("userIds", "array-contains", user.uid)
+        .orderBy("lastMessageSentAt", "desc")
+        .limit(dmsPerPage)
+    : null;
+  const [conversations, loading, error] = useCollectionData(query, {
+    idField: "id",
+  });
+  const unreadCount = conversations
+    ? conversations.reduce((unreadCount, conversation) => {
+        const lastReadAt = conversation.users[user.uid].lastReadAt;
+        let isUnread = false;
+
+        // NOTE: lastReadAt will be null from latency compensation
+        if (lastReadAt !== null) {
+          isUnread = conversation.lastMessageSentAt > lastReadAt;
+        }
+        return isUnread ? unreadCount + 1 : unreadCount;
+      }, 0)
+    : 0;
+
+  console.log(conversations);
+  console.log("unreadCount: ", unreadCount);
 
   const [photoURL, setPhotoURL] = useState(user.photoURL);
 
@@ -121,7 +147,7 @@ export function ChatRoom(props) {
     setMenuOpenKey(menuOpenKey + 1);
   };
 
-  const query = messagesRef
+  query = messagesRef
     .limit(25)
     .orderBy("createdAt", "desc")
     .where("isDeleted", "==", false);
@@ -182,6 +208,43 @@ export function ChatRoom(props) {
     messageInput.focus();
     messageInput.setSelectionRange(start, end);
   }, [selection]);
+
+  useEffect(() => {
+    // if (props.dms) {
+    //   props.messagesRef.parent.set(
+    //     {
+    //       users: {
+    //         [user.uid]: {
+    //           lastReadAt: firebase.firestore.FieldValue.serverTimestamp(),
+    //         },
+    //       },
+    //     },
+    //     { merge: true }
+    //   );
+    // }
+  }, [props.header]);
+
+  useEffect(async () => {
+    if (!props.dms) {
+      return;
+    }
+    if (!user) {
+      return;
+    }
+
+    await props.messagesRef.parent.set(
+      {
+        // NOTE: Required for marking messages read
+        users: {
+          [user.uid]: {
+            lastReadAt: firebase.firestore.FieldValue.serverTimestamp(),
+            // lastReadAt: new firebase.firestore.Timestamp(1726757369, 337000000),
+          },
+        },
+      },
+      { merge: true }
+    );
+  }, [messages]);
 
   return (
     <section className={styles["chat-section"]} onClickCapture={closeMenus}>
@@ -255,15 +318,6 @@ export function ChatRoom(props) {
       />
 
       <div className={styles["chat-controls"]}>
-        <span className={styles["badge"]}>
-          <ChatBubbleIcon
-            className={styles["pointer"]}
-            onClick={() => {
-              setDmsOpen(!isDmsOpen);
-            }}
-          />
-        </span>
-
         <span
           className={styles["pointer"] + " " + styles["user-count"]}
           onClick={() => {
@@ -271,6 +325,24 @@ export function ChatRoom(props) {
           }}
         >
           {onlineUsers ? onlineUsers.length : 1}
+        </span>
+
+        <span
+          className={styles["badge"] + " " + styles["pointer"]}
+          data-badge-text={unreadCount ? unreadCount : ""}
+          onClick={() => {
+            setDmsOpen(!isDmsOpen);
+          }}
+        >
+          <ChatBubbleIcon
+            className={
+              styles["pointer"] +
+              " " +
+              styles["chat-bubble-icon"] +
+              " " +
+              (unreadCount ? styles["yellow"] : "")
+            }
+          />
         </span>
 
         {user.isModerator && (
@@ -330,7 +402,7 @@ export function ChatRoom(props) {
                 text: "Sample message text",
                 uid: user.uid,
                 createdAt: new firebase.firestore.Timestamp(
-                  1626757369,
+                  1726757369,
                   337000000
                 ),
                 username: user.username,
@@ -528,6 +600,8 @@ export function ChatRoom(props) {
         username={user.username}
         uid={user.uid}
         setDmMessagesRef={props.setDmMessagesRef}
+        conversations={conversations}
+        itemsPerPage={dmsPerPage}
         requestClose={() => {
           setDmsOpen(false);
         }}

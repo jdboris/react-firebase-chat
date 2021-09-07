@@ -1,6 +1,5 @@
 import emoji from "emoji-dictionary";
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 import styles from "../css/emoji-selector.module.css";
 
 export function EmojiSelector(props) {
