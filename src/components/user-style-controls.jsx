@@ -2,7 +2,7 @@ import AddIcon from "@material-ui/icons/Add";
 import ArrowDropDownIcon from "@material-ui/icons/ArrowDropDown";
 import CloseIcon from "@material-ui/icons/Close";
 import FormatColorTextIcon from "@material-ui/icons/FormatColorText";
-import React, { useState } from "react";
+import React from "react";
 import { auth, usersRef } from "../app";
 import styles from "../css/chat-room.module.css";
 import { fonts } from "../fonts";

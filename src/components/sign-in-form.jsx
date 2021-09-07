@@ -1,9 +1,7 @@
-import React, { useState } from "react";
-import styles from "../css/chat-room.module.css";
-
 import firebase from "firebase/app";
-
+import React, { useState } from "react";
 import { auth } from "../app";
+import styles from "../css/chat-room.module.css";
 
 export function SignInForm(props) {
   const [username, setUsername] = useState("");

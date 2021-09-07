@@ -40,6 +40,29 @@ label [type="file"] {
   display: none;
 }
 
+.yellow {
+  color: yellow;
+}
+
+.badge {
+  position: relative;
+}
+
+.badge::after {
+  content: attr(data-badge-text);
+  position: absolute;
+  display: flex;
+  color: black;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.7em;
+  width: 100%;
+  height: 100%;
+  left: 0px;
+  top: 0px;
+  margin-top: -1px;
+}
+
 .slider {
   -webkit-appearance: none;
   width: 100%;
@@ -187,6 +210,11 @@ label [type="file"] {
   vertical-align: middle;
 }
 
+svg.chat-bubble-icon {
+  width: 0.8em;
+  height: 0.8em;
+}
+
 svg.gavel-icon {
   font-size: 1.1em;
 }
@@ -220,6 +248,19 @@ svg.gavel-icon {
 .dialog header svg {
   font-size: 1rem;
   cursor: pointer;
+}
+
+.dialog ul {
+  margin: 5px 0px;
+  padding-left: 0px;
+}
+
+.dialog main ul li {
+  padding: 3px 0px;
+}
+
+.unread-conversation {
+  font-weight: bold;
 }
 
 .moderators main > div {
