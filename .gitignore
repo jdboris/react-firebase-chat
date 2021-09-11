@@ -29,3 +29,6 @@ yarn-error.log*
 
 # environment
 .env
+
+# personal notes
+NOTES
