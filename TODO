@@ -6,18 +6,18 @@
 -give list items key attributes to shut the warnings up
 -optimization to reduce re-renders
 -fix this:
-    -Can't perform a React state update on an unmounted component. This is a no-op, but it indicates a memory leak in your application. 
-     To fix, cancel all subscriptions and asynchronous tasks in a useEffect cleanup function. at ChatRoom
--consider resizing images, and/or make thumbnails
-    -https://firebase.google.com/docs/storage/extend-with-functions#example_image_transformation
+-Can't perform a React state update on an unmounted component. This is a no-op, but it indicates a memory leak in your application.
+To fix, cancel all subscriptions and asynchronous tasks in a useEffect cleanup function. at ChatRoom
+-consider resizing images, and/or make thumbnails -https://firebase.google.com/docs/storage/extend-with-functions#example_image_transformation
 -shorten image urls https://firebase.google.com/docs/dynamic-links/rest
--consider specifying "function location" to reduce latency (i.e. between functions and storage)
-    -https://firebase.google.com/docs/functions/locations
+-consider specifying "function location" to reduce latency (i.e. between functions and storage) -https://firebase.google.com/docs/functions/locations
 -investigate
-    i  functions: Beginning execution of "us-central1-onUserStatusChanged"
-    i  functions: Finished "us-central1-onUserStatusChanged" in ~1s
-    (node:3492) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 log listeners added to [EventEmitter]. Use emitter.setMaxListeners() to increase limit
-    i  functions: Beginning execution of "us-central1-onUserStatusChanged"
-    i  functions: Finished "us-central1-onUserStatusChanged" in ~1
--security audit
-    -prevent updating
+i functions: Beginning execution of "us-central1-onUserStatusChanged"
+i functions: Finished "us-central1-onUserStatusChanged" in ~1s
+(node:3492) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 log listeners added to [EventEmitter]. Use emitter.setMaxListeners() to increase limit
+i functions: Beginning execution of "us-central1-onUserStatusChanged"
+i functions: Finished "us-central1-onUserStatusChanged" in ~1
+-security audit (prevent updating, ...)
+-add batches (transactions)
+-accept donations (https://support.stripe.com/questions/how-to-accept-donations-through-stripe)
+-logging errors with @google-cloud/logging

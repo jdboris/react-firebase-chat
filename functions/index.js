@@ -1,12 +1,15 @@
 const functions = require("firebase-functions");
-const Filter = require("bad-words");
 const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
 const fetch = require("node-fetch");
 const crypto = require("crypto");
+const firebase = require("firebase");
 const { fromBuffer: fileTypeFromBuffer } = require("file-type");
 const { user } = require("firebase-functions/lib/providers/auth");
-const { CollectionsBookmarkOutlined } = require("@material-ui/icons");
+const { Logging } = require("@google-cloud/logging");
+const logging = new Logging({
+  projectId: process.env.GCLOUD_PROJECT,
+});
 
 admin.initializeApp();
 
@@ -435,6 +438,7 @@ async function sendVerificationEmail(email, username, link) {
       },
     });
 
+    // NOTE: Use https://www.campaignmonitor.com/resources/tools/css-inliner/
     const mailOptions = {
       from: functions.config().accounts.support.username,
       to: email,
@@ -443,57 +447,57 @@ async function sendVerificationEmail(email, username, link) {
           Welcome to Chatpad! Please visit ${link} to verify your email address.
       `,
       html: `
-        <html>
-            <head>
-                <style>
+      <html>
+          <head>
+              <style>
 
-                    header, footer, main {
-                        max-width: 600px;
-                        text-align: center;
-                    }
+                  header, footer, main {
+                      max-width: 600px;
+                      text-align: center;
+                  }
 
-                    header {
-                        background: rgb(36, 36, 179);
-                        font-size: 30px;
-                        padding: 8px;
-                        text-align: center;
-                    }
+                  header {
+                      background: rgb(36, 36, 179);
+                      font-size: 30px;
+                      padding: 8px;
+                      text-align: center;
+                  }
 
-                    footer {
-                        background: gray;
-                        font-size: 10px;
-                        padding: 8px;
-                        color: rgb(29, 29, 29);
-                        text-align: center;
-                    }
+                  footer {
+                      background: gray;
+                      font-size: 10px;
+                      padding: 8px;
+                      color: rgb(29, 29, 29);
+                      text-align: center;
+                  }
 
-                    p {
-                        text-align: initial;
-                    }
+                  p {
+                      text-align: initial;
+                  }
 
-                    .button-link {
-                        border-radius: 5px;
-                        background: rgb(36, 36, 179);
-                        color: rgb(196, 196, 196);
-                        padding: 10px;
-                        text-decoration: none;
-                        font-size: 1.5em;
-                    }
-                </style>
-            </head>
-            <body>
-                <header>Chatpad</header>
-                <main>
-                  <p>
-                    Welcome to Chatpad! Please verify your email address.
-                  </p>
-                  <a class="button-link" href="${link}">Verify</a>
-                </main>
-                <footer>
-                    <a href="http://www.chatpad.app">chatpad.app</a>
-                </footer>
-            </body>
-        </html>
+                  .button-link {
+                      border-radius: 5px;
+                      background: rgb(36, 36, 179);
+                      color: rgb(196, 196, 196);
+                      padding: 10px;
+                      text-decoration: none;
+                      font-size: 1.5em;
+                  }
+              </style>
+          </head>
+          <body>
+              <header style="background-attachment:scroll;max-width:600px;background-color:rgb(36, 36, 179);background-image:none;background-repeat:repeat;background-position:top left;font-size:30px;padding-top:8px;padding-bottom:8px;padding-right:8px;padding-left:8px;text-align:center;" >Chatpad</header>
+              <main style="max-width:600px;text-align:center;" >
+                <p style="text-align:initial;" >
+                  Welcome to Chatpad! Please verify your email address.
+                </p>
+                <a class="button-link" href="${link}" style="background-attachment:scroll;border-radius:5px;background-color:rgb(36, 36, 179);background-image:none;background-repeat:repeat;background-position:top left;color:rgb(196, 196, 196);padding-top:10px;padding-bottom:10px;padding-right:10px;padding-left:10px;text-decoration:none;font-size:1.5em;" >Verify</a>
+              </main>
+              <footer style="background-attachment:scroll;max-width:600px;background-color:gray;background-image:none;background-repeat:repeat;background-position:top left;font-size:10px;padding-top:8px;padding-bottom:8px;padding-right:8px;padding-left:8px;color:rgb(29, 29, 29);text-align:center;" >
+                  <a href="http://www.chatpad.app">chatpad.app</a>
+              </footer>
+          </body>
+      </html>
       `,
     };
 
@@ -683,3 +687,240 @@ exports.uploadFile = functions.https.onCall(async (data, context) => {
   await file.save(imageByteArray, options);
   return { url: await file.publicUrl() };
 });
+
+// ======================================================================================================
+//                                               Stripe
+// ======================================================================================================
+
+// /**
+//  * When a user is created, create a Stripe customer object for them.
+//  *
+//  * @see https://stripe.com/docs/payments/save-and-reuse#web-create-customer
+//  */
+// exports.createStripeCustomer = functions.auth.user().onCreate(async (user) => {
+//   const customer = await stripe.customers.create({ email: user.email });
+//   const intent = await stripe.setupIntents.create({
+//     customer: customer.id,
+//   });
+//   await admin.firestore().collection("stripeCustomers").doc(user.uid).set({
+//     customerId: customer.id,
+//     setupSecret: intent.client_secret,
+//   });
+//   return;
+// });
+
+// /**
+//  * When adding the payment method ID on the client,
+//  * this function is triggered to retrieve the payment method details.
+//  */
+// exports.addPaymentMethodDetails = functions.firestore
+//   .document("/stripeCustomers/{userId}/paymentMethods/{pushId}")
+//   .onCreate(async (snap, context) => {
+//     try {
+//       const paymentMethodId = snap.data().id;
+//       const paymentMethod = await stripe.payment_methods.retrieve(
+//         paymentMethodId
+//       );
+//       await snap.ref.set(paymentMethod);
+//       // Create a new SetupIntent so the customer can add a new method next time.
+//       const intent = await stripe.setupIntents.create({
+//         customer: `${paymentMethod.customer}`,
+//       });
+//       await snap.ref.parent.parent.set(
+//         {
+//           setupSecret: intent.client_secret,
+//         },
+//         { merge: true }
+//       );
+//       return;
+//     } catch (error) {
+//       await snap.ref.set({ error: userFacingMessage(error) }, { merge: true });
+//       await reportError(error, { user: context.params.userId });
+//     }
+//   });
+
+// /**
+//  * When a payment document is written on the client,
+//  * this function is triggered to create the payment in Stripe.
+//  *
+//  * @see https://stripe.com/docs/payments/save-and-reuse#web-create-payment-intent-off-session
+//  */
+
+// // [START chargecustomer]
+
+// exports.createStripePayment = functions.firestore
+//   .document("stripeCustomers/{userId}/payments/{pushId}")
+//   .onCreate(async (snap, context) => {
+//     const { amount, currency, paymentMethod } = snap.data();
+//     try {
+//       // Look up the Stripe customer id.
+//       const customer = (await snap.ref.parent.parent.get()).data().customerId;
+//       // Create a charge using the pushId as the idempotency key
+//       // to protect against double charges.
+//       const idempotencyKey = context.params.pushId;
+
+//       const payment = await stripe.paymentIntents.create(
+//         {
+//           amount,
+//           currency,
+//           customer,
+//           payment_method: paymentMethod,
+//           off_session: false,
+//           confirm: true,
+//           confirmation_method: "manual",
+//         },
+//         { idempotencyKey }
+//       );
+//       // If the result is successful, write it back to the database.
+//       await snap.ref.set(payment);
+//     } catch (error) {
+//       // We want to capture errors and render them in a user-friendly way, while
+//       // still logging an exception with StackDriver
+//       functions.logger.log(error);
+//       await snap.ref.set({ error: userFacingMessage(error) }, { merge: true });
+//       await reportError(error, { user: context.params.userId });
+//     }
+//   });
+
+// exports.createStripeSubscription = functions.firestore
+//   .document("stripeCustomers/{userId}/subscriptions/{pushId}")
+//   .onCreate(async (snap, context) => {
+//     const { amount, currency, paymentMethod } = snap.data();
+//     try {
+//       // Look up the Stripe customer id.
+//       const customer = (await snap.ref.parent.parent.get()).data().customerId;
+//       // Create a charge using the pushId as the idempotency key
+//       // to protect against double charges.
+//       const idempotencyKey = context.params.pushId;
+
+//       const priceId = context.params.priceId;
+
+//       // Create the subscription. Note we're expanding the Subscription's
+//       // latest invoice and that invoice's payment_intent
+//       // so we can pass it to the front end to confirm the payment
+//       const subscription = await stripe.subscriptions.create(
+//         {
+//           customer,
+//           items: [
+//             {
+//               price: priceId,
+//             },
+//           ],
+//           payment_behavior: "default_incomplete",
+//           expand: ["latest_invoice.payment_intent"],
+//         },
+//         { idempotencyKey }
+//       );
+
+//       res.send({
+//         subscriptionId: subscription.id,
+//         clientSecret: subscription.latest_invoice.payment_intent.client_secret,
+//       });
+
+//       const payment = await stripe.paymentIntents.create(
+//         {
+//           amount,
+//           currency,
+//           customer,
+//           payment_method: paymentMethod,
+//           off_session: false,
+//           confirm: true,
+//           confirmation_method: "manual",
+//         },
+//         { idempotencyKey }
+//       );
+//       // If the result is successful, write it back to the database.
+//       await snap.ref.set(payment);
+//     } catch (error) {
+//       // We want to capture errors and render them in a user-friendly way, while
+//       // still logging an exception with StackDriver
+//       functions.logger.log(error);
+//       await snap.ref.set({ error: userFacingMessage(error) }, { merge: true });
+//       await reportError(error, { user: context.params.userId });
+//     }
+//   });
+
+// // [END chargecustomer]
+
+// /**
+//  * When 3D Secure is performed, we need to reconfirm the payment
+//  * after authentication has been performed.
+//  *
+//  * @see https://stripe.com/docs/payments/accept-a-payment-synchronously#web-confirm-payment
+//  */
+// exports.confirmStripePayment = functions.firestore
+//   .document("stripeCustomers/{userId}/payments/{pushId}")
+//   .onUpdate(async (change, context) => {
+//     if (change.after.data().status === "requires_confirmation") {
+//       const payment = await stripe.paymentIntents.confirm(
+//         change.after.data().id
+//       );
+//       change.after.ref.set(payment);
+//     }
+//   });
+
+// /**
+//  * When a user deletes their account, clean up after them
+//  */
+// exports.cleanupUser = functions.auth.user().onDelete(async (user) => {
+//   const dbRef = admin.firestore().collection("stripeCustomers");
+//   const customer = (await dbRef.doc(user.uid).get()).data();
+//   await stripe.customers.del(customer.customerId);
+//   // Delete the customers payments & payment methods in firestore.
+//   const batch = admin.firestore().batch();
+//   const paymetsMethodsSnapshot = await dbRef
+//     .doc(user.uid)
+//     .collection("paymentMethods")
+//     .get();
+//   paymetsMethodsSnapshot.forEach((snap) => batch.delete(snap.ref));
+//   const paymentsSnapshot = await dbRef
+//     .doc(user.uid)
+//     .collection("payments")
+//     .get();
+//   paymentsSnapshot.forEach((snap) => batch.delete(snap.ref));
+
+//   await batch.commit();
+
+//   await dbRef.doc(user.uid).delete();
+//   return;
+// });
+
+// exports.sendToStripe = functions.https.onCall(async (data, context) => {
+//   return db
+//     .collection("users")
+//     .doc(context.auth.uid)
+//     .collection("checkoutSessions")
+//     .add({
+//       price: "price_1JYOR4AknxYOkdXtABxRsfSe", // todo price Id from your products price in the Stripe Dashboard
+//       success_url: data.returnUrl, // return user to this screen on successful purchase
+//       cancel_url: data.returnUrl, // return user to this screen on failed purchase
+//     })
+//     .then((docRef) => {
+//       // Wait for the checkoutSession to get attached by the extension
+//       docRef.onSnapshot(async (snap) => {
+//         const { error, sessionId } = snap.data();
+//         if (error) {
+//           // Show an error to your customer and inspect
+//           // your Cloud Function logs in the Firebase console.
+//           console.error(`An error occurred: ${error.message}`);
+//         }
+
+//         if (sessionId) {
+//           // We have a session, let's redirect to Checkout
+//           console.log(`redirecting`);
+
+//           await stripe.redirectToCheckout({ sessionId });
+//         }
+//       });
+//     });
+// });
+
+// exports.sendToCustomerPortal = functions.https.onCall(async (data, context) => {
+//   // had to update firebase.app().functions() to firebase.default.functions() and
+//   // removed the region from the functions call (from stripe firebase extension docs)
+//   const functionRef = firebase.default
+//     .functions()
+//     .httpsCallable("ext-firestore-stripe-subscriptions-createPortalLink");
+//   const { data } = await functionRef({ returnUrl: window.location.origin });
+//   window.location.assign(data.url);
+// });
