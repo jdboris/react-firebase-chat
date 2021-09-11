@@ -48,15 +48,21 @@ service cloud.firestore {
       allow read: if request.auth.uid != null && (resource.data.isDeleted == false || currentUser().isModerator == true || currentUser().isAdmin == true);
     }
   
-    match /users/{docId} {
-      allow create: if isDocOwner(docId);
+    match /users/{uid} {
+      allow create: if isDocOwner(uid);
       allow read: if true;
-      allow update: if isDocOwner(docId) && 
+      allow update: if isDocOwner(uid) && 
                     // NOTE: Don't allow updating these keys
                     (!request.resource.data.diff(resource.data).affectedKeys()
                     .hasAny(['isAdmin', 'isModerator', 'isBanned']));
+      match /checkout_sessions/{id} {
+        allow read, write: if request.auth.uid == uid;
+      }
+      match /subscriptions/{id} {
+        allow read: if request.auth.uid == uid;
+      }
     }
-
+    
     function isDocOwner(docId) {
       // debug( request.auth.uid );
       let isSignedIn = request.auth.uid != null;
@@ -64,7 +70,19 @@ service cloud.firestore {
 
       return isSignedIn && isOwner;
     }
-  
+
+    match /products/{id} {
+      allow read: if true;
+
+      match /prices/{id} {
+        allow read: if true;
+      }
+
+      match /tax_rates/{id} {
+        allow read: if true;
+      }
+    }
+
     match /oembedProviders/{docId} {
       allow read: if true;
     }

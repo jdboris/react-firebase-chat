@@ -7,7 +7,7 @@ import PersonIcon from "@material-ui/icons/Person";
 import firebase from "firebase/app";
 import React, { useEffect, useRef, useState } from "react";
 import { useCollectionData, useDocument } from "react-firebase-hooks/firestore";
-import { auth, conversationsRef, usersRef as usersRef } from "../app";
+import { auth, conversationsRef, usersRef, sendToStripe } from "../app";
 import styles from "../css/chat-room.module.css";
 import { fonts } from "../fonts";
 import { toggleSelectionMarkup } from "../markdown";
@@ -74,9 +74,6 @@ export function ChatRoom(props) {
         return isUnread ? unreadCount + 1 : unreadCount;
       }, 0)
     : 0;
-
-  console.log(conversations);
-  console.log("unreadCount: ", unreadCount);
 
   const [photoURL, setPhotoURL] = useState(user.photoURL);
 
@@ -379,6 +376,9 @@ export function ChatRoom(props) {
             },
             "Edit profile": () => {
               setProfileOpen(!isProfileOpen);
+            },
+            Premium: () => {
+              sendToStripe(user.uid, "price_1JYOR4AknxYOkdXtABxRsfSe");
             },
           }}
         />
