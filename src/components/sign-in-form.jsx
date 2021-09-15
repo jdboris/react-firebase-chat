@@ -15,15 +15,22 @@ export function SignInForm(props) {
       onSubmit={(e) => {
         e.preventDefault();
         if (isNewUser) {
-          const signUp = firebase.functions().httpsCallable("signUp");
-          signUp({ email: email, password: password, username: username }).then(
-            (result) => {
+          const signUp = firebase
+            .app()
+            .functions("us-central1")
+            .httpsCallable("signUp");
+          signUp({ email: email, password: password, username: username })
+            .then((result) => {
+              console.log(result);
               if (result.data.success) {
                 auth.signInWithEmailAndPassword(email, password);
               }
-            }
-          );
+            })
+            .catch((error) => {
+              console.error(error);
+            });
         } else {
+          console.log(email, password);
           auth.signInWithEmailAndPassword(email, password);
         }
       }}
@@ -92,7 +99,10 @@ export function SignInForm(props) {
         className={styles["sign-in"]}
         onClick={(e) => {
           e.preventDefault();
-          const signUp = firebase.functions().httpsCallable("signUp");
+          const signUp = firebase
+            .app()
+            .functions("us-central1")
+            .httpsCallable("signUp");
           signUp({ anonymous: true }).then((result) => {
             if (result.data.success) {
               auth.signInWithCustomToken(result.data.token);
