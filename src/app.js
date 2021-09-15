@@ -14,8 +14,9 @@ import styles from "./css/chat-room.module.css";
 // import { SignOutButton } from "./components/sign-out-button";
 
 let databaseUrl = "https://stream-site-9ebd9-default-rtdb.firebaseio.com";
+const useEmulators = false;
 
-if (window.location.hostname == "localhost") {
+if (window.location.hostname == "localhost" && useEmulators) {
   databaseUrl = "http://localhost:9000/?ns=stream-site-9ebd9-default-rtdb";
 }
 
@@ -39,7 +40,7 @@ export const storage = firebase.storage();
 
 const db = firebase.database();
 
-if (window.location.hostname == "localhost") {
+if (window.location.hostname == "localhost" && useEmulators) {
   auth.useEmulator("http://localhost:9099");
   firestore.useEmulator("localhost", 8080);
   // firestore.settings({ host: "localhost:8080", ssl: false });
@@ -62,14 +63,18 @@ export const getCustomerPortalLink = firebase
   .httpsCallable("ext-firestore-stripe-subscriptions-createPortalLink");
 
 export async function sendToStripe(uid, priceId) {
+  const returnUrl = new URL(window.location);
+  // Force a logout to refresh the token for premium custom claims
+  returnUrl.searchParams.set("chat-logout", "1");
+
   return firestore
     .collection("users")
     .doc(uid)
     .collection("checkout_sessions")
     .add({
-      price: priceId, // todo price Id from your products price in the Stripe Dashboard
-      success_url: window.location.origin, // return user to this screen on successful purchase
-      cancel_url: window.location.origin, // return user to this screen on failed purchase
+      price: priceId, // price Id from your products price in the Stripe Dashboard
+      success_url: returnUrl.href, // return user to this screen on successful purchase
+      cancel_url: window.location.href, // return user to this screen on failed purchase
     })
     .then((docRef) => {
       // Wait for the checkoutSession to get attached by the extension
@@ -99,6 +104,13 @@ function App() {
   const [user] = useAuthState(auth);
   const email = user && !user.isAnonymous ? user.email : "";
   const [dmMessagesRef, setDmMessagesRef] = useState(null);
+
+  const url = new URL(window.location);
+  // Force a logout to refresh the token
+  if (url.searchParams.get("chat-logout") && user) {
+    url.searchParams.delete("chat-logout");
+    auth.signOut();
+  }
 
   // NOTE: This is a safe usage of displayName
   const header =

@@ -75,12 +75,12 @@ export function ChatRoom(props) {
       }, 0)
     : 0;
 
-  const [photoURL, setPhotoURL] = useState(user.photoURL);
-
+  const [premium, setPremium] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
   const [messageValue, setMessageValue] = useState("");
   const [onlineUsers, setOnlineUsers] = useState([]);
 
+  const [photoURL, setPhotoURL] = useState(user.photoURL);
   const [font, setFont] = useState(fonts[0]);
   const [fontSize, setFontSize] = useState(13);
   const [fontColor, setFontColor] = useState("#000000");
@@ -153,8 +153,8 @@ export function ChatRoom(props) {
 
   console.log("RE-RENDER");
 
-  useEffect(() => {
-    if (isLoadingUser) {
+  useEffect(async () => {
+    if (isLoadingUser || !user) {
       return;
     }
 
@@ -197,6 +197,14 @@ export function ChatRoom(props) {
           })
         );
       });
+
+    const idTokenResult = await firebase.auth().currentUser.getIdTokenResult();
+    console.log("idTokenResult.claims: ", idTokenResult.claims);
+    if (idTokenResult.claims.stripeRole == "premium") {
+      setPremium(true);
+    } else {
+      setPremium(false);
+    }
   }, [isLoadingUser]);
 
   useEffect(() => {
@@ -660,6 +668,7 @@ export function ChatRoom(props) {
             setMessageValue={setMessageValue}
             messageInput={messageInput}
             shouldComponentUpdate={false}
+            premium={premium}
           />
         </div>
       </div>
