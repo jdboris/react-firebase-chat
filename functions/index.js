@@ -3,7 +3,6 @@ const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
 const fetch = require("node-fetch");
 const crypto = require("crypto");
-const firebase = require("firebase");
 const { fromBuffer: fileTypeFromBuffer } = require("file-type");
 const { user } = require("firebase-functions/lib/providers/auth");
 const { Logging } = require("@google-cloud/logging");
@@ -356,45 +355,42 @@ exports.signUp = functions.https.onCall(async (data, context) => {
     user.username = "anon" + anonSuffix;
   }
 
-  return admin
-    .auth()
-    .createUser(
-      data.anonymous
-        ? { displayName: data.username }
-        : {
-            email: data.email,
-            emailVerified: false,
-            password: data.password,
-            displayName: data.username,
-            // photoURL: "http://www.example.com/12345678/photo.png",
-            disabled: false,
-          }
-    )
-    .then(async (userRecord) => {
-      // NOTE: Must create the document now to allow calling .update() later
-      db.doc(`users/${userRecord.uid}`).set({
-        username: data.username,
-        isBanned: false,
-        isModerator: false,
-        isAdmin: false,
-        ...(data.anonymous ? { anonSuffix: anonSuffix } : {}),
-      });
+  const userRecord = await admin.auth().createUser(
+    data.anonymous
+      ? { displayName: data.username }
+      : {
+          email: data.email,
+          emailVerified: false,
+          password: data.password,
+          displayName: data.username,
+          // photoURL: "http://www.example.com/12345678/photo.png",
+          disabled: false,
+        }
+  );
+  // NOTE: Must create the document now to allow calling .update() later
+  await db.doc(`users/${userRecord.uid}`).set({
+    username: data.username,
+    isBanned: false,
+    isModerator: false,
+    isAdmin: false,
+    ...(data.anonymous ? { anonSuffix: anonSuffix } : {}),
+  });
 
-      const token = await admin.auth().createCustomToken(userRecord.uid);
+  const token = await admin.auth().createCustomToken(userRecord.uid);
 
-      // See the UserRecord reference doc for the contents of userRecord.
-      return {
-        success: true,
-        ...(data.anonymous ? { token } : {}),
-      };
-    })
-    .catch(function (error) {
-      console.error("Error creating new user:", error);
-      return {
-        success: false,
-        message: "Something went wrong. Please try again.",
-      };
-    });
+  // See the UserRecord reference doc for the contents of userRecord.
+  return {
+    success: true,
+    ...(data.anonymous ? { token } : {}),
+  };
+
+  // .catch(function (error) {
+  //   console.error("Error creating new user:", error);
+  //   return {
+  //     success: false,
+  //     message: "Something went wrong. Please try again.",
+  //   };
+  // });
 });
 
 exports.sendWelcomeEmail = functions.auth.user().onCreate((user) => {
@@ -414,6 +410,8 @@ exports.sendWelcomeEmail = functions.auth.user().onCreate((user) => {
       .catch((error) => {
         console.error(error);
       });
+  } else {
+    return null;
   }
 });
 
@@ -451,8 +449,10 @@ async function sendVerificationEmail(email, username, link) {
           <head>
               <style>
 
-                  header, footer, main {
+                  .header, .footer, .main {
+                      display: block;
                       max-width: 600px;
+                      margin: auto;
                       text-align: center;
                   }
 
@@ -463,7 +463,7 @@ async function sendVerificationEmail(email, username, link) {
                       text-align: center;
                   }
 
-                  footer {
+                  .footer {
                       background: gray;
                       font-size: 10px;
                       padding: 8px;
@@ -486,16 +486,16 @@ async function sendVerificationEmail(email, username, link) {
               </style>
           </head>
           <body>
-              <header style="background-attachment:scroll;max-width:600px;background-color:rgb(36, 36, 179);background-image:none;background-repeat:repeat;background-position:top left;font-size:30px;padding-top:8px;padding-bottom:8px;padding-right:8px;padding-left:8px;text-align:center;" >Chatpad</header>
-              <main style="max-width:600px;text-align:center;" >
+              <div class="header" style="background-attachment:scroll;max-width:600px;background-color:rgb(36, 36, 179);background-image:none;background-repeat:repeat;background-position:top left;font-size:30px;padding-top:8px;padding-bottom:8px;padding-right:8px;padding-left:8px;text-align:center;display:block;margin-top:auto;margin-bottom:auto;margin-right:auto;margin-left:auto;" >Chatpad</div>
+              <div class="main" style="max-width:600px;text-align:center;display:block;margin-top:auto;margin-bottom:auto;margin-right:auto;margin-left:auto;" >
                 <p style="text-align:initial;" >
                   Welcome to Chatpad! Please verify your email address.
                 </p>
                 <a class="button-link" href="${link}" style="background-attachment:scroll;border-radius:5px;background-color:rgb(36, 36, 179);background-image:none;background-repeat:repeat;background-position:top left;color:rgb(196, 196, 196);padding-top:10px;padding-bottom:10px;padding-right:10px;padding-left:10px;text-decoration:none;font-size:1.5em;" >Verify</a>
-              </main>
-              <footer style="background-attachment:scroll;max-width:600px;background-color:gray;background-image:none;background-repeat:repeat;background-position:top left;font-size:10px;padding-top:8px;padding-bottom:8px;padding-right:8px;padding-left:8px;color:rgb(29, 29, 29);text-align:center;" >
+              </div>
+              <div class="footer" style="background-attachment:scroll;max-width:600px;background-color:gray;background-image:none;background-repeat:repeat;background-position:top left;font-size:10px;padding-top:8px;padding-bottom:8px;padding-right:8px;padding-left:8px;color:rgb(29, 29, 29);text-align:center;display:block;margin-top:auto;margin-bottom:auto;margin-right:auto;margin-left:auto;" >
                   <a href="http://www.chatpad.app">chatpad.app</a>
-              </footer>
+              </div>
           </body>
       </html>
       `,

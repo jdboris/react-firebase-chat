@@ -1,4 +1,5 @@
 -premium
+-fix logging out and back in
 -input validation, error messages
 -add security logic to cloud functions (i.e. ensuring the user is authenticated)
 -optimization to reduce firestore reads (prevent dialogs from querying until they're opened)
@@ -21,3 +22,8 @@ i functions: Finished "us-central1-onUserStatusChanged" in ~1
 -add batches (transactions)
 -accept donations (https://support.stripe.com/questions/how-to-accept-donations-through-stripe)
 -logging errors with @google-cloud/logging
+
+Future features:
+-custom emojis
+-API for embedding
+-API for custom styling (badges for streamers, etc...)
