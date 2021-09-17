@@ -40,8 +40,8 @@ export function EmojiSelector(props) {
     // "eggplant",
   ];
 
-  const freeCodes = emoji.unicode.filter((code, i) => {
-    return freeNames.includes(emoji.names[i]);
+  const freeCodes = freeNames.map((name) => {
+    return emoji.getUnicode(name);
   });
 
   return (
