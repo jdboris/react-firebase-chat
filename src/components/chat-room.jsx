@@ -62,6 +62,7 @@ export function ChatRoom(props) {
   const [conversations, loading, error] = useCollectionData(query, {
     idField: "id",
   });
+
   const unreadCount = conversations
     ? conversations.reduce((unreadCount, conversation) => {
         const lastReadAt = conversation.users[user.uid].lastReadAt;
@@ -149,9 +150,9 @@ export function ChatRoom(props) {
     .orderBy("createdAt", "desc")
     .where("isDeleted", "==", false);
 
-  const [messages] = useCollectionData(query, { idField: "id" });
-
-  console.log("RE-RENDER");
+  const [messages, loadingMessages, messagesError] = useCollectionData(query, {
+    idField: "id",
+  });
 
   useEffect(async () => {
     if (isLoadingUser || !user) {
