@@ -308,14 +308,16 @@ exports.sendMessage = functions.https.onCall(async (data, context) => {
         { merge: true }
       );
 
-    return db
+    await db
       .collection("conversations")
       .doc(data.conversationId)
       .collection("messages")
       .add(contents);
   } else {
-    return db.collection("messages").add(contents);
+    await db.collection("messages").add(contents);
   }
+
+  return {};
 });
 
 exports.signUp = functions.https.onCall(async (data, context) => {
@@ -323,13 +325,12 @@ exports.signUp = functions.https.onCall(async (data, context) => {
 
   if (!data.anonymous) {
     if (data.username.match(/^anon\d+$/g)) {
-      return { success: false, message: "Invalid username (anonXXXX)." };
+      return { error: "Invalid username (anonXXXX)." };
     }
 
     if (!data.username.match(/^[a-z0-9]+$/i)) {
       return {
-        success: false,
-        message:
+        error:
           "Invalid username (may only contain alphanumeric characters and numbers).",
       };
     }
@@ -339,7 +340,7 @@ exports.signUp = functions.https.onCall(async (data, context) => {
     const snapshot = await query.get();
     const docs = await snapshot.docs;
     if (docs.length > 0) {
-      return { success: false, message: "Username taken." };
+      return { error: "Username taken." };
     }
   } else {
     // Select users whose names start with "anon"
@@ -387,8 +388,7 @@ exports.signUp = functions.https.onCall(async (data, context) => {
   // .catch(function (error) {
   //   console.error("Error creating new user:", error);
   //   return {
-  //     success: false,
-  //     message: "Something went wrong. Please try again.",
+  //     error: "Something went wrong. Please try again.",
   //   };
   // });
 });
