@@ -7,7 +7,7 @@ import PersonIcon from "@material-ui/icons/Person";
 import firebase from "firebase/app";
 import React, { useEffect, useRef, useState } from "react";
 import { useCollectionData, useDocument } from "react-firebase-hooks/firestore";
-import { auth, conversationsRef, usersRef, sendToStripe } from "../app";
+import { auth, conversationsRef, usersRef } from "../app";
 import styles from "../css/chat-room.module.css";
 import { fonts } from "../fonts";
 import { toggleSelectionMarkup } from "../markdown";
@@ -26,6 +26,7 @@ import { MessageInputForm } from "./message-input-form";
 import { MessageList } from "./message-list";
 import { ModActionLogDialog } from "./mod-action-log-dialog";
 import { ModeratorsDialog } from "./moderators-dialog";
+import { PremiumDialog } from "./premium-dialog";
 import { SliderInput } from "./slider-input";
 import { UserStyleControls } from "./user-style-controls";
 
@@ -51,7 +52,7 @@ export function ChatRoom(props) {
         photoUrl: authUser.photoURL,
         email: authUser.email,
       };
-
+  console.log(user);
   const dmsPerPage = 10;
   let query = user
     ? conversationsRef
@@ -95,6 +96,7 @@ export function ChatRoom(props) {
 
   const [stylesEnabled, setStylesEnabled] = useState(true);
 
+  const [isPremiumOpen, setPremiumOpen] = useState(false);
   const [isDmsOpen, setDmsOpen] = useState(false);
   const [isUsersOpen, setUsersOpen] = useState(false);
   const [isBanlistOpen, setBanlistOpen] = useState(false);
@@ -200,12 +202,7 @@ export function ChatRoom(props) {
       });
 
     const idTokenResult = await firebase.auth().currentUser.getIdTokenResult();
-    console.log("idTokenResult.claims: ", idTokenResult.claims);
-    if (idTokenResult.claims.stripeRole == "premium") {
-      setPremium(true);
-    } else {
-      setPremium(false);
-    }
+    setPremium(idTokenResult.claims.stripeRole == "premium");
   }, [isLoadingUser]);
 
   useEffect(() => {
@@ -387,7 +384,7 @@ export function ChatRoom(props) {
               setProfileOpen(!isProfileOpen);
             },
             Premium: () => {
-              sendToStripe(user.uid, "price_1JYOR4AknxYOkdXtABxRsfSe");
+              setPremiumOpen(!isPremiumOpen);
             },
           }}
         />
@@ -603,6 +600,16 @@ export function ChatRoom(props) {
           </ul>
         </div>
       )}
+
+      <PremiumDialog
+        open={isPremiumOpen}
+        uid={user.uid}
+        premium={premium}
+        stripeLink={user.stripeLink}
+        requestClose={() => {
+          setPremiumOpen(false);
+        }}
+      />
 
       <DmsDialog
         open={isDmsOpen}

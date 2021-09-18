@@ -52,7 +52,7 @@ export function EmojiSelector(props) {
         }}
         value={searchValue}
         autoFocus
-        placeholder="smile, thinking, glasses, etc..."
+        placeholder="smile, angry, laughing, etc..."
       />
       <section>
         {(props.premium ? emoji.unicode : freeCodes).reduce(
