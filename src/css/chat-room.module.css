@@ -259,6 +259,10 @@ svg.gavel-icon {
   padding: 3px 0px;
 }
 
+.premium-dialog label {
+  display: block;
+}
+
 .unread-conversation {
   font-weight: bold;
 }
