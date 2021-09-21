@@ -16,8 +16,6 @@ import { uploadFile } from "../storage";
 import { insertIntoInput } from "../utils";
 import { BanlistDialog } from "./banlist-dialog";
 // import { getProviders } from "../oembed";
-import { ChatMessage } from "./chat-message";
-import { ColorInput } from "./color-input";
 import { DmsDialog } from "./dms-dialog";
 import { EmojiSelector } from "./emoji-selector";
 import { FilteredWordsDialog } from "./filtered-words-dialog";
@@ -27,7 +25,7 @@ import { MessageList } from "./message-list";
 import { ModActionLogDialog } from "./mod-action-log-dialog";
 import { ModeratorsDialog } from "./moderators-dialog";
 import { PremiumDialog } from "./premium-dialog";
-import { SliderInput } from "./slider-input";
+import { StyleEditorDialog } from "./style-editor-dialog";
 import { UserStyleControls } from "./user-style-controls";
 
 export function ChatRoom(props) {
@@ -36,9 +34,7 @@ export function ChatRoom(props) {
 
   // Fetch the current user's ID from Firebase Authentication.
   const authUser = props.user;
-  const [userSnapshot, isLoadingUser, errorLoadingUser] = useDocument(
-    usersRef.doc(authUser.uid)
-  );
+  const [userSnapshot, isLoadingUser] = useDocument(usersRef.doc(authUser.uid));
 
   const user = userSnapshot
     ? {
@@ -52,7 +48,7 @@ export function ChatRoom(props) {
         photoUrl: authUser.photoURL,
         email: authUser.email,
       };
-  console.log(user);
+
   const dmsPerPage = 10;
   let query = user
     ? conversationsRef
@@ -60,7 +56,7 @@ export function ChatRoom(props) {
         .orderBy("lastMessageSentAt", "desc")
         .limit(dmsPerPage)
     : null;
-  const [conversations, loading, error] = useCollectionData(query, {
+  const [conversations] = useCollectionData(query, {
     idField: "id",
   });
 
@@ -152,7 +148,7 @@ export function ChatRoom(props) {
     .orderBy("createdAt", "desc")
     .where("isDeleted", "==", false);
 
-  const [messages, loadingMessages, messagesError] = useCollectionData(query, {
+  const [messages] = useCollectionData(query, {
     idField: "id",
   });
 
@@ -212,21 +208,6 @@ export function ChatRoom(props) {
     messageInput.setSelectionRange(start, end);
   }, [selection]);
 
-  useEffect(() => {
-    // if (props.dms) {
-    //   props.messagesRef.parent.set(
-    //     {
-    //       users: {
-    //         [user.uid]: {
-    //           lastReadAt: firebase.firestore.FieldValue.serverTimestamp(),
-    //         },
-    //       },
-    //     },
-    //     { merge: true }
-    //   );
-    // }
-  }, [props.header]);
-
   useEffect(async () => {
     if (!props.dms) {
       return;
@@ -277,6 +258,7 @@ export function ChatRoom(props) {
 
       <UserStyleControls
         open={isFormatOpen}
+        premium={premium}
         menuOpenKey={menuOpenKey}
         setMenuOpenKey={setMenuOpenKey}
         stylesEnabled={stylesEnabled}
@@ -390,198 +372,33 @@ export function ChatRoom(props) {
         />
       </div>
 
-      {isStyleEditorOpen && (
-        <div
-          className={styles["dialog"] + " " + styles["message-style-editor"]}
-        >
-          <header>
-            Message style editor
-            <CloseIcon
-              onClick={() => {
-                setStyleEditorOpen(false);
-              }}
-            />
-          </header>
-          <div className={styles["sample-message-wrapper"]}>
-            <ChatMessage
-              message={{
-                text: "Sample message text",
-                uid: user.uid,
-                createdAt: new firebase.firestore.Timestamp(
-                  1726757369,
-                  337000000
-                ),
-                username: user.username,
-                fontSize,
-                fontColor,
-                font,
-                backgroundImage: msgBgImg,
-                nameColor: nameColor,
-                bgColor: msgBgColor,
-                bgTransparency: msgBgTransparency,
-                msgBgRepeat: msgBgRepeat,
-                msgBgPosition: msgBgPosition,
-                msgBgImgTransparency: msgBgImgTransparency,
-              }}
-              stylesEnabled={stylesEnabled}
-              onClick={() => {}}
-              currentUser={user}
-              messagesRef={messagesRef}
-            />
-          </div>
-          <label>
-            Name color
-            <ColorInput
-              defaultValue={nameColor}
-              onChange={(e) => {
-                setNameColor(e.target.value);
-              }}
-              onChangeComplete={(e) => {
-                usersRef.doc(user.uid).update({
-                  nameColor: e.target.value,
-                });
-              }}
-            />
-          </label>
-          <label>
-            Bg color
-            <ColorInput
-              defaultValue={msgBgColor}
-              onChange={(e) => {
-                setMsgBgColor(e.target.value);
-              }}
-              onChangeComplete={(e) => {
-                usersRef.doc(user.uid).update({
-                  msgBgColor: e.target.value,
-                });
-              }}
-            />
-          </label>
-          <label>
-            Bg transparency
-            <SliderInput
-              min="0"
-              max="100"
-              defaultValue={msgBgTransparency * 100}
-              onChange={(e) => {
-                setMsgBgTransparency(e.target.value / 100);
-              }}
-              onChangeComplete={(e) => {
-                usersRef.doc(user.uid).update({
-                  msgBgTransparency: e.target.value / 100,
-                });
-              }}
-            />
-          </label>
-          <label className={styles["button"]}>
-            Upload Image
-            <input
-              type="file"
-              onChange={async (e) => {
-                if (e.target.files.length) {
-                  const file = e.target.files[0];
-                  const url = await uploadFile(file);
-                  if (url) {
-                    await usersRef.doc(user.uid).update({
-                      msgBgImg: url,
-                    });
-                    setMsgBgImg(url);
-                  }
-                }
-              }}
-            />
-          </label>
-          {msgBgImg && (
-            <label
-              onClick={async (e) => {
-                await usersRef.doc(user.uid).update({
-                  msgBgImg: "",
-                });
-                setMsgBgImg("");
-              }}
-              className={styles["button"]}
-            >
-              Clear Image
-            </label>
-          )}
-          <div>
-            {msgBgImg && (
-              <label>
-                <input
-                  type="checkbox"
-                  onChange={async (e) => {
-                    const checked = e.target.checked;
-                    await usersRef.doc(user.uid).update({
-                      msgBgRepeat: checked ? "repeat" : "no-repeat",
-                    });
-
-                    setMsgBgRepeat(checked ? "repeat" : "no-repeat");
-                  }}
-                  defaultChecked={msgBgRepeat == "repeat"}
-                />
-                Tile image
-              </label>
-            )}
-          </div>
-          {msgBgImg && (
-            <>
-              <div>
-                Align image
-                <label>
-                  <input
-                    type="radio"
-                    name="msgBgPosition"
-                    defaultChecked={msgBgPosition == "left 0px top 0px"}
-                    onChange={async (e) => {
-                      const checked = e.target.checked;
-                      if (checked) {
-                        await usersRef.doc(user.uid).update({
-                          msgBgPosition: "left 0px top 0px",
-                        });
-                        setMsgBgPosition("left 0px top 0px");
-                      }
-                    }}
-                  />
-                  Left
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    name="msgBgPosition"
-                    defaultChecked={msgBgPosition == "right 0px top 0px"}
-                    onChange={async (e) => {
-                      const checked = e.target.checked;
-                      if (checked) {
-                        await usersRef.doc(user.uid).update({
-                          msgBgPosition: "right 0px top 0px",
-                        });
-                        setMsgBgPosition("right 0px top 0px");
-                      }
-                    }}
-                  />
-                  Right
-                </label>
-              </div>
-              <label>
-                Image transparency
-                <SliderInput
-                  min="0"
-                  max="100"
-                  defaultValue={msgBgImgTransparency * 100}
-                  onChange={(e) => {
-                    setMsgBgImgTransparency(e.target.value / 100);
-                  }}
-                  onChangeComplete={(e) => {
-                    usersRef.doc(user.uid).update({
-                      msgBgImgTransparency: e.target.value / 100,
-                    });
-                  }}
-                />
-              </label>
-            </>
-          )}
-        </div>
-      )}
+      <StyleEditorDialog
+        open={isStyleEditorOpen}
+        premium={premium}
+        requestClose={() => {
+          setStyleEditorOpen(false);
+        }}
+        messagesRef={messagesRef}
+        user={user}
+        fontSize={fontSize}
+        fontColor={fontColor}
+        font={font}
+        msgBgImg={msgBgImg}
+        nameColor={nameColor}
+        msgBgColor={msgBgColor}
+        msgBgTransparency={msgBgTransparency}
+        msgBgRepeat={msgBgRepeat}
+        msgBgPosition={msgBgPosition}
+        msgBgImgTransparency={msgBgImgTransparency}
+        stylesEnabled={stylesEnabled}
+        setNameColor={setNameColor}
+        setMsgBgColor={setMsgBgColor}
+        setMsgBgTransparency={setMsgBgTransparency}
+        setMsgBgImg={setMsgBgImg}
+        setMsgBgRepeat={setMsgBgRepeat}
+        setMsgBgPosition={setMsgBgPosition}
+        setMsgBgImgTransparency={setMsgBgImgTransparency}
+      />
 
       {isUsersOpen && (
         <div className={styles["dialog"]}>
