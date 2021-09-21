@@ -29,6 +29,7 @@ export function ColorInput(props) {
       onClick={props.onClick}
       onClickCapture={props.onClickCapture}
       defaultValue={props.defaultValue}
+      disabled={props.disabled}
     />
   );
 }

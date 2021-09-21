@@ -31,6 +31,7 @@ export function SliderInput(props) {
           );
         }
       }}
+      disabled={props.disabled}
     />
   );
 }
