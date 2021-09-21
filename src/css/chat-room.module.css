@@ -40,6 +40,16 @@ label [type="file"] {
   display: none;
 }
 
+.chat-app *.disabled,
+.chat-app *[disabled] {
+  color: grey;
+  cursor: default;
+}
+
+.chat-app *.disabled:hover {
+  text-decoration: none;
+}
+
 .yellow {
   color: yellow;
 }
@@ -83,6 +93,10 @@ label [type="file"] {
   border-right: 5px solid transparent;
 
   border-bottom: 5px solid black;
+}
+
+.slider[disabled]::-webkit-slider-thumb {
+  cursor: default;
 }
 
 .slider::-moz-range-thumb {
