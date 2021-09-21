@@ -8,6 +8,9 @@ service cloud.firestore {
     function currentUser() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
+    function isPremium() {
+      return request.auth.token.stripeRole == "premium";
+    }
 
     match /messages/{docId} {
       allow read: if request.auth.uid != null && (resource.data.isDeleted == false || currentUser().isModerator == true || currentUser().isAdmin == true);
@@ -51,10 +54,13 @@ service cloud.firestore {
     match /users/{uid} {
       allow create: if isDocOwner(uid);
       allow read: if true;
-      allow update: if isDocOwner(uid) && 
+      allow update: if isDocOwner(uid)
                     // NOTE: Don't allow updating these keys
-                    (!request.resource.data.diff(resource.data).affectedKeys()
-                    .hasAny(['isAdmin', 'isModerator', 'isBanned']));
+                    && (!request.resource.data.diff(resource.data).affectedKeys()
+                       .hasAny(['isAdmin', 'isModerator', 'isBanned']))
+                    // NOTE: Don't allow updating these keys unless user is premium
+                    && (isPremium() || !request.resource.data.diff(resource.data).affectedKeys()
+                       .hasAny(['fontSize', 'fontColor', 'font', 'msgBgImg', 'msgBgColor', 'msgBgTransparency', 'msgBgRepeat', 'msgBgPosition', 'msgBgImgTransparency']));
       match /checkout_sessions/{id} {
         allow read, write: if request.auth.uid == uid;
       }

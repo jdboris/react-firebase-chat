@@ -11,13 +11,31 @@ import { ColorInput } from "./color-input";
 import { MenuWithButton } from "./menu-with-button";
 
 export function UserStyleControls(props) {
+  const {
+    stylesEnabled,
+    setStylesEnabled,
+    open,
+    premium,
+    menuOpenKey,
+    font,
+    setFont,
+    fontSize,
+    setFontSize,
+    fontColor,
+    setFontColor,
+    toggleSelectionMarkup,
+    setMessageValue,
+    setSelection,
+    isStyleEditorOpen,
+    setStyleEditorOpen,
+  } = props;
   const { uid } = auth.currentUser;
 
-  const enabled = props.stylesEnabled;
+  const enabled = stylesEnabled;
 
   return (
     <>
-      {props.open && (
+      {open && (
         <div className={styles["format-controls"]}>
           <span
             onClickCapture={() => {
@@ -26,7 +44,7 @@ export function UserStyleControls(props) {
                 .doc(uid)
                 .update({ stylesEnabled: newValue })
                 .then(() => {
-                  props.setStylesEnabled(newValue);
+                  setStylesEnabled(newValue);
                 });
             }}
           >
@@ -41,16 +59,16 @@ export function UserStyleControls(props) {
                     <ArrowDropDownIcon className={styles["down-arrow"]} />
                   </>
                 }
-                openKey={props.menuOpenKey}
+                openKey={menuOpenKey}
                 items={fonts.reduce((items, fontObj) => {
                   items[
-                    fontObj.name + (props.font.name == fontObj.name ? " ✓" : "")
+                    fontObj.name + (font.name == fontObj.name ? " ✓" : "")
                   ] = () => {
                     usersRef
                       .doc(uid)
                       .update({ font: fontObj })
                       .then(() => {
-                        props.setFont(fontObj);
+                        setFont(fontObj);
                       });
                   };
 
@@ -61,12 +79,13 @@ export function UserStyleControls(props) {
               <MenuWithButton
                 button={
                   <>
-                    {props.fontSize}
+                    {fontSize}
                     <ArrowDropDownIcon className={styles["down-arrow"]} />
                   </>
                 }
-                openKey={props.menuOpenKey}
-                items={[...Array(14).keys()].reduce((items, number) => {
+                openKey={menuOpenKey}
+                // Convert to an object with reduce
+                items={[...Array(6).keys()].reduce((items, number) => {
                   items[9 + number] = () => {
                     usersRef
                       .doc(uid)
@@ -74,20 +93,42 @@ export function UserStyleControls(props) {
                         fontSize: 9 + number,
                       })
                       .then(() => {
-                        props.setFontSize(9 + number);
+                        setFontSize(9 + number);
                       });
                   };
 
                   return items;
                 }, {})}
-              />
+              >
+                {[...Array(8).keys()].map((number) => {
+                  return (
+                    <div
+                      className={!premium ? styles["disabled"] : ""}
+                      onClick={() => {
+                        if (premium) {
+                          usersRef
+                            .doc(uid)
+                            .update({
+                              fontSize: 15 + number,
+                            })
+                            .then(() => {
+                              setFontSize(15 + number);
+                            });
+                        }
+                      }}
+                    >
+                      {15 + number}
+                    </div>
+                  );
+                })}
+              </MenuWithButton>
 
               <strong
                 onClick={() => {
-                  let result = props.toggleSelectionMarkup(MARKUP_SYMBOLS.BOLD);
+                  let result = toggleSelectionMarkup(MARKUP_SYMBOLS.BOLD);
 
-                  props.setMessageValue(result.value);
-                  props.setSelection({
+                  setMessageValue(result.value);
+                  setSelection({
                     start: result.start,
                     end: result.end,
                   });
@@ -97,12 +138,10 @@ export function UserStyleControls(props) {
               </strong>
               <em
                 onClick={() => {
-                  let result = props.toggleSelectionMarkup(
-                    MARKUP_SYMBOLS.ITALICS
-                  );
+                  let result = toggleSelectionMarkup(MARKUP_SYMBOLS.ITALICS);
 
-                  props.setMessageValue(result.value);
-                  props.setSelection({
+                  setMessageValue(result.value);
+                  setSelection({
                     start: result.start,
                     end: result.end,
                   });
@@ -112,7 +151,7 @@ export function UserStyleControls(props) {
               </em>
               <span
                 onClickCapture={() => {
-                  props.setStyleEditorOpen(!props.isStyleEditorOpen);
+                  setStyleEditorOpen(!isStyleEditorOpen);
                 }}
               >
                 bg
@@ -122,16 +161,16 @@ export function UserStyleControls(props) {
                 button={
                   <FormatColorTextIcon
                     className={styles["font-color"]}
-                    style={{ color: props.fontColor }}
+                    style={{ color: fontColor }}
                   />
                 }
-                openKey={props.menuOpenKey}
+                openKey={menuOpenKey}
                 keepOpen={true}
               >
                 <ColorInput
-                  defaultValue={props.fontColor}
+                  defaultValue={fontColor}
                   onChange={(e) => {
-                    props.setFontColor(e.target.value);
+                    setFontColor(e.target.value);
                   }}
                   onChangeComplete={(e) => {
                     usersRef.doc(uid).update({
