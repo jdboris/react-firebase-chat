@@ -280,6 +280,7 @@ export function ChatRoom(props) {
       />
 
       <MessageInputForm
+        premium={premium}
         sendMessage={sendMessage}
         setMessageInput={(input) => {
           messageInput = input;

@@ -79,6 +79,7 @@ export function ChatMessage(props) {
   let {
     text,
     uid,
+    premium,
     photoURL,
     createdAt,
     username,
@@ -93,6 +94,10 @@ export function ChatMessage(props) {
     msgBgPosition,
     msgBgImgTransparency,
   } = props.message;
+
+  // Cap the font size for non-premium users
+  fontSize = premium && fontSize >= 15 ? 15 : fontSize;
+
   const { currentUser, stylesEnabled, messagesRef } = props;
   const messageClass = uid === auth.currentUser.uid ? "sent" : "received";
 
@@ -134,7 +139,7 @@ export function ChatMessage(props) {
           }
         }}
         style={
-          stylesEnabled
+          stylesEnabled && premium
             ? {
                 backgroundColor: `rgba(${hexToRgb(bgColor)},${bgTransparency})`,
               }
@@ -144,7 +149,7 @@ export function ChatMessage(props) {
         <div
           className={styles["message-background-image"]}
           style={
-            stylesEnabled
+            stylesEnabled && premium
               ? {
                   backgroundImage: `url(${backgroundImage})`,
                   backgroundRepeat: msgBgRepeat,
