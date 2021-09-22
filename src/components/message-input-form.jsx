@@ -8,6 +8,8 @@ import { uploadFile } from "../storage";
 
 export function MessageInputForm(props) {
   let messageInput = useRef();
+  // Cap the font size for non-premium users
+  const fontSize = props.premium && props.fontSize >= 15 ? 15 : props.fontSize;
 
   return (
     <form className={styles["message-form"]} onSubmit={props.sendMessage}>
@@ -34,7 +36,7 @@ export function MessageInputForm(props) {
       <div
         className={styles["input-wrapper"]}
         style={
-          props.stylesEnabled
+          props.stylesEnabled && props.premium
             ? {
                 backgroundColor: `rgba(${hexToRgb(props.msgBgColor)},${
                   props.msgBgTransparency
@@ -48,7 +50,7 @@ export function MessageInputForm(props) {
         <div
           className={styles["message-background-image"]}
           style={
-            props.stylesEnabled
+            props.stylesEnabled && props.premium
               ? {
                   backgroundImage: `url(${props.msgBgImg})`,
                   backgroundRepeat: props.msgBgRepeat,
@@ -83,7 +85,7 @@ export function MessageInputForm(props) {
             props.stylesEnabled
               ? {
                   fontFamily: props.font.style,
-                  fontSize: props.fontSize,
+                  fontSize: fontSize,
                   color: props.fontColor,
                 }
               : {}
