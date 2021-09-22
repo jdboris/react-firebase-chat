@@ -1,4 +1,4 @@
--hide the styles of messages sent by users who didn't have premium at the time of sending (with a read-only premium field in the message doc)
+-add a prompt to upgrade to premium upon attempting to use premium features
 -fix logging out and back in
 -input validation, error messages
 -add security logic to cloud functions (i.e. ensuring the user is authenticated)
