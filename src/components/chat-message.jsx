@@ -206,7 +206,7 @@ export function ChatMessage(props) {
             style={
               stylesEnabled
                 ? {
-                    fontSize: fontSize + "px",
+                    fontSize: fontSize + "pt",
                     color: fontColor,
                     fontFamily: font.style,
                   }
