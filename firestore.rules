@@ -8,8 +8,13 @@ service cloud.firestore {
     function currentUser() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
+
     function isPremium() {
       return request.auth.token.stripeRole == "premium";
+    }
+
+    function affectedKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys();
     }
 
     match /messages/{docId} {
@@ -17,8 +22,7 @@ service cloud.firestore {
       allow update: if (currentUser().isModerator == true || currentUser().isAdmin == true) && 
                       // If the request only has the isDeleted field
                       // https://firebase.google.com/docs/firestore/security/rules-fields#allowing_only_certain_fields_to_be_changed
-                      (request.resource.data.diff(resource.data).affectedKeys()
-                      .hasOnly(['isDeleted']));
+                      affectedKeys().hasOnly(['isDeleted']);
     }
 
     match /modActionLog/{docId} {
@@ -56,11 +60,12 @@ service cloud.firestore {
       allow read: if true;
       allow update: if isDocOwner(uid)
                     // NOTE: Don't allow updating these keys
-                    && (!request.resource.data.diff(resource.data).affectedKeys()
-                       .hasAny(['isAdmin', 'isModerator', 'isBanned']))
+                    && (!affectedKeys().hasAny(['isAdmin', 'isModerator', 'isBanned']))
                     // NOTE: Don't allow updating these keys unless user is premium
-                    && (isPremium() || !request.resource.data.diff(resource.data).affectedKeys()
-                       .hasAny(['fontSize', 'fontColor', 'font', 'msgBgImg', 'msgBgColor', 'msgBgTransparency', 'msgBgRepeat', 'msgBgPosition', 'msgBgImgTransparency']));
+                    && (isPremium() 
+                        || (!affectedKeys()
+                            .hasAny(['msgBgImg', 'msgBgColor', 'msgBgTransparency', 'msgBgRepeat', 'msgBgPosition', 'msgBgImgTransparency'])
+                            && (!affectedKeys().hasAny(['fontSize']) || request.resource.data.fontSize < 15 )));
       match /checkout_sessions/{id} {
         allow read, write: if request.auth.uid == uid;
       }

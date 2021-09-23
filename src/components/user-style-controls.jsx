@@ -105,16 +105,15 @@ export function UserStyleControls(props) {
                     <div
                       className={!premium ? styles["disabled"] : ""}
                       onClick={() => {
-                        if (premium) {
-                          usersRef
-                            .doc(uid)
-                            .update({
-                              fontSize: 15 + number,
-                            })
-                            .then(() => {
-                              setFontSize(15 + number);
-                            });
-                        }
+                        if (!premium) return;
+                        usersRef
+                          .doc(uid)
+                          .update({
+                            fontSize: 15 + number,
+                          })
+                          .then(() => {
+                            setFontSize(15 + number);
+                          });
                       }}
                     >
                       {15 + number}
