@@ -92,6 +92,7 @@ export function ChatRoom(props) {
 
   const [stylesEnabled, setStylesEnabled] = useState(true);
 
+  const [isPremiumPromptOpen, setPremiumPromptOpen] = useState(false);
   const [isPremiumOpen, setPremiumOpen] = useState(false);
   const [isDmsOpen, setDmsOpen] = useState(false);
   const [isUsersOpen, setUsersOpen] = useState(false);
@@ -277,6 +278,7 @@ export function ChatRoom(props) {
           return toggleSelectionMarkup(messageInput, symbol);
         }}
         setSelection={setSelection}
+        setPremiumPromptOpen={setPremiumPromptOpen}
       />
 
       <MessageInputForm
@@ -379,6 +381,7 @@ export function ChatRoom(props) {
         requestClose={() => {
           setStyleEditorOpen(false);
         }}
+        setPremiumPromptOpen={setPremiumPromptOpen}
         messagesRef={messagesRef}
         user={user}
         fontSize={fontSize}
@@ -418,16 +421,6 @@ export function ChatRoom(props) {
           </ul>
         </div>
       )}
-
-      <PremiumDialog
-        open={isPremiumOpen}
-        uid={user.uid}
-        premium={premium}
-        stripeLink={user.stripeLink}
-        requestClose={() => {
-          setPremiumOpen(false);
-        }}
-      />
 
       <DmsDialog
         open={isDmsOpen}
@@ -490,6 +483,8 @@ export function ChatRoom(props) {
               insertIntoInput(emojiChar + " ", messageInput);
               setMessageValue(messageInput.value);
             }}
+            setPremiumPromptOpen={setPremiumPromptOpen}
+            setPremiumOpen={setPremiumOpen}
             messageValue={messageValue}
             setMessageValue={setMessageValue}
             messageInput={messageInput}
@@ -534,6 +529,42 @@ export function ChatRoom(props) {
           </div>
         </div>
       )}
+
+      {isPremiumPromptOpen && (
+        <div className={styles["dialog"]}>
+          <header>
+            Premium Feature
+            <CloseIcon
+              onClick={() => {
+                setPremiumPromptOpen(false);
+              }}
+            />
+          </header>
+          <main>
+            You must be a Premium user to do that!
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                setPremiumPromptOpen(false);
+                setPremiumOpen(true);
+              }}
+            >
+              Upgrade now!
+            </a>
+          </main>
+        </div>
+      )}
+
+      <PremiumDialog
+        open={isPremiumOpen}
+        uid={user.uid}
+        premium={premium}
+        stripeLink={user.stripeLink}
+        requestClose={() => {
+          setPremiumOpen(false);
+        }}
+      />
 
       {!isOnline && (
         <div className={styles["chat-room-overlay"]}>

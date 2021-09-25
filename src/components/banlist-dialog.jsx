@@ -38,7 +38,7 @@ export function BanlistDialog(props) {
                     href="#"
                     onClick={async (e) => {
                       e.preventDefault();
-                      console.log(await unbanUser(user.username));
+                      await unbanUser(user.username);
                     }}
                   >
                     remove
@@ -50,7 +50,7 @@ export function BanlistDialog(props) {
             onSubmit={async (e) => {
               e.preventDefault();
               if (username) {
-                console.log(await banUser(username));
+                await banUser(username);
               }
             }}
           >
