@@ -20,4 +20,14 @@
     cursor: initial;
     font-size: initial;
   }
+
+  section.preview {
+    color: grey;
+    -webkit-filter: grayscale(100%);
+    filter: grayscale(100%);
+  }
+
+  footer {
+    text-align: center;
+  }
 }

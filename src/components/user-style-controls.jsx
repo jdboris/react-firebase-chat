@@ -16,6 +16,7 @@ export function UserStyleControls(props) {
     setStylesEnabled,
     open,
     premium,
+    setPremiumPromptOpen,
     menuOpenKey,
     font,
     setFont,
@@ -104,8 +105,9 @@ export function UserStyleControls(props) {
                   return (
                     <div
                       className={!premium ? styles["disabled"] : ""}
-                      onClick={() => {
-                        if (!premium) return;
+                      onClickCapture={() => {
+                        if (!premium) return setPremiumPromptOpen(true);
+
                         usersRef
                           .doc(uid)
                           .update({
