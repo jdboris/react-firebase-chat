@@ -1,4 +1,5 @@
--add a prompt to upgrade to premium upon attempting to use premium features
+-change bold an italic behavior when nothing is selected
+-add a reconnect button
 -fix logging out and back in
 -input validation, error messages
 -add security logic to cloud functions (i.e. ensuring the user is authenticated)

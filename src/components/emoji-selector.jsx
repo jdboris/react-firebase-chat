@@ -39,8 +39,23 @@ export function EmojiSelector(props) {
     // "peach",
     // "eggplant",
   ];
+  const previewNames = [
+    "fire",
+    "100",
+    "thinking",
+    "ok_hand",
+    "peach",
+    "eggplant",
+    "ghost",
+    "alien",
+    "robot",
+  ];
 
   const freeCodes = freeNames.map((name) => {
+    return emoji.getUnicode(name);
+  });
+
+  const previewCodes = previewNames.map((name) => {
     return emoji.getUnicode(name);
   });
 
@@ -78,6 +93,41 @@ export function EmojiSelector(props) {
           []
         )}
       </section>
+      {!props.premium && (
+        <>
+          <section className={styles["preview"]}>
+            {previewCodes.reduce((accumulator, emojiChar, i) => {
+              if (searchValue == "" || previewNames[i].includes(searchValue)) {
+                accumulator.push(
+                  <span
+                    title={previewNames[i]}
+                    onClick={() => {
+                      console.log("TEST");
+                      props.setPremiumPromptOpen(true);
+                    }}
+                  >
+                    {emojiChar}
+                  </span>
+                );
+              }
+
+              return accumulator;
+            }, [])}
+          </section>
+          <footer>
+            Want more emojis?
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                props.setPremiumOpen(true);
+              }}
+            >
+              Upgrade to Premium now!
+            </a>
+          </footer>
+        </>
+      )}
     </div>
   );
 }
