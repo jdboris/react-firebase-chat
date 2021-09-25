@@ -16,8 +16,6 @@ export function PremiumDialog(props) {
     .where("role", "==", "premium");
 
   const [subscriptions, loading, error] = useCollectionData(query);
-  console.log(error);
-  console.log(subscriptions);
 
   return (
     props.open && (
@@ -66,7 +64,6 @@ export function PremiumDialog(props) {
               message style options, and more...
               <form
                 onSubmit={(e) => {
-                  console.log(process.env.REACT_APP_STRIPE_3_MONTH_PRICE_ID);
                   e.preventDefault();
                   sendToStripe(uid, e.target.period.value);
                 }}

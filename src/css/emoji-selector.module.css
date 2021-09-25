@@ -23,4 +23,14 @@
   cursor: initial;
   font-size: initial;
 }
+
+.emoji-selector section.preview {
+  color: grey;
+  -webkit-filter: grayscale(100%);
+  filter: grayscale(100%);
+}
+
+.emoji-selector footer {
+  text-align: center;
+}
 /*# sourceMappingURL=emoji-selector.module.css.map */

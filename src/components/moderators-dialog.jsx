@@ -43,7 +43,7 @@ export function ModeratorsDialog(props) {
                     href="#"
                     onClick={async (e) => {
                       e.preventDefault();
-                      console.log(await removeModerator(mod.username));
+                      await removeModerator(mod.username);
                     }}
                   >
                     remove

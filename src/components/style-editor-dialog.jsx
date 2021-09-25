@@ -13,6 +13,7 @@ export function StyleEditorDialog(props) {
     user,
     premium,
     requestClose,
+    setPremiumPromptOpen,
     messagesRef,
     fontSize,
     fontColor,
@@ -91,16 +92,18 @@ export function StyleEditorDialog(props) {
             }}
           />
         </label>
-        <label>
+        <label
+          onClick={() => {
+            if (!premium) return setPremiumPromptOpen(true);
+          }}
+        >
           Bg color
           <ColorInput
             defaultValue={msgBgColor}
             onChange={(e) => {
-              if (!premium) return;
               setMsgBgColor(e.target.value);
             }}
             onChangeComplete={(e) => {
-              if (!premium) return;
               usersRef.doc(user.uid).update({
                 msgBgColor: e.target.value,
               });
@@ -108,18 +111,20 @@ export function StyleEditorDialog(props) {
             disabled={!premium}
           />
         </label>
-        <label>
+        <label
+          onClick={() => {
+            if (!premium) return setPremiumPromptOpen(true);
+          }}
+        >
           Bg transparency
           <SliderInput
             min="0"
             max="100"
             defaultValue={msgBgTransparency * 100}
             onChange={(e) => {
-              if (!premium) return;
               setMsgBgTransparency(e.target.value / 100);
             }}
             onChangeComplete={(e) => {
-              if (!premium) return;
               usersRef.doc(user.uid).update({
                 msgBgTransparency: e.target.value / 100,
               });
@@ -131,12 +136,14 @@ export function StyleEditorDialog(props) {
           className={
             styles["button"] + " " + (!premium ? styles["disabled"] : "")
           }
+          onClick={() => {
+            if (!premium) return setPremiumPromptOpen(true);
+          }}
         >
           Upload Image
           <input
             type="file"
             onChange={async (e) => {
-              if (!premium) return;
               if (e.target.files.length) {
                 const file = e.target.files[0];
                 const url = await uploadFile(file);
@@ -154,7 +161,7 @@ export function StyleEditorDialog(props) {
         {msgBgImg && (
           <label
             onClick={async (e) => {
-              if (!premium) return;
+              if (!premium) return setPremiumPromptOpen(true);
               await usersRef.doc(user.uid).update({
                 msgBgImg: "",
               });
@@ -169,11 +176,14 @@ export function StyleEditorDialog(props) {
         )}
         <div>
           {msgBgImg && (
-            <label>
+            <label
+              onClick={() => {
+                if (!premium) return setPremiumPromptOpen(true);
+              }}
+            >
               <input
                 type="checkbox"
                 onChange={async (e) => {
-                  if (!premium) return;
                   const checked = e.target.checked;
                   await usersRef.doc(user.uid).update({
                     msgBgRepeat: checked ? "repeat" : "no-repeat",
@@ -192,13 +202,16 @@ export function StyleEditorDialog(props) {
           <>
             <div>
               Align image
-              <label>
+              <label
+                onClick={() => {
+                  if (!premium) return setPremiumPromptOpen(true);
+                }}
+              >
                 <input
                   type="radio"
                   name="msgBgPosition"
                   defaultChecked={msgBgPosition == "left 0px top 0px"}
                   onChange={async (e) => {
-                    if (!premium) return;
                     const checked = e.target.checked;
                     if (checked) {
                       await usersRef.doc(user.uid).update({
@@ -211,13 +224,16 @@ export function StyleEditorDialog(props) {
                 />
                 Left
               </label>
-              <label>
+              <label
+                onClick={() => {
+                  if (!premium) return setPremiumPromptOpen(true);
+                }}
+              >
                 <input
                   type="radio"
                   name="msgBgPosition"
                   defaultChecked={msgBgPosition == "right 0px top 0px"}
                   onChange={async (e) => {
-                    if (!premium) return;
                     const checked = e.target.checked;
                     if (checked) {
                       await usersRef.doc(user.uid).update({
@@ -231,18 +247,20 @@ export function StyleEditorDialog(props) {
                 Right
               </label>
             </div>
-            <label>
+            <label
+              onClick={() => {
+                if (!premium) return setPremiumPromptOpen(true);
+              }}
+            >
               Image transparency
               <SliderInput
                 min="0"
                 max="100"
                 defaultValue={msgBgImgTransparency * 100}
                 onChange={(e) => {
-                  if (!premium) return;
                   setMsgBgImgTransparency(e.target.value / 100);
                 }}
                 onChangeComplete={(e) => {
-                  if (!premium) return;
                   usersRef.doc(user.uid).update({
                     msgBgImgTransparency: e.target.value / 100,
                   });
