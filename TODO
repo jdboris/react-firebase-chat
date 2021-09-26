@@ -1,6 +1,5 @@
--add a reconnect button
--fix logging out and back in
 -input validation, error messages
+-add a reconnect button
 -add security logic to cloud functions (i.e. ensuring the user is authenticated)
 -optimization to reduce firestore reads (prevent dialogs from querying until they're opened)
 -add latency compensation everywhere
