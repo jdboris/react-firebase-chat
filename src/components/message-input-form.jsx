@@ -4,6 +4,7 @@ import TextFormatIcon from "@material-ui/icons/TextFormat";
 import React, { useRef } from "react";
 import { hexToRgb } from "../color";
 import styles from "../css/chat-room.module.css";
+import { MARKUP_SYMBOLS } from "../markdown";
 import { uploadFile } from "../storage";
 
 export function MessageInputForm(props) {
@@ -69,6 +70,29 @@ export function MessageInputForm(props) {
           value={props.messageValue}
           onChange={(e) => props.setMessageValue(e.target.value)}
           placeholder="Type here to send a message"
+          onKeyDown={(e) => {
+            if ((e.key === "b" || e.key === "B") && e.ctrlKey) {
+              const result = props.toggleSelectionMarkup(MARKUP_SYMBOLS.BOLD);
+
+              console.log(result);
+              props.setMessageValue(result.value);
+              props.setSelection({
+                start: result.start,
+                end: result.end,
+              });
+            } else if ((e.key === "i" || e.key === "I") && e.ctrlKey) {
+              const result = props.toggleSelectionMarkup(
+                MARKUP_SYMBOLS.ITALICS
+              );
+
+              console.log(result);
+              props.setMessageValue(result.value);
+              props.setSelection({
+                start: result.start,
+                end: result.end,
+              });
+            }
+          }}
           onKeyPress={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.target.form.dispatchEvent(
