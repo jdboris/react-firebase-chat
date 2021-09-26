@@ -11,50 +11,39 @@ const MARKUP_CHARACTERS = new Set(
 
 // Returns the selected text in the given input element, surrounded by the given symbol
 export function toggleSelectionMarkup(element, symbol) {
-  let value = element.value;
-  let start = element.selectionStart;
-  let end = element.selectionEnd;
-  if (start == end) {
-    start = 0;
-    end = value.length;
-  }
+  const value = element.value;
+  const start = element.selectionStart;
+  const end = element.selectionEnd;
 
-  // Trim the whitespace
-  for (let i = end - 1; i >= 0; i--) {
-    if (/\s/.test(value[i])) end--;
-    else break;
-  }
+  const frontMarkup =
+    start == end
+      ? getMarkupBefore(value, start)
+      : getMarkupAround(value, start);
+  const backMarkup =
+    start == end ? getMarkupAfter(value, end) : getMarkupAround(value, end);
 
-  for (let i = start; i < value.length; i++) {
-    if (/\s/.test(value[i])) start++;
-    else break;
-  }
+  const beforeMarkup = value.substring(0, frontMarkup.start);
+  const middleValue = value.substring(frontMarkup.end, backMarkup.start);
+  const afterMarkup = value.substring(backMarkup.end);
 
-  let frontMarkup = getMarkupAround(value, start);
   frontMarkup.value = toggleSymbolInMarkup(frontMarkup.value, symbol);
-
-  let backMarkup = getMarkupAround(value, end);
   // Reverse+unreverse the markup so the new symbol will be added in the right spot
   backMarkup.value = reverse(
     toggleSymbolInMarkup(reverse(backMarkup.value), symbol)
   );
 
-  let middleValue = value.substring(frontMarkup.end, backMarkup.start);
-  if (!middleValue) return "";
-
-  let firstHalf = value.substring(0, frontMarkup.start) + frontMarkup.value;
-
   let parts = [
-    firstHalf,
+    beforeMarkup,
+    frontMarkup.value,
     middleValue,
     backMarkup.value,
-    value.substring(backMarkup.end),
+    afterMarkup,
   ];
 
   return {
     value: parts.join(""),
-    start: firstHalf.length,
-    end: firstHalf.length + middleValue.length,
+    start: beforeMarkup.length + frontMarkup.value.length,
+    end: beforeMarkup.length + frontMarkup.value.length + middleValue.length,
   };
 }
 
@@ -90,6 +79,27 @@ function toggleSymbolInMarkup(markup, symbol) {
   }
 }
 
+function getMarkupBefore(string, index) {
+  let firstHalf = string.substring(0, index);
+  const markup = getMarkupAround(firstHalf, Math.max(firstHalf.length - 1, 0));
+  markup.end = index;
+  markup.start = markup.end - markup.value.length;
+  console.log("markup.end: ", markup.end);
+  console.log("markup.value: ", markup.value);
+  console.log("markup.value.length: ", markup.value.length);
+
+  return markup;
+}
+
+function getMarkupAfter(string, index) {
+  let secondHalf = string.substring(index);
+  const markup = getMarkupAround(secondHalf, 0);
+  markup.start = index;
+  markup.end = markup.start + markup.value.length;
+
+  return markup;
+}
+
 function getMarkupAround(string, index) {
   let markup = { start: index, end: index, value: "" };
 
@@ -113,3 +123,16 @@ function getMarkupAround(string, index) {
 
   return markup;
 }
+
+// let frontMarkup = getMarkupBefore(value, start);
+// frontMarkup = toggleSymbolInMarkup(frontMarkup.value, symbol);
+
+// console.log(frontMarkup);
+
+// let backMarkup = getMarkupAfter(value, end);
+// // Reverse+unreverse the markup so the new symbol will be added in the right spot
+// backMarkup.value = reverse(backMarkup.value);
+// backMarkup = toggleSymbolInMarkup(backMarkup, symbol);
+// backMarkup.value = reverse(backMarkup.value);
+
+// console.log(backMarkup);

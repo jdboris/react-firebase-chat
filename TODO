@@ -1,4 +1,3 @@
--change bold an italic behavior when nothing is selected
 -add a reconnect button
 -fix logging out and back in
 -input validation, error messages
