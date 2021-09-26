@@ -102,7 +102,6 @@ export function EmojiSelector(props) {
                   <span
                     title={previewNames[i]}
                     onClick={() => {
-                      console.log("TEST");
                       props.setPremiumPromptOpen(true);
                     }}
                   >

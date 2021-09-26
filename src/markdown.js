@@ -84,9 +84,6 @@ function getMarkupBefore(string, index) {
   const markup = getMarkupAround(firstHalf, Math.max(firstHalf.length - 1, 0));
   markup.end = index;
   markup.start = markup.end - markup.value.length;
-  console.log("markup.end: ", markup.end);
-  console.log("markup.value: ", markup.value);
-  console.log("markup.value.length: ", markup.value.length);
 
   return markup;
 }
