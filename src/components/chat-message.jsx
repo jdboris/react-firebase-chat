@@ -41,7 +41,7 @@ function Link(props) {
               verticalAlign: "bottom",
             }}
           >
-            <img src={props.href} />
+            <img src={props.href} alt="embedded" />
           </a>
         );
       } else {
@@ -60,7 +60,7 @@ function Link(props) {
         );
       }
     });
-  }, []);
+  }, [props.href]);
 
   return (
     <span
@@ -126,7 +126,7 @@ export function ChatMessage(props) {
         }}
         onMouseUp={(e) => {
           // Left click
-          if (e.button == 0 && mouseDownSpot) {
+          if (e.button === 0 && mouseDownSpot) {
             let a = mouseDownSpot.x - e.pageX;
             let b = mouseDownSpot.y - e.pageY;
 
@@ -160,7 +160,7 @@ export function ChatMessage(props) {
           }
         ></div>
         {photoURL ? (
-          <img className={styles["avatar"]} src={photoURL} />
+          <img className={styles["avatar"]} src={photoURL} alt="profile" />
         ) : (
           <PersonIcon className={styles["avatar"]} />
         )}

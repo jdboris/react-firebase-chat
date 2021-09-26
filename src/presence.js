@@ -1,9 +1,7 @@
 import firebase from "firebase/app";
 import "firebase/database";
-import { auth } from "./app";
 
-export function presence(user, setIsOnline) {
-  let { uid, username } = user;
+export function presence(uid, username, setIsOnline) {
   let offlineTimeout = null;
   let disconnectRef = null;
   let unsubPresence = null;
@@ -65,7 +63,7 @@ export function presence(user, setIsOnline) {
       .database()
       .ref(".info/connected")
       .on("value", function (snapshot) {
-        if (snapshot.val() == false) {
+        if (snapshot.val() === false) {
           // Instead of simply returning, we'll also set Firestore's state
           // to 'offline'. This ensures that our Firestore cache is aware
           // of the switch to 'offline.'

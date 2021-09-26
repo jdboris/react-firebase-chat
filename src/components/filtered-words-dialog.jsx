@@ -10,7 +10,7 @@ import paginationStyles from "../css/pagination-controls.module.css";
 export function FilteredWordsDialog(props) {
   const [word, setWord] = useState("");
   const query = props.open ? settingsRef.doc("filteredWords") : null;
-  const [filteredWords, loading, error] = useDocumentData(query);
+  const [filteredWords] = useDocumentData(query);
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;
   const start = (page - 1) * itemsPerPage;
@@ -29,12 +29,12 @@ export function FilteredWordsDialog(props) {
         </header>
         <main>
           {filteredWords &&
-            filteredWords.list.slice(start, end).map((word) => {
+            filteredWords.list.slice(start, end).map((word, i) => {
               return (
-                <div>
+                <div key={i}>
                   {word}{" "}
-                  <a
-                    href="#"
+                  <button
+                    className={styles["link"]}
                     onClick={async (e) => {
                       e.preventDefault();
                       const newWords = [...filteredWords.list];
@@ -57,7 +57,7 @@ export function FilteredWordsDialog(props) {
                     }}
                   >
                     remove
-                  </a>
+                  </button>
                 </div>
               );
             })}
@@ -65,20 +65,24 @@ export function FilteredWordsDialog(props) {
             onSubmit={async (e) => {
               e.preventDefault();
               if (word) {
-                settingsRef.doc("filteredWords").update({
-                  list: firebase.firestore.FieldValue.arrayUnion(word),
-                  regex: new RegExp(
-                    [...new Set([...filteredWords.list, word])]
-                      // Escape special characters
-                      .map((s) =>
-                        s.replace(/[()[\]{}*+?^$|#.,\/\\\s-]/g, "\\$&")
-                      )
-                      // Sort for maximal munch
-                      .sort((a, b) => b.length - a.length)
-                      .join("|"),
-                    "gi"
-                  ).source,
-                });
+                const list = filteredWords ? filteredWords.list : [];
+                settingsRef.doc("filteredWords").set(
+                  {
+                    list: firebase.firestore.FieldValue.arrayUnion(word),
+                    regex: new RegExp(
+                      [...new Set([...list, word])]
+                        // Escape special characters
+                        .map((s) =>
+                          s.replace(/[()[\]{}*+?^$|#.,\/\\\s-]/g, "\\$&")
+                        )
+                        // Sort for maximal munch
+                        .sort((a, b) => b.length - a.length)
+                        .join("|"),
+                      "gi"
+                    ).source,
+                  },
+                  { merge: true }
+                );
               }
             }}
           >

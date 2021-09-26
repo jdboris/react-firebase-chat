@@ -2,7 +2,7 @@ import CloseIcon from "@material-ui/icons/Close";
 import { default as React, useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import ReactPaginate from "react-paginate";
-import { banUser, unbanUser, usersRef as usersRef } from "../app";
+import { banUser, unbanUser, usersRef } from "../app";
 import styles from "../css/chat-room.module.css";
 import paginationStyles from "../css/pagination-controls.module.css";
 
@@ -11,7 +11,9 @@ export function BanlistDialog(props) {
   const query = props.open
     ? usersRef.orderBy("username").where("isBanned", "==", true)
     : null;
-  const [bannedUsers] = useCollectionData(query, { idField: "id" });
+  const [bannedUsers] = useCollectionData(query, {
+    idField: "id",
+  });
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;
   const start = (page - 1) * itemsPerPage;
@@ -30,19 +32,18 @@ export function BanlistDialog(props) {
         </header>
         <main>
           {bannedUsers &&
-            bannedUsers.slice(start, end).map((user) => {
+            bannedUsers.slice(start, end).map((user, i) => {
               return (
-                <div>
+                <div key={i}>
                   {user.username}{" "}
-                  <a
-                    href="#"
-                    onClick={async (e) => {
-                      e.preventDefault();
+                  <button
+                    className={styles["link"]}
+                    onClick={async () => {
                       await unbanUser(user.username);
                     }}
                   >
                     remove
-                  </a>
+                  </button>
                 </div>
               );
             })}
