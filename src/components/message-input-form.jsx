@@ -74,7 +74,6 @@ export function MessageInputForm(props) {
             if ((e.key === "b" || e.key === "B") && e.ctrlKey) {
               const result = props.toggleSelectionMarkup(MARKUP_SYMBOLS.BOLD);
 
-              console.log(result);
               props.setMessageValue(result.value);
               props.setSelection({
                 start: result.start,
@@ -85,7 +84,6 @@ export function MessageInputForm(props) {
                 MARKUP_SYMBOLS.ITALICS
               );
 
-              console.log(result);
               props.setMessageValue(result.value);
               props.setSelection({
                 start: result.start,

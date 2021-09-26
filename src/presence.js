@@ -6,7 +6,7 @@ export function presence(user, setIsOnline) {
   let { uid, username } = user;
   let offlineTimeout = null;
   let disconnectRef = null;
-  let removeSnapshotListener = null;
+  let unsubPresence = null;
   let userPresenceDatabaseRef = null;
   let userPresenceRef = null;
 
@@ -35,26 +35,26 @@ export function presence(user, setIsOnline) {
   };
 
   if (uid) {
-    startMonitoring(uid);
+    subscribe(uid);
   }
 
-  firebase.auth().onIdTokenChanged(function (user) {
+  const unsubToken = firebase.auth().onIdTokenChanged(function (user) {
     // If the user is now logged out
     if (!user) {
       userPresenceDatabaseRef.set(isOfflineForDatabase);
 
-      stopMonitoring();
+      unsubscribe();
       uid = null;
 
       // Assume this is a login
     } else if (uid == null) {
       uid = user.uid;
-      startMonitoring(uid);
+      subscribe(uid);
     }
   });
 
   // Add all the listeners
-  function startMonitoring(uid) {
+  function subscribe(uid) {
     // Create a reference to this user's specific status node.
     // This is where we will store data about being online/offline.
     userPresenceDatabaseRef = firebase.database().ref("/userPresences/" + uid);
@@ -83,7 +83,7 @@ export function presence(user, setIsOnline) {
         });
       });
 
-    removeSnapshotListener = userPresenceRef.onSnapshot(function (doc) {
+    unsubPresence = userPresenceRef.onSnapshot(function (doc) {
       if (doc.data()) {
         let isOnline = doc.data().isOnline;
 
@@ -106,10 +106,11 @@ export function presence(user, setIsOnline) {
   }
 
   // Remove all the listeners
-  function stopMonitoring() {
-    disconnectRef.cancel();
+  function unsubscribe() {
+    if (disconnectRef) disconnectRef.cancel();
     firebase.database().ref(".info/connected").off("value");
-    removeSnapshotListener();
+    if (unsubPresence) unsubPresence();
+    if (unsubToken) unsubToken();
   }
 
   // snapshot.docChanges().forEach(function (change) {
@@ -124,4 +125,6 @@ export function presence(user, setIsOnline) {
   //     // ...
   //   }
   // });
+
+  return unsubscribe;
 }
