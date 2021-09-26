@@ -12,6 +12,8 @@ export function MenuWithButton(props) {
       setKeepOpen(false);
       setMenuOpen(true);
     }
+    // NOTE: Must NOT list keepOpen as a dependent
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.openKey]);
 
   return (
@@ -38,8 +40,9 @@ export function MenuWithButton(props) {
           }}
         >
           {props.items &&
-            Object.keys(props.items).map((key) => (
+            Object.keys(props.items).map((key, i) => (
               <div
+                key={i}
                 onClickCapture={() => {
                   props.items[key]();
                 }}

@@ -15,7 +15,7 @@ import styles from "./css/chat-room.module.css";
 let databaseUrl = "https://stream-site-9ebd9-default-rtdb.firebaseio.com";
 const useEmulators = false;
 
-if (window.location.hostname == "localhost" && useEmulators) {
+if (window.location.hostname === "localhost" && useEmulators) {
   databaseUrl = "http://localhost:9000/?ns=stream-site-9ebd9-default-rtdb";
 }
 
@@ -39,7 +39,7 @@ export const storage = firebase.storage();
 
 const db = firebase.database();
 
-if (window.location.hostname == "localhost" && useEmulators) {
+if (window.location.hostname === "localhost" && useEmulators) {
   auth.useEmulator("http://localhost:9099");
   firestore.useEmulator("localhost", 8080);
   // firestore.settings({ host: "localhost:8080", ssl: false });

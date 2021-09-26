@@ -28,9 +28,9 @@ export function ModActionLogDialog(props) {
         <main>
           {modActions && (
             <>
-              {modActions.slice(start, end).map((action) => {
+              {modActions.slice(start, end).map((action, i) => {
                 return (
-                  <div>
+                  <div key={i}>
                     {action.action}
                     <small>{action.date.toDate().toLocaleString()}</small>
                   </div>

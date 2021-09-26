@@ -73,11 +73,12 @@ export function EmojiSelector(props) {
         {(props.premium ? emoji.unicode : freeCodes).reduce(
           (accumulator, emojiChar, i) => {
             if (
-              searchValue == "" ||
+              searchValue === "" ||
               (props.premium ? emoji.names : freeNames)[i].includes(searchValue)
             ) {
               accumulator.push(
                 <span
+                  key={"emoji-" + i}
                   title={(props.premium ? emoji.names : freeNames)[i]}
                   onClick={() => {
                     props.onSelect(emojiChar);
@@ -97,9 +98,10 @@ export function EmojiSelector(props) {
         <>
           <section className={styles["preview"]}>
             {previewCodes.reduce((accumulator, emojiChar, i) => {
-              if (searchValue == "" || previewNames[i].includes(searchValue)) {
+              if (searchValue === "" || previewNames[i].includes(searchValue)) {
                 accumulator.push(
                   <span
+                    key={"emoji-preview-" + i}
                     title={previewNames[i]}
                     onClick={() => {
                       props.setPremiumPromptOpen(true);
@@ -115,15 +117,14 @@ export function EmojiSelector(props) {
           </section>
           <footer>
             Want more emojis?
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
+            <button
+              className={styles["link"]}
+              onClick={() => {
                 props.setPremiumOpen(true);
               }}
             >
               Upgrade to Premium now!
-            </a>
+            </button>
           </footer>
         </>
       )}

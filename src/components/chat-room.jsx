@@ -154,7 +154,7 @@ export function ChatRoom(props) {
   });
 
   useEffect(() => {
-    if (isLoadingUser || !user) {
+    if (isLoadingUser || !user.username) {
       return;
     }
 
@@ -184,7 +184,7 @@ export function ChatRoom(props) {
         }
       });
 
-    const unsubPresence = presence(user, setIsOnline);
+    const unsubPresence = presence(user.uid, user.username, setIsOnline);
 
     const unsubOnlineUsers = firebase
       .firestore()
@@ -202,7 +202,7 @@ export function ChatRoom(props) {
       const idTokenResult = await firebase
         .auth()
         .currentUser.getIdTokenResult();
-      setPremium(idTokenResult.claims.stripeRole == "premium");
+      setPremium(idTokenResult.claims.stripeRole === "premium");
     }
     fetchPremium();
 
@@ -211,7 +211,7 @@ export function ChatRoom(props) {
       unsubOnlineUsers();
     };
     // NOTE: isLoadingUser for loading new user, user.uid for cleanup when logging out
-  }, [isLoadingUser, user.uid]);
+  }, [isLoadingUser, user.uid, user.username]);
 
   useEffect(() => {
     if (!selection) return;
@@ -222,9 +222,6 @@ export function ChatRoom(props) {
 
   useEffect(() => {
     if (!props.dms) {
-      return;
-    }
-    if (!user) {
       return;
     }
 
@@ -243,7 +240,7 @@ export function ChatRoom(props) {
       );
     }
     markMessagesRead();
-  }, [messages]);
+  }, [props.dms, user.uid, messages, props.messagesRef.parent]);
 
   return (
     <section className={styles["chat-section"]} onClickCapture={closeMenus}>
@@ -433,8 +430,8 @@ export function ChatRoom(props) {
             />
           </header>
           <ul>
-            {onlineUsers.map((user) => {
-              return <li>{user.username}</li>;
+            {onlineUsers.map((user, i) => {
+              return <li key={i}>{user.username}</li>;
             })}
           </ul>
         </div>
@@ -525,7 +522,11 @@ export function ChatRoom(props) {
           <div>
             <label>
               {photoURL ? (
-                <img className={styles["avatar"]} src={photoURL} />
+                <img
+                  className={styles["avatar"]}
+                  src={photoURL}
+                  alt="profile"
+                />
               ) : (
                 <PersonIcon className={styles["avatar"]} />
               )}
@@ -560,16 +561,15 @@ export function ChatRoom(props) {
           </header>
           <main>
             You must be a Premium user to do that!
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
+            <button
+              className={styles["link"]}
+              onClick={() => {
                 setPremiumPromptOpen(false);
                 setPremiumOpen(true);
               }}
             >
               Upgrade now!
-            </a>
+            </button>
           </main>
         </div>
       )}
@@ -578,7 +578,6 @@ export function ChatRoom(props) {
         open={isPremiumOpen}
         uid={user.uid}
         premium={premium}
-        stripeLink={user.stripeLink}
         requestClose={() => {
           setPremiumOpen(false);
         }}
