@@ -126,7 +126,7 @@ export function UserStyleControls(props) {
 
               <strong
                 onClick={() => {
-                  let result = toggleSelectionMarkup(MARKUP_SYMBOLS.BOLD);
+                  const result = toggleSelectionMarkup(MARKUP_SYMBOLS.BOLD);
 
                   setMessageValue(result.value);
                   setSelection({
@@ -139,7 +139,7 @@ export function UserStyleControls(props) {
               </strong>
               <em
                 onClick={() => {
-                  let result = toggleSelectionMarkup(MARKUP_SYMBOLS.ITALICS);
+                  const result = toggleSelectionMarkup(MARKUP_SYMBOLS.ITALICS);
 
                   setMessageValue(result.value);
                   setSelection({

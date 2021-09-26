@@ -289,6 +289,10 @@ export function ChatRoom(props) {
         }}
         messageValue={messageValue}
         setMessageValue={setMessageValue}
+        setSelection={setSelection}
+        toggleSelectionMarkup={(symbol) => {
+          return toggleSelectionMarkup(messageInput, symbol);
+        }}
         stylesEnabled={stylesEnabled}
         font={font}
         fontSize={fontSize}
