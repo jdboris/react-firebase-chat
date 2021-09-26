@@ -34,7 +34,7 @@ export function ChatRoom(props) {
 
   // Fetch the current user's ID from Firebase Authentication.
   const authUser = props.user;
-  const [userSnapshot, isLoadingUser] = useDocument(usersRef.doc(authUser.uid));
+  let [userSnapshot, isLoadingUser] = useDocument(usersRef.doc(authUser.uid));
 
   const user = userSnapshot
     ? {
@@ -153,7 +153,7 @@ export function ChatRoom(props) {
     idField: "id",
   });
 
-  useEffect(async () => {
+  useEffect(() => {
     if (isLoadingUser || !user) {
       return;
     }
@@ -184,9 +184,9 @@ export function ChatRoom(props) {
         }
       });
 
-    presence(user, setIsOnline);
+    const unsubPresence = presence(user, setIsOnline);
 
-    firebase
+    const unsubOnlineUsers = firebase
       .firestore()
       .collection("userPresences")
       .where("isOnline", "==", true)
@@ -198,9 +198,20 @@ export function ChatRoom(props) {
         );
       });
 
-    const idTokenResult = await firebase.auth().currentUser.getIdTokenResult();
-    setPremium(idTokenResult.claims.stripeRole == "premium");
-  }, [isLoadingUser]);
+    async function fetchPremium() {
+      const idTokenResult = await firebase
+        .auth()
+        .currentUser.getIdTokenResult();
+      setPremium(idTokenResult.claims.stripeRole == "premium");
+    }
+    fetchPremium();
+
+    return () => {
+      unsubPresence();
+      unsubOnlineUsers();
+    };
+    // NOTE: isLoadingUser for loading new user, user.uid for cleanup when logging out
+  }, [isLoadingUser, user.uid]);
 
   useEffect(() => {
     if (!selection) return;
@@ -209,7 +220,7 @@ export function ChatRoom(props) {
     messageInput.setSelectionRange(start, end);
   }, [selection]);
 
-  useEffect(async () => {
+  useEffect(() => {
     if (!props.dms) {
       return;
     }
@@ -217,18 +228,21 @@ export function ChatRoom(props) {
       return;
     }
 
-    await props.messagesRef.parent.set(
-      {
-        // NOTE: Required for marking messages read
-        users: {
-          [user.uid]: {
-            lastReadAt: firebase.firestore.FieldValue.serverTimestamp(),
-            // lastReadAt: new firebase.firestore.Timestamp(1726757369, 337000000),
+    async function markMessagesRead() {
+      await props.messagesRef.parent.set(
+        {
+          // NOTE: Required for marking messages read
+          users: {
+            [user.uid]: {
+              lastReadAt: firebase.firestore.FieldValue.serverTimestamp(),
+              // lastReadAt: new firebase.firestore.Timestamp(1726757369, 337000000),
+            },
           },
         },
-      },
-      { merge: true }
-    );
+        { merge: true }
+      );
+    }
+    markMessagesRead();
   }, [messages]);
 
   return (

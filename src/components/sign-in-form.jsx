@@ -30,7 +30,6 @@ export function SignInForm(props) {
               console.error(error);
             });
         } else {
-          console.log(email, password);
           auth.signInWithEmailAndPassword(email, password);
         }
       }}
