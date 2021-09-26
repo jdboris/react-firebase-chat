@@ -16,11 +16,11 @@ export function toggleSelectionMarkup(element, symbol) {
   const end = element.selectionEnd;
 
   const frontMarkup =
-    start == end
+    start === end
       ? getMarkupBefore(value, start)
       : getMarkupAround(value, start);
   const backMarkup =
-    start == end ? getMarkupAfter(value, end) : getMarkupAround(value, end);
+    start === end ? getMarkupAfter(value, end) : getMarkupAround(value, end);
 
   const beforeMarkup = value.substring(0, frontMarkup.start);
   const middleValue = value.substring(frontMarkup.end, backMarkup.start);
@@ -59,7 +59,7 @@ function toggleSymbolInMarkup(markup, symbol) {
   // order, and there are no duplicate symbols in the markup, then this
   // will prevent mixing up two symbols that share characters (i.e. "**" and "*")
   for (let key in MARKUP_SYMBOLS) {
-    if (MARKUP_SYMBOLS[key] == symbol) {
+    if (MARKUP_SYMBOLS[key] === symbol) {
       break;
     }
 

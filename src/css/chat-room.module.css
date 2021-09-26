@@ -1,11 +1,14 @@
-a {
+a,
+.chat-app *.link {
   color: #0084eb;
   cursor: pointer;
   padding: 0.25em 0.5em;
   text-decoration: none;
+  background: none;
 }
 
-a:hover {
+a:hover,
+.chat-app *.link:hover {
   text-decoration: underline;
 }
 

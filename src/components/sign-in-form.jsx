@@ -37,6 +37,7 @@ export function SignInForm(props) {
       <input
         type="email"
         name="email"
+        autoComplete="username"
         value={email}
         onChange={(e) => {
           setEmail(e.target.value);
@@ -45,6 +46,8 @@ export function SignInForm(props) {
       />
       {isNewUser ? (
         <input
+          id="username"
+          autoComplete="username"
           type="text"
           name="username"
           value={username}
@@ -57,6 +60,8 @@ export function SignInForm(props) {
         ""
       )}
       <input
+        id="current-password"
+        autoComplete="current-password"
         type="password"
         name="password"
         value={password}
@@ -69,28 +74,28 @@ export function SignInForm(props) {
       {isNewUser ? (
         <>
           <button>Sign Up</button>
-          <a
-            href="#"
+          <button
+            className={styles["link"]}
             onClick={(e) => {
               e.preventDefault();
               setIsNewUser(false);
             }}
           >
             Existing user?
-          </a>
+          </button>
         </>
       ) : (
         <>
           <button>Sign In</button>
-          <a
-            href="#"
+          <button
+            className={styles["link"]}
             onClick={(e) => {
               e.preventDefault();
               setIsNewUser(true);
             }}
           >
             New user?
-          </a>
+          </button>
         </>
       )}
 

@@ -63,7 +63,7 @@ export function UserStyleControls(props) {
                 openKey={menuOpenKey}
                 items={fonts.reduce((items, fontObj) => {
                   items[
-                    fontObj.name + (font.name == fontObj.name ? " ✓" : "")
+                    fontObj.name + (font.name === fontObj.name ? " ✓" : "")
                   ] = () => {
                     usersRef
                       .doc(uid)
@@ -101,9 +101,10 @@ export function UserStyleControls(props) {
                   return items;
                 }, {})}
               >
-                {[...Array(8).keys()].map((number) => {
+                {[...Array(8).keys()].map((number, i) => {
                   return (
                     <div
+                      key={"premium-" + i}
                       className={!premium ? styles["disabled"] : ""}
                       onClickCapture={() => {
                         if (!premium) return setPremiumPromptOpen(true);

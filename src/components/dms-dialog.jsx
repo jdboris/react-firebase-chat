@@ -34,7 +34,7 @@ export function DmsDialog(props) {
         <main>
           <ul>
             {conversations &&
-              conversations.slice(start, end).map((conversation) => {
+              conversations.slice(start, end).map((conversation, i) => {
                 const lastReadAt = conversation.users[props.uid].lastReadAt;
                 let isUnread = false;
 
@@ -44,12 +44,14 @@ export function DmsDialog(props) {
                 }
 
                 return (
-                  <li>
-                    <a
-                      className={isUnread ? styles["unread-conversation"] : ""}
-                      href="#"
-                      onClick={async (e) => {
-                        e.preventDefault();
+                  <li key={i}>
+                    <button
+                      className={
+                        styles["link"] +
+                        " " +
+                        (isUnread ? styles["unread-conversation"] : "")
+                      }
+                      onClick={async () => {
                         props.setDmMessagesRef(
                           firestore
                             .collection("conversations")
@@ -62,7 +64,7 @@ export function DmsDialog(props) {
                         .split(":")
                         .filter((e) => e !== props.username)
                         .toString()}
-                    </a>
+                    </button>
                   </li>
                 );
               })}

@@ -6,7 +6,7 @@ import styles from "../css/chat-room.module.css";
 import { sendToCustomerPortal, sendToStripe } from "../stripe";
 
 export function PremiumDialog(props) {
-  const { premium, uid, stripeLink } = props;
+  const { premium, uid } = props;
   const [period, setPeriod] = useState(3);
   const query = firestore
     .collection("users")
@@ -15,7 +15,7 @@ export function PremiumDialog(props) {
     .where("status", "==", "active")
     .where("role", "==", "premium");
 
-  const [subscriptions, loading, error] = useCollectionData(query);
+  const [subscriptions] = useCollectionData(query);
 
   return (
     props.open && (
@@ -31,7 +31,7 @@ export function PremiumDialog(props) {
         <main>
           {premium ? (
             <>
-              {subscriptions.map((subscription) => {
+              {subscriptions.map((subscription, i) => {
                 const expiration = new Date(Date.UTC(1970, 0, 1));
                 expiration.setUTCSeconds(
                   subscription.current_period_end.seconds
@@ -43,7 +43,9 @@ export function PremiumDialog(props) {
                 });
 
                 return (
-                  <>Your subscription expires {formatter.format(expiration)}</>
+                  <span key={i}>
+                    Your subscription expires {formatter.format(expiration)}
+                  </span>
                 );
               })}
 

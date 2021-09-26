@@ -1,7 +1,7 @@
 import CloseIcon from "@material-ui/icons/Close";
 import firebase from "firebase/app";
 import { default as React } from "react";
-import { usersRef as usersRef } from "../app";
+import { usersRef } from "../app";
 import styles from "../css/chat-room.module.css";
 import { uploadFile } from "../storage";
 import { ChatMessage } from "./chat-message";
@@ -191,7 +191,7 @@ export function StyleEditorDialog(props) {
 
                   setMsgBgRepeat(checked ? "repeat" : "no-repeat");
                 }}
-                defaultChecked={msgBgRepeat == "repeat"}
+                defaultChecked={msgBgRepeat === "repeat"}
                 disabled={!premium}
               />
               Tile image
@@ -210,7 +210,7 @@ export function StyleEditorDialog(props) {
                 <input
                   type="radio"
                   name="msgBgPosition"
-                  defaultChecked={msgBgPosition == "left 0px top 0px"}
+                  defaultChecked={msgBgPosition === "left 0px top 0px"}
                   onChange={async (e) => {
                     const checked = e.target.checked;
                     if (checked) {
@@ -232,7 +232,7 @@ export function StyleEditorDialog(props) {
                 <input
                   type="radio"
                   name="msgBgPosition"
-                  defaultChecked={msgBgPosition == "right 0px top 0px"}
+                  defaultChecked={msgBgPosition === "right 0px top 0px"}
                   onChange={async (e) => {
                     const checked = e.target.checked;
                     if (checked) {
