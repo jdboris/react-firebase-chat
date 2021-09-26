@@ -3,7 +3,7 @@ import firebase from "firebase/app";
 import { default as React, useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import ReactPaginate from "react-paginate";
-import { usersRef as usersRef } from "../app";
+import { usersRef } from "../app";
 import styles from "../css/chat-room.module.css";
 import paginationStyles from "../css/pagination-controls.module.css";
 
@@ -35,19 +35,18 @@ export function ModeratorsDialog(props) {
         </header>
         <main>
           {mods &&
-            mods.slice(start, end).map((mod) => {
+            mods.slice(start, end).map((mod, i) => {
               return (
-                <div>
+                <div key={i}>
                   {mod.username}{" "}
-                  <a
-                    href="#"
-                    onClick={async (e) => {
-                      e.preventDefault();
+                  <button
+                    className={styles["link"]}
+                    onClick={async () => {
                       await removeModerator(mod.username);
                     }}
                   >
                     remove
-                  </a>
+                  </button>
                 </div>
               );
             })}
