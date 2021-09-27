@@ -38,21 +38,23 @@ export function FilteredWordsDialog(props) {
                     onClick={async (e) => {
                       e.preventDefault();
                       const newWords = [...filteredWords.list];
-                      newWords.splice(newWords.indexOf(word));
+                      newWords.splice(newWords.indexOf(word), 1);
 
                       settingsRef.doc("filteredWords").update({
                         list: firebase.firestore.FieldValue.arrayRemove(word),
-                        regex: new RegExp(
-                          newWords
-                            // Escape special characters
-                            .map((s) =>
-                              s.replace(/[()[\]{}*+?^$|#.,\/\\\s-]/g, "\\$&")
-                            )
-                            // Sort for maximal munch
-                            .sort((a, b) => b.length - a.length)
-                            .join("|"),
-                          "gi"
-                        ).source,
+                        regex: newWords.length
+                          ? new RegExp(
+                              newWords
+                                // Escape special characters
+                                .map((s) =>
+                                  s.replace(/[()[\]{}*+?^$|#.,\\\s-]/g, "\\$&")
+                                )
+                                // Sort for maximal munch
+                                .sort((a, b) => b.length - a.length)
+                                .join("|"),
+                              "gi"
+                            ).source
+                          : null,
                       });
                     }}
                   >
@@ -73,7 +75,7 @@ export function FilteredWordsDialog(props) {
                       [...new Set([...list, word])]
                         // Escape special characters
                         .map((s) =>
-                          s.replace(/[()[\]{}*+?^$|#.,\/\\\s-]/g, "\\$&")
+                          s.replace(/[()[\]{}*+?^$|#.,\\\s-]/g, "\\$&")
                         )
                         // Sort for maximal munch
                         .sort((a, b) => b.length - a.length)
