@@ -15,18 +15,6 @@ admin.initializeApp();
 const db = admin.firestore();
 const OEMBED_PROVIDER_WHITELIST = ["YouTube", "Twitter"];
 
-// async function logoutUser(user) {
-//   return admin
-//     .auth()
-//     .revokeRefreshTokens(user.uid)
-//     .then(() => {
-//       return admin.auth().getUser(user.uid);
-//     })
-//     .then((userRecord) => {
-//       return new Date(userRecord.tokensValidAfterTime).getTime() / 1000;
-//     });
-// }
-
 async function getUser(uid) {
   const snapshot = await db.collection("users").doc(uid).get();
   return snapshot.data();

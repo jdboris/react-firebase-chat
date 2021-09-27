@@ -12,23 +12,22 @@ export function SignInForm(props) {
   return (
     <form
       className={styles["login-form"]}
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
         if (isNewUser) {
           const signUp = firebase
             .app()
             .functions("us-central1")
             .httpsCallable("signUp");
-          signUp({ email: email, password: password, username: username })
-            .then((result) => {
-              console.log(result);
-              if (result.data.success) {
-                auth.signInWithEmailAndPassword(email, password);
-              }
-            })
-            .catch((error) => {
-              console.error(error);
-            });
+          const result = signUp({
+            email: email,
+            password: password,
+            username: username,
+          });
+          console.log(result);
+          if (result.data.success) {
+            auth.signInWithEmailAndPassword(email, password);
+          }
         } else {
           auth.signInWithEmailAndPassword(email, password);
         }
