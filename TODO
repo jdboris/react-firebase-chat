@@ -1,5 +1,6 @@
 -add security logic to cloud functions (i.e. ensuring the user is authenticated)
 -add loading spinners
+-add email verification checks
 -add a reconnect button
 -optimization to reduce firestore reads (prevent dialogs from querying until they're opened)
 -add latency compensation everywhere

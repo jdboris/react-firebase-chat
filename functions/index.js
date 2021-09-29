@@ -1,13 +1,9 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-const nodemailer = require("nodemailer");
-const fetch = require("node-fetch");
-const crypto = require("crypto");
-const { fromBuffer: fileTypeFromBuffer } = require("file-type");
-const { Logging } = require("@google-cloud/logging");
-const logging = new Logging({
-  projectId: process.env.GCLOUD_PROJECT,
-});
+// const { Logging } = require("@google-cloud/logging");
+// const logging = new Logging({
+//   projectId: process.env.GCLOUD_PROJECT,
+// });
 
 admin.initializeApp();
 
@@ -456,6 +452,7 @@ exports.sendWelcomeEmail = functions.auth.user().onCreate((user) => {
 });
 
 async function sendVerificationEmail(email, username, link) {
+  const nodemailer = require("nodemailer");
   return new Promise((resolve, reject) => {
     // https://support.google.com/a/answer/176600?hl=en
     const transporter = nodemailer.createTransport({
@@ -587,6 +584,7 @@ exports.onUserStatusChanged = functions.database
 
 // exports.getOembedProviders = functions.https.onCall((data, context) => {
 async function getOembedProviders() {
+  const fetch = require("node-fetch");
   return fetch("https://oembed.com/providers.json")
     .then((response) => {
       if (!response.ok) {
@@ -622,6 +620,7 @@ function escapeRegExExceptStar(string) {
 }
 
 exports.getOembed = functions.https.onCall(async (data, context) => {
+  const fetch = require("node-fetch");
   if (!context.auth.uid) {
     return { error: "Must be logged in." };
   }
@@ -694,6 +693,8 @@ exports.getOembed = functions.https.onCall(async (data, context) => {
 });
 
 exports.uploadFile = functions.https.onCall(async (data, context) => {
+  const { fromBuffer: fileTypeFromBuffer } = require("file-type");
+  const crypto = require("crypto");
   if (!context.auth.uid) {
     return { error: "Must be logged in." };
   }
