@@ -18,6 +18,7 @@ import { BanlistDialog } from "./banlist-dialog";
 // import { getProviders } from "../oembed";
 import { DmsDialog } from "./dms-dialog";
 import { EmojiSelector } from "./emoji-selector";
+import { ErrorDialog } from "./error-dialog";
 import { FilteredWordsDialog } from "./filtered-words-dialog";
 import { MenuWithButton } from "./menu-with-button";
 import { MessageInputForm } from "./message-input-form";
@@ -73,12 +74,13 @@ export function ChatRoom(props) {
       }, 0)
     : 0;
 
+  const [errors, setErrors] = useState([]);
   const [premium, setPremium] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
   const [messageValue, setMessageValue] = useState("");
   const [onlineUsers, setOnlineUsers] = useState([]);
 
-  const [photoURL, setPhotoURL] = useState(user.photoURL);
+  const [photoUrl, setPhotoUrl] = useState(user.photoURL);
   const [font, setFont] = useState(fonts[0]);
   const [fontSize, setFontSize] = useState(13);
   const [fontColor, setFontColor] = useState("#000000");
@@ -299,6 +301,7 @@ export function ChatRoom(props) {
           messageInput = input;
         }}
         messageValue={messageValue}
+        setErrors={setErrors}
         setMessageValue={setMessageValue}
         setSelection={setSelection}
         toggleSelectionMarkup={(symbol) => {
@@ -396,6 +399,7 @@ export function ChatRoom(props) {
         requestClose={() => {
           setStyleEditorOpen(false);
         }}
+        setErrors={setErrors}
         setPremiumPromptOpen={setPremiumPromptOpen}
         messagesRef={messagesRef}
         user={user}
@@ -521,10 +525,10 @@ export function ChatRoom(props) {
           </header>
           <div>
             <label>
-              {photoURL ? (
+              {photoUrl ? (
                 <img
                   className={styles["avatar"]}
-                  src={photoURL}
+                  src={photoUrl}
                   alt="profile"
                 />
               ) : (
@@ -534,13 +538,20 @@ export function ChatRoom(props) {
               <input
                 type="file"
                 onChange={async (e) => {
-                  if (e.target.files.length) {
+                  try {
+                    if (!e.target.files.length) {
+                      return;
+                    }
                     const file = e.target.files[0];
                     const url = await uploadFile(file);
-                    if (url) {
-                      await auth.currentUser.updateProfile({ photoURL: url });
-                      setPhotoURL(url);
+                    if (!url) {
+                      setErrors(["Error uploading file."]);
+                      return;
                     }
+                    await auth.currentUser.updateProfile({ photoURL: url });
+                    setPhotoUrl(url);
+                  } catch (error) {
+                    setErrors([error]);
                   }
                 }}
               />
@@ -583,11 +594,20 @@ export function ChatRoom(props) {
         }}
       />
 
+      {errors.length > 0 && (
+        <ErrorDialog
+          errors={errors}
+          requestClose={() => {
+            setErrors([]);
+          }}
+        />
+      )}
+
       {!isOnline && (
         <div className={styles["chat-room-overlay"]}>
           <div className={styles["overlay-message"]}>
             <div>Connection failed.</div>
-            <div>Reconnecting...</div>
+            <div>Attemtping reconnect...</div>
           </div>
         </div>
       )}

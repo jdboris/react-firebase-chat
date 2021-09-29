@@ -21,14 +21,24 @@ export function MessageInputForm(props) {
         <input
           type="file"
           onChange={async (e) => {
-            if (e.target.files.length) {
+            try {
+              if (!e.target.files.length) {
+                return;
+              }
+
               const file = e.target.files[0];
               const url = await uploadFile(file);
-              if (url) {
-                messageInput.focus();
-                props.setMessageValue(props.messageValue + " " + url + " ");
+
+              if (!url) {
+                props.setErrors(["Error uploading file."]);
+                return;
               }
+
+              messageInput.focus();
+              props.setMessageValue(props.messageValue + " " + url + " ");
               e.target.value = "";
+            } catch (error) {
+              props.setErrors([error]);
             }
           }}
         />

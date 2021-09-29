@@ -9,6 +9,7 @@ import paginationStyles from "../css/pagination-controls.module.css";
 
 export function FilteredWordsDialog(props) {
   const [word, setWord] = useState("");
+  const [errors, setErrors] = useState([]);
   const query = props.open ? settingsRef.doc("filteredWords") : null;
   const [filteredWords] = useDocumentData(query);
   const [page, setPage] = useState(1);
@@ -23,6 +24,8 @@ export function FilteredWordsDialog(props) {
           Filtered words
           <CloseIcon
             onClick={() => {
+              setWord("");
+              setErrors([]);
               props.requestClose();
             }}
           />
@@ -37,6 +40,7 @@ export function FilteredWordsDialog(props) {
                     className={styles["link"]}
                     onClick={async (e) => {
                       e.preventDefault();
+
                       const newWords = [...filteredWords.list];
                       newWords.splice(newWords.indexOf(word), 1);
 
@@ -66,28 +70,35 @@ export function FilteredWordsDialog(props) {
           <form
             onSubmit={async (e) => {
               e.preventDefault();
-              if (word) {
-                const list = filteredWords ? filteredWords.list : [];
-                settingsRef.doc("filteredWords").set(
-                  {
-                    list: firebase.firestore.FieldValue.arrayUnion(word),
-                    regex: new RegExp(
-                      [...new Set([...list, word])]
-                        // Escape special characters
-                        .map((s) =>
-                          s.replace(/[()[\]{}*+?^$|#.,\\\s-]/g, "\\$&")
-                        )
-                        // Sort for maximal munch
-                        .sort((a, b) => b.length - a.length)
-                        .join("|"),
-                      "gi"
-                    ).source,
-                  },
-                  { merge: true }
-                );
+
+              if (word.length < 4) {
+                setErrors(["Word must be 4+ characters."]);
+                return;
               }
+              const list = filteredWords ? filteredWords.list : [];
+              settingsRef.doc("filteredWords").set(
+                {
+                  list: firebase.firestore.FieldValue.arrayUnion(word),
+                  regex: new RegExp(
+                    [...new Set([...list, word])]
+                      // Escape special characters
+                      .map((s) => s.replace(/[()[\]{}*+?^$|#.,\\\s-]/g, "\\$&"))
+                      // Sort for maximal munch
+                      .sort((a, b) => b.length - a.length)
+                      .join("|"),
+                    "gi"
+                  ).source,
+                },
+                { merge: true }
+              );
+              setErrors([]);
             }}
           >
+            {errors.map((error, i) => (
+              <div key={i} className={styles["error"]}>
+                {error}
+              </div>
+            ))}
             <input
               type="text"
               placeholder="word to filter"
