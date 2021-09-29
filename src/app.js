@@ -12,8 +12,9 @@ import styles from "./css/chat-room.module.css";
 
 // import { SignOutButton } from "./components/sign-out-button";
 
+const useEmulators = true;
+
 let databaseUrl = "https://stream-site-9ebd9-default-rtdb.firebaseio.com";
-const useEmulators = false;
 
 if (window.location.hostname === "localhost" && useEmulators) {
   databaseUrl = "http://localhost:9000/?ns=stream-site-9ebd9-default-rtdb";
@@ -70,6 +71,16 @@ function App() {
   // Force a logout to refresh the token
   if (url.searchParams.get("chat-logout") && user) {
     url.searchParams.delete("chat-logout");
+    const queryString = url.searchParams.toString();
+    const hash = window.location.hash;
+
+    window.history.replaceState(
+      {},
+      "",
+      `${window.location.pathname}${
+        queryString ? "?" + queryString : ""
+      }${hash}`
+    );
     auth.signOut();
   }
 

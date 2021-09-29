@@ -10,6 +10,7 @@ export function DmsDialog(props) {
   const { conversations } = props;
 
   const [username, setUsername] = useState("");
+  const [errors, setErrors] = useState([]);
   const [page, setPage] = useState(1);
   const itemsPerPage = props.itemsPerPage;
   const start = (page - 1) * itemsPerPage;
@@ -27,6 +28,8 @@ export function DmsDialog(props) {
           Conversations
           <CloseIcon
             onClick={() => {
+              setUsername("");
+              setErrors([]);
               props.requestClose();
             }}
           />
@@ -72,55 +75,64 @@ export function DmsDialog(props) {
           <form
             onSubmit={async (e) => {
               e.preventDefault();
-              if (username) {
-                const snapshot = await usersRef
-                  .where("username", "==", username)
-                  .get();
+              if (!username) {
+                setErrors(["Enter a username."]);
+                return;
+              }
+              const snapshot = await usersRef
+                .where("username", "==", username)
+                .get();
 
-                if (!snapshot.docs.length) {
-                  // Error: User not found
-                  return;
-                }
+              if (!snapshot.docs.length) {
+                setErrors(["User not found."]);
+                return;
+              }
 
-                const conversationId = combineStrings([
-                  props.username,
-                  username,
-                ]);
+              if (snapshot.docs[0].id == props.uid) {
+                setErrors(["Cannot chat with yourself."]);
+                return;
+              }
 
-                await conversationsRef.doc(conversationId).set(
-                  {
-                    lastMessageSentAt: 0,
-                    // NOTE: This insanity is required for later queries with NoSQL
-                    userIds: [props.uid, snapshot.docs[0].id],
-                    users: {
-                      [props.uid]: {
-                        lastReadAt:
-                          firebase.firestore.FieldValue.serverTimestamp(),
-                      },
-                      [snapshot.docs[0].id]: {
-                        lastReadAt:
-                          firebase.firestore.FieldValue.serverTimestamp(),
-                      },
+              const conversationId = combineStrings([props.username, username]);
+
+              await conversationsRef.doc(conversationId).set(
+                {
+                  lastMessageSentAt: 0,
+                  // NOTE: This insanity is required for later queries with NoSQL
+                  userIds: [props.uid, snapshot.docs[0].id],
+                  users: {
+                    [props.uid]: {
+                      lastReadAt:
+                        firebase.firestore.FieldValue.serverTimestamp(),
+                    },
+                    [snapshot.docs[0].id]: {
+                      lastReadAt:
+                        firebase.firestore.FieldValue.serverTimestamp(),
                     },
                   },
-                  { merge: true }
-                );
+                },
+                { merge: true }
+              );
 
-                // await conversationsRef
-                //   .doc(conversationId)
-                //   .collection("messages");
+              // await conversationsRef
+              //   .doc(conversationId)
+              //   .collection("messages");
 
-                props.setDmMessagesRef(
-                  firestore
-                    .collection("conversations")
-                    .doc(conversationId)
-                    .collection("messages")
-                );
+              props.setDmMessagesRef(
+                firestore
+                  .collection("conversations")
+                  .doc(conversationId)
+                  .collection("messages")
+              );
 
-                props.requestClose();
-              }
+              props.requestClose();
             }}
           >
+            {errors.map((error, i) => (
+              <div key={i} className={styles["error"]}>
+                {error}
+              </div>
+            ))}
             <input
               type="text"
               placeholder="username"

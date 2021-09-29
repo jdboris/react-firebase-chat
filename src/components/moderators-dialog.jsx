@@ -9,6 +9,7 @@ import paginationStyles from "../css/pagination-controls.module.css";
 
 export function ModeratorsDialog(props) {
   const [username, setUsername] = useState("");
+  const [errors, setErrors] = useState([]);
   const addModerator = firebase.functions().httpsCallable("addModerator");
   const removeModerator = firebase.functions().httpsCallable("removeModerator");
 
@@ -29,6 +30,8 @@ export function ModeratorsDialog(props) {
           Moderators
           <CloseIcon
             onClick={() => {
+              setUsername("");
+              setErrors([]);
               props.requestClose();
             }}
           />
@@ -42,7 +45,12 @@ export function ModeratorsDialog(props) {
                   <button
                     className={styles["link"]}
                     onClick={async () => {
-                      await removeModerator(mod.username);
+                      const result = await removeModerator(mod.username);
+                      if (result.error) {
+                        setErrors([result.error]);
+                      } else {
+                        setErrors([]);
+                      }
                     }}
                   >
                     remove
@@ -51,13 +59,21 @@ export function ModeratorsDialog(props) {
               );
             })}
           <form
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
-              if (username) {
-                addModerator(username);
+              const result = await addModerator(username);
+              if (result.data.error) {
+                setErrors([result.data.error]);
+              } else {
+                setErrors([]);
               }
             }}
           >
+            {errors.map((error, i) => (
+              <div key={i} className={styles["error"]}>
+                {error}
+              </div>
+            ))}
             <input
               type="text"
               placeholder="Username"
