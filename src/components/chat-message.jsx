@@ -80,7 +80,7 @@ export function ChatMessage(props) {
     text,
     uid,
     premium,
-    photoURL,
+    photoUrl,
     createdAt,
     username,
     fontSize,
@@ -159,8 +159,8 @@ export function ChatMessage(props) {
               : {}
           }
         ></div>
-        {photoURL ? (
-          <img className={styles["avatar"]} src={photoURL} alt="profile" />
+        {photoUrl ? (
+          <img className={styles["avatar"]} src={photoUrl} alt="profile" />
         ) : (
           <PersonIcon className={styles["avatar"]} />
         )}

@@ -114,6 +114,11 @@ label [type="file"] {
   border-bottom: 5px solid black;
 }
 
+.error {
+  color: red;
+  font-size: 0.75em;
+}
+
 .chat-app {
   height: 100%;
   max-width: 728px;
@@ -278,6 +283,10 @@ svg.gavel-icon {
 
 .premium-dialog label {
   display: block;
+}
+
+.error-dialog .error {
+  font-size: 1em;
 }
 
 .unread-conversation {
@@ -529,6 +538,8 @@ li {
 .message-contents {
   margin-left: 5px;
   width: 100%;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 .message > div {
@@ -608,4 +619,7 @@ li {
 .chat-app .avatar {
   height: 40px;
   width: 40px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  border: 1px solid gray;
 }

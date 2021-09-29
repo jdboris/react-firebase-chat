@@ -1,4 +1,4 @@
--input validation, error messages
+-add loading spinners
 -add a reconnect button
 -add security logic to cloud functions (i.e. ensuring the user is authenticated)
 -optimization to reduce firestore reads (prevent dialogs from querying until they're opened)
@@ -23,3 +23,6 @@ Future features:
 -API for embedding
 -API for custom styling (badges for streamers, etc...)
 -more fonts (adobe source code pro)
+-DM user by clicking their avatar
+-autocomplete @, DM username, mod username, and ban user username
+-add DM search, mod search, and banned user search

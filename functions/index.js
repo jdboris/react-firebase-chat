@@ -4,7 +4,6 @@ const nodemailer = require("nodemailer");
 const fetch = require("node-fetch");
 const crypto = require("crypto");
 const { fromBuffer: fileTypeFromBuffer } = require("file-type");
-const { user } = require("firebase-functions/lib/providers/auth");
 const { Logging } = require("@google-cloud/logging");
 const logging = new Logging({
   projectId: process.env.GCLOUD_PROJECT,
@@ -14,6 +13,18 @@ admin.initializeApp();
 
 const db = admin.firestore();
 const OEMBED_PROVIDER_WHITELIST = ["YouTube", "Twitter"];
+
+function translateError(error) {
+  const newError = { ...error };
+
+  if (newError.errorInfo.code == "auth/wrong-password") {
+    newError.errorInfo.message = "Invalid email/password.";
+  } else if (newError.errorInfo.code == "auth/user-not-found") {
+    newError.errorInfo.message = "Invalid email/password.";
+  }
+
+  return newError;
+}
 
 async function getUser(uid) {
   const snapshot = await db.collection("users").doc(uid).get();
@@ -58,8 +69,7 @@ exports.banUser = functions.https.onCall(async (username, context) => {
 
   if (user.isModerator !== true) {
     return {
-      error:
-        "Request not authorized. User must be a moderator to fulfill request.",
+      error: "You must be a moderator to do that.",
     };
   }
 
@@ -75,7 +85,7 @@ exports.banUser = functions.https.onCall(async (username, context) => {
   });
 
   return {
-    result: `Request fulfilled! ${username} is now banned.`,
+    message: `${username} is now banned.`,
   };
 });
 
@@ -111,8 +121,7 @@ exports.unbanUser = functions.https.onCall(async (username, context) => {
 
   if (user.isModerator !== true) {
     return {
-      error:
-        "Request not authorized. User must be a moderator to fulfill request.",
+      error: "You must be a moderator to do that.",
     };
   }
 
@@ -128,7 +137,7 @@ exports.unbanUser = functions.https.onCall(async (username, context) => {
   });
 
   return {
-    result: `Request fulfilled! ${username} is no longer banned.`,
+    message: `${username} is no longer banned.`,
   };
 });
 
@@ -170,8 +179,7 @@ exports.addModerator = functions.https.onCall(async (username, context) => {
 
   if (user.isModerator !== true) {
     return {
-      error:
-        "Request not authorized. User must be a moderator to fulfill request.",
+      error: "You must be a moderator to do that.",
     };
   }
 
@@ -187,7 +195,7 @@ exports.addModerator = functions.https.onCall(async (username, context) => {
   });
 
   return {
-    result: `Request fulfilled! ${username} is now a moderator.`,
+    message: `${username} is now a moderator.`,
   };
 });
 
@@ -223,8 +231,7 @@ exports.removeModerator = functions.https.onCall(async (username, context) => {
 
   if (user.isModerator !== true) {
     return {
-      error:
-        "Request not authorized. User must be a moderator to fulfill request.",
+      error: "You must be a moderator to do that.",
     };
   }
 
@@ -240,7 +247,7 @@ exports.removeModerator = functions.https.onCall(async (username, context) => {
   });
 
   return {
-    result: `Request fulfilled! ${username} is no longer a moderator.`,
+    message: `${username} is no longer a moderator.`,
   };
 });
 
@@ -263,6 +270,7 @@ exports.sendMessage = functions.https.onCall(async (data, context) => {
   }
 
   const user = await getUser(context.auth.uid);
+  const authUser = await admin.auth().getUser(context.auth.uid);
   // await admin.auth().verifyIdToken(context.auth.token);
 
   // .then((claims) => {
@@ -278,12 +286,12 @@ exports.sendMessage = functions.https.onCall(async (data, context) => {
   data.text = await filterWords(data.text);
 
   const timestamp = admin.firestore.FieldValue.serverTimestamp();
-
+  console.log(authUser.photoURL);
   const contents = {
     ...data,
     uid: context.auth.uid,
     username: user.username,
-    photoUrl: user.phoroUrl || "",
+    photoUrl: authUser.photoURL || "",
     createdAt: timestamp,
     premium: context.auth.token.stripeRole == "premium",
   };
@@ -317,76 +325,103 @@ exports.sendMessage = functions.https.onCall(async (data, context) => {
 });
 
 exports.signUp = functions.https.onCall(async (data, context) => {
-  let anonSuffix;
+  try {
+    let anonSuffix;
 
-  if (!data.anonymous) {
-    if (data.username.match(/^anon\d+$/g)) {
-      return { error: "Invalid username (anonXXXX)." };
+    if (!data.anonymous) {
+      if (data.username.match(/^anon\d+$/g)) {
+        return { error: "Invalid username (anonXXXX)." };
+      }
+
+      if (data.username.length < 4) {
+        return {
+          error: "Username must be 4+ characters.",
+        };
+      }
+
+      if (!data.username.match(/^[a-z0-9]+$/i)) {
+        return {
+          error: "Username may only contain letters and numbers.",
+        };
+      }
+
+      if (data.password.length < 8) {
+        return {
+          error: "Password must be 8+ characters.",
+        };
+      }
+
+      // Require username to be unique
+      const query = db
+        .collection("users")
+        .where("username", "==", data.username);
+      const snapshot = await query.get();
+      const docs = await snapshot.docs;
+      if (docs.length > 0) {
+        return { error: "Username taken." };
+      }
+    } else {
+      // Select users whose names start with "anon"
+      const query = db
+        .collection("users")
+        .where("anonSuffix", ">=", 0)
+        .orderBy("anonSuffix", "desc")
+        .limit(1);
+
+      const snapshot = await query.get();
+      const docs = await snapshot.docs;
+      anonSuffix = docs.length ? docs[0].data().anonSuffix + 1 : 0;
+      data.username = "anon" + anonSuffix;
     }
-
-    if (!data.username.match(/^[a-z0-9]+$/i)) {
+    let authError = null;
+    const userRecord = await admin
+      .auth()
+      .createUser(
+        data.anonymous
+          ? { displayName: data.username }
+          : {
+              email: data.email,
+              emailVerified: false,
+              password: data.password,
+              displayName: data.username,
+              // photoURL: "http://www.example.com/12345678/photo.png",
+              disabled: false,
+            }
+      )
+      .catch((error) => {
+        authError = error;
+      });
+    if (authError) {
       return {
-        error:
-          "Invalid username (may only contain alphanumeric characters and numbers).",
+        error: authError.errorInfo
+          ? translateError(authError).errorInfo.message
+          : "Something went wrong. Please try again.",
       };
     }
 
-    // Require username to be unique
-    const query = db.collection("users").where("username", "==", data.username);
-    const snapshot = await query.get();
-    const docs = await snapshot.docs;
-    if (docs.length > 0) {
-      return { error: "Username taken." };
-    }
-  } else {
-    // Select users whose names start with "anon"
-    const query = db
-      .collection("users")
-      .where("anonSuffix", ">=", 0)
-      .orderBy("anonSuffix", "desc")
-      .limit(1);
+    // NOTE: Must create the document now to allow calling .update() later
+    await db.doc(`users/${userRecord.uid}`).set({
+      username: data.username,
+      isBanned: false,
+      isModerator: false,
+      isAdmin: false,
+      ...(data.anonymous ? { anonSuffix: anonSuffix } : {}),
+    });
 
-    const snapshot = await query.get();
-    const docs = await snapshot.docs;
-    anonSuffix = docs.length ? docs[0].data().anonSuffix + 1 : 0;
-    user.username = "anon" + anonSuffix;
+    const token = await admin.auth().createCustomToken(userRecord.uid);
+
+    // See the UserRecord reference doc for the contents of userRecord.
+    return {
+      ...(data.anonymous ? { token } : {}),
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      error: error.errorInfo
+        ? translateError(error).errorInfo.message
+        : "Something went wrong. Please try again.",
+    };
   }
-
-  const userRecord = await admin.auth().createUser(
-    data.anonymous
-      ? { displayName: data.username }
-      : {
-          email: data.email,
-          emailVerified: false,
-          password: data.password,
-          displayName: data.username,
-          // photoURL: "http://www.example.com/12345678/photo.png",
-          disabled: false,
-        }
-  );
-  // NOTE: Must create the document now to allow calling .update() later
-  await db.doc(`users/${userRecord.uid}`).set({
-    username: data.username,
-    isBanned: false,
-    isModerator: false,
-    isAdmin: false,
-    ...(data.anonymous ? { anonSuffix: anonSuffix } : {}),
-  });
-
-  const token = await admin.auth().createCustomToken(userRecord.uid);
-
-  // See the UserRecord reference doc for the contents of userRecord.
-  return {
-    success: true,
-    ...(data.anonymous ? { token } : {}),
-  };
-
-  // .catch(function (error) {
-  //   console.error("Error creating new user:", error);
-  //   return {
-  //     error: "Something went wrong. Please try again.",
-  //   };
-  // });
 });
 
 exports.sendWelcomeEmail = functions.auth.user().onCreate((user) => {

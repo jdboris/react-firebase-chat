@@ -8,6 +8,7 @@ import paginationStyles from "../css/pagination-controls.module.css";
 
 export function BanlistDialog(props) {
   const [username, setUsername] = useState("");
+  const [errors, setErrors] = useState([]);
   const query = props.open
     ? usersRef.orderBy("username").where("isBanned", "==", true)
     : null;
@@ -26,6 +27,8 @@ export function BanlistDialog(props) {
           Banlist
           <CloseIcon
             onClick={() => {
+              setUsername("");
+              setErrors([]);
               props.requestClose();
             }}
           />
@@ -39,7 +42,12 @@ export function BanlistDialog(props) {
                   <button
                     className={styles["link"]}
                     onClick={async () => {
-                      await unbanUser(user.username);
+                      const result = await unbanUser(user.username);
+                      if (result.data.error) {
+                        setErrors([result.data.error]);
+                      } else {
+                        setErrors([]);
+                      }
                     }}
                   >
                     remove
@@ -50,11 +58,19 @@ export function BanlistDialog(props) {
           <form
             onSubmit={async (e) => {
               e.preventDefault();
-              if (username) {
-                await banUser(username);
+              const result = await banUser(username);
+              if (result.data.error) {
+                setErrors([result.data.error]);
+              } else {
+                setErrors([]);
               }
             }}
           >
+            {errors.map((error, i) => (
+              <div key={i} className={styles["error"]}>
+                {error}
+              </div>
+            ))}
             <input
               type="text"
               placeholder="Username"
