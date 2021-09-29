@@ -212,7 +212,7 @@ export function ChatMessage(props) {
             >
               {username}
             </span>
-            :
+            :{" "}
             {useMemo(() => {
               return (
                 <ReactMarkdown
