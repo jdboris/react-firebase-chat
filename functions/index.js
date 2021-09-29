@@ -42,7 +42,7 @@ async function markUserBanned(username) {
   const user = await getUser(snapshot.docs[0].id);
 
   // If the user is banned already
-  if (user.isBanned === true) {
+  if (user.isBanned) {
     return {
       error: "User is already banned.",
     };
@@ -129,6 +129,12 @@ exports.unbanUser = functions.https.onCall(async (username, context) => {
     };
   }
 
+  if (user.isBanned) {
+    return {
+      error: "You are banned.",
+    };
+  }
+
   const result = await markUserUnbanned(username);
   if (result) {
     return result;
@@ -166,7 +172,7 @@ async function grantModeratorRole(username) {
     };
   }
 
-  if (user.isBanned === true) {
+  if (user.isBanned) {
     return {
       error: "Cannot mod a banned user.",
     };
@@ -188,6 +194,12 @@ exports.addModerator = functions.https.onCall(async (username, context) => {
   if (user.isModerator !== true) {
     return {
       error: "You must be a moderator to do that.",
+    };
+  }
+
+  if (user.isBanned === true) {
+    return {
+      error: "You are banned.",
     };
   }
 
@@ -247,6 +259,12 @@ exports.removeModerator = functions.https.onCall(async (username, context) => {
     };
   }
 
+  if (user.isBanned) {
+    return {
+      error: "You are banned.",
+    };
+  }
+
   const result = await revokeModeratorRole(username);
   if (result) {
     return result;
@@ -282,11 +300,12 @@ exports.sendMessage = functions.https.onCall(async (data, context) => {
   }
 
   const user = await getUser(context.auth.uid);
-  const authUser = await admin.auth().getUser(context.auth.uid);
 
   if (user.isBanned) {
     return { error: "You are banned." };
   }
+
+  const authUser = await admin.auth().getUser(context.auth.uid);
 
   data.text = await filterWords(data.text);
 
@@ -693,11 +712,18 @@ exports.getOembed = functions.https.onCall(async (data, context) => {
 });
 
 exports.uploadFile = functions.https.onCall(async (data, context) => {
-  const { fromBuffer: fileTypeFromBuffer } = require("file-type");
-  const crypto = require("crypto");
+  const user = await getUser(context.auth.uid);
+
+  if (user.isBanned) {
+    return { error: "You are banned." };
+  }
+
   if (!context.auth.uid) {
     return { error: "Must be logged in." };
   }
+
+  const { fromBuffer: fileTypeFromBuffer } = require("file-type");
+  const crypto = require("crypto");
 
   // 10 Megabytes
   const sizeLimit = 10 * 1024 * 1024;
