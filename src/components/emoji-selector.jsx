@@ -116,7 +116,7 @@ export function EmojiSelector(props) {
             }, [])}
           </section>
           <footer>
-            Want more emojis?
+            Want more emojis?{" "}
             <button
               className={styles["link"]}
               onClick={() => {

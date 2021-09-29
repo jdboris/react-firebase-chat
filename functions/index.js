@@ -65,6 +65,10 @@ async function markUserBanned(username) {
 }
 
 exports.banUser = functions.https.onCall(async (username, context) => {
+  if (!context.auth.uid) {
+    return { error: "Must be logged in." };
+  }
+
   const user = await getUser(context.auth.uid);
 
   if (user.isModerator !== true) {
@@ -117,6 +121,10 @@ async function markUserUnbanned(username) {
 }
 
 exports.unbanUser = functions.https.onCall(async (username, context) => {
+  if (!context.auth.uid) {
+    return { error: "Must be logged in." };
+  }
+
   const user = await getUser(context.auth.uid);
 
   if (user.isModerator !== true) {
@@ -175,6 +183,10 @@ async function grantModeratorRole(username) {
 }
 
 exports.addModerator = functions.https.onCall(async (username, context) => {
+  if (!context.auth.uid) {
+    return { error: "Must be logged in." };
+  }
+
   const user = await getUser(context.auth.uid);
 
   if (user.isModerator !== true) {
@@ -227,6 +239,10 @@ async function revokeModeratorRole(username) {
 }
 
 exports.removeModerator = functions.https.onCall(async (username, context) => {
+  if (!context.auth.uid) {
+    return { error: "Must be logged in." };
+  }
+
   const user = await getUser(context.auth.uid);
 
   if (user.isModerator !== true) {
@@ -266,18 +282,11 @@ async function filterWords(text) {
 
 exports.sendMessage = functions.https.onCall(async (data, context) => {
   if (!context.auth.uid) {
-    return { error: "Please login." };
+    return { error: "Must be logged in." };
   }
 
   const user = await getUser(context.auth.uid);
   const authUser = await admin.auth().getUser(context.auth.uid);
-  // await admin.auth().verifyIdToken(context.auth.token);
-
-  // .then((claims) => {
-  //   if (claims.admin === true) {
-  //     // Allow access to requested admin resource.
-  //   }
-  // });
 
   if (user.isBanned) {
     return { error: "You are banned." };
@@ -286,7 +295,7 @@ exports.sendMessage = functions.https.onCall(async (data, context) => {
   data.text = await filterWords(data.text);
 
   const timestamp = admin.firestore.FieldValue.serverTimestamp();
-  console.log(authUser.photoURL);
+
   const contents = {
     ...data,
     uid: context.auth.uid,
@@ -613,6 +622,10 @@ function escapeRegExExceptStar(string) {
 }
 
 exports.getOembed = functions.https.onCall(async (data, context) => {
+  if (!context.auth.uid) {
+    return { error: "Must be logged in." };
+  }
+
   const snapshot = await db.collection("settings").get("oembed");
   let settings = {};
 

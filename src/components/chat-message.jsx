@@ -195,13 +195,6 @@ export function ChatMessage(props) {
         </span>
         <div>
           <span
-            className={styles["message-username"]}
-            style={stylesEnabled ? { color: nameColor } : {}}
-          >
-            {username}
-          </span>
-          :
-          <span
             className={styles["message-contents"]}
             style={
               stylesEnabled
@@ -213,6 +206,13 @@ export function ChatMessage(props) {
                 : {}
             }
           >
+            <span
+              className={styles["message-username"]}
+              style={stylesEnabled ? { color: nameColor } : {}}
+            >
+              {username}
+            </span>
+            :
             {useMemo(() => {
               return (
                 <ReactMarkdown
