@@ -1,4 +1,4 @@
--add security logic to cloud functions (i.e. ensuring the user is authenticated)
+-prevent anons from subscribing, setting styles, uploading profile image, etc...
 -add loading spinners
 -add email verification checks
 -add a reconnect button
@@ -27,3 +27,4 @@ Future features:
 -DM user by clicking their avatar
 -autocomplete @, DM username, mod username, and ban user username
 -add DM search, mod search, and banned user search
+-cropping/scaling profile images

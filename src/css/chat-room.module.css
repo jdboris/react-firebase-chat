@@ -7,6 +7,15 @@ a,
   background: none;
 }
 
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 a:hover,
 .chat-app *.link:hover {
   text-decoration: underline;
@@ -28,6 +37,10 @@ ul {
   cursor: pointer;
 }
 
+label {
+  display: block;
+}
+
 label [type="file"] {
   display: none;
 }
@@ -44,14 +57,60 @@ label [type="file"] {
   display: none;
 }
 
+.loading-placeholder,
+.loading,
 .chat-app *.disabled,
-.chat-app *[disabled] {
+.chat-app *[disabled],
+.chat-app fieldset[disabled] input,
+.chat-app fieldset[disabled] button,
+.chat-app fieldset.disable input,
+.chat-app fieldset.disabled button {
   color: grey;
   cursor: default;
 }
 
-.chat-app *.disabled:hover {
+.chat-app *.disabled:hover,
+.chat-app fieldset.disabled *:hover {
   text-decoration: none;
+}
+
+.loading-placeholder,
+.loading {
+  position: relative;
+  pointer-events: none;
+}
+
+.loading-placeholder {
+  min-width: 1em;
+  min-height: 1em;
+}
+
+.loading-placeholder > * {
+  visibility: hidden;
+}
+
+.loading-placeholder::before,
+.loading::after {
+  content: "";
+  position: absolute;
+  margin: auto;
+  top: 0px;
+  bottom: 0px;
+  width: 1em;
+  height: 1em;
+  margin-left: 0.5em;
+  border-radius: 50%;
+  /* border: 0.1em solid #f3f3f3; */
+  border-top: 0.1em solid;
+  border-right: 0.2em solid;
+  border-bottom: 0.1em solid transparent;
+
+  animation: rotation 0.9s linear infinite;
+}
+
+.loading-placeholder::before {
+  box-sizing: border-box;
+  margin-left: auto;
 }
 
 .yellow {
@@ -290,6 +349,10 @@ svg.gavel-icon {
   font-size: 1em;
 }
 
+.profile-editor svg {
+  vertical-align: middle;
+}
+
 .unread-conversation {
   font-weight: bold;
 }
@@ -303,6 +366,10 @@ svg.gavel-icon {
   display: flex;
   justify-content: space-between;
   margin-top: 5px;
+}
+
+.message-style-editor label {
+  display: inline-block;
 }
 
 .message-style-editor > label:not(.button) {
@@ -361,9 +428,15 @@ svg.gavel-icon {
   z-index: 0;
 }
 
-.message-form > *,
-.message-form svg {
+.message-form > * {
   height: 100% !important;
+}
+
+.message-form > * {
+  display: flex;
+  align-items: center;
+  /* To fix the weird extra space around svgs */
+  line-height: 10px;
 }
 
 .message-form button {
@@ -475,16 +548,18 @@ button:disabled {
   color: #282c34;
 }
 
-.login-form {
+.login-form,
+.login-form fieldset {
   display: flex;
   flex-direction: column;
   justify-content: center;
   width: 100%;
   max-width: 300px;
   text-align: center;
+  border: 0;
 }
 
-.login-form > * {
+.login-form fieldset > * {
   margin-bottom: 5px;
 }
 
@@ -534,11 +609,13 @@ li {
 
 .message-username {
   font-weight: bold;
+  vertical-align: top;
 }
 
 .message-contents {
   margin-left: 5px;
   padding-top: 15px;
+  padding-bottom: 5px;
   width: 100%;
 }
 
@@ -622,4 +699,5 @@ li {
   margin-top: 5px;
   margin-bottom: 5px;
   border: 1px solid gray;
+  vertical-align: middle;
 }
