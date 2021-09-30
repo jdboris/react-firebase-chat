@@ -57,12 +57,13 @@ export function DmsDialog(props) {
                         (isUnread ? styles["unread-conversation"] : "")
                       }
                       onClick={async () => {
-                        props.setDmMessagesRef(
+                        await props.setDmMessagesRef(
                           firestore
                             .collection("conversations")
                             .doc(conversation.id)
                             .collection("messages")
                         );
+                        props.requestClose();
                       }}
                     >
                       {conversation.id
@@ -138,6 +139,7 @@ export function DmsDialog(props) {
               })
                 .then(() => {
                   setLoading(false);
+                  props.requestClose();
                 })
                 .catch(() => {
                   setErrors(["Something went wrong. Please try again."]);
@@ -158,7 +160,7 @@ export function DmsDialog(props) {
               value={username}
             />{" "}
             <button className={loading ? styles["loading"] : ""}>
-              Send Message
+              Start Conversation
             </button>
           </form>
         </main>

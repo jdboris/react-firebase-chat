@@ -1,7 +1,18 @@
-[data-provider] {
+/* [data-provider] {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
+} */
+
+/* Put a line break before the first embed of a group and after the last one */
+[data-provider]:first-child::before {
+  content: "";
+  display: block;
+}
+
+[data-provider]:last-child::after {
+  content: "";
+  display: block;
 }
 
 /* Youtube */
@@ -22,7 +33,7 @@
   border-style: solid;
   border-width: 1px;
   -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
   margin: 10px 5px;
   padding: 0 16px 16px 16px;
   min-height: initial;
