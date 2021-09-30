@@ -1,9 +1,7 @@
 import ChatBubbleIcon from "@material-ui/icons/ChatBubble";
 import CloseIcon from "@material-ui/icons/Close";
-import PencilIcon from "@material-ui/icons/Create";
 import GavelIcon from "@material-ui/icons/Gavel";
 import MenuIcon from "@material-ui/icons/Menu";
-import PersonIcon from "@material-ui/icons/Person";
 import firebase from "firebase/app";
 import React, { useEffect, useRef, useState } from "react";
 import { useCollectionData, useDocument } from "react-firebase-hooks/firestore";
@@ -12,7 +10,6 @@ import styles from "../css/chat-room.module.css";
 import { fonts } from "../fonts";
 import { toggleSelectionMarkup } from "../markdown";
 import { presence } from "../presence";
-import { uploadFile } from "../storage";
 import { insertIntoInput } from "../utils";
 import { BanlistDialog } from "./banlist-dialog";
 // import { getProviders } from "../oembed";
@@ -26,6 +23,7 @@ import { MessageList } from "./message-list";
 import { ModActionLogDialog } from "./mod-action-log-dialog";
 import { ModeratorsDialog } from "./moderators-dialog";
 import { PremiumDialog } from "./premium-dialog";
+import { ProfileDialog } from "./profile-dialog";
 import { StyleEditorDialog } from "./style-editor-dialog";
 import { UserStyleControls } from "./user-style-controls";
 
@@ -37,18 +35,12 @@ export function ChatRoom(props) {
   const authUser = props.user;
   let [userSnapshot, isLoadingUser] = useDocument(usersRef.doc(authUser.uid));
 
-  const user = userSnapshot
-    ? {
-        uid: authUser.uid,
-        photoUrl: authUser.photoURL,
-        email: authUser.email,
-        ...userSnapshot.data(),
-      }
-    : {
-        uid: authUser.uid,
-        photoUrl: authUser.photoURL,
-        email: authUser.email,
-      };
+  const user = {
+    uid: authUser.uid,
+    photoUrl: authUser.photoURL,
+    email: authUser.email,
+    ...(userSnapshot ? userSnapshot.data() : {}),
+  };
 
   const dmsPerPage = 10;
   let query = user
@@ -80,7 +72,7 @@ export function ChatRoom(props) {
   const [messageValue, setMessageValue] = useState("");
   const [onlineUsers, setOnlineUsers] = useState([]);
 
-  const [photoUrl, setPhotoUrl] = useState(user.photoURL);
+  const [photoUrl, setPhotoUrl] = useState(user.photoUrl);
   const [font, setFont] = useState(fonts[0]);
   const [fontSize, setFontSize] = useState(13);
   const [fontColor, setFontColor] = useState("#000000");
@@ -513,52 +505,15 @@ export function ChatRoom(props) {
         </div>
       </div>
 
-      {isProfileOpen && (
-        <div className={styles["dialog"] + " " + styles["profile-editor"]}>
-          <header>
-            Edit profile
-            <CloseIcon
-              onClick={() => {
-                setProfileOpen(false);
-              }}
-            />
-          </header>
-          <div>
-            <label>
-              {photoUrl ? (
-                <img
-                  className={styles["avatar"]}
-                  src={photoUrl}
-                  alt="profile"
-                />
-              ) : (
-                <PersonIcon className={styles["avatar"]} />
-              )}
-              {<PencilIcon />}
-              <input
-                type="file"
-                onChange={async (e) => {
-                  try {
-                    if (!e.target.files.length) {
-                      return;
-                    }
-                    const file = e.target.files[0];
-                    const url = await uploadFile(file);
-                    if (!url) {
-                      setErrors(["Error uploading file."]);
-                      return;
-                    }
-                    await auth.currentUser.updateProfile({ photoURL: url });
-                    setPhotoUrl(url);
-                  } catch (error) {
-                    setErrors([error]);
-                  }
-                }}
-              />
-            </label>
-          </div>
-        </div>
-      )}
+      <ProfileDialog
+        open={isProfileOpen}
+        requestClose={() => {
+          setProfileOpen(false);
+        }}
+        setErrrors={setErrors}
+        photoUrl={photoUrl}
+        setPhotoUrl={setPhotoUrl}
+      />
 
       {isPremiumPromptOpen && (
         <div className={styles["dialog"]}>

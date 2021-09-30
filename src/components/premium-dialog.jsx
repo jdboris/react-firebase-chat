@@ -4,10 +4,12 @@ import { useCollectionData } from "react-firebase-hooks/firestore";
 import { firestore } from "../app";
 import styles from "../css/chat-room.module.css";
 import { sendToCustomerPortal, sendToStripe } from "../stripe";
+import { timeout } from "../utils";
 
 export function PremiumDialog(props) {
   const { premium, uid } = props;
   const [period, setPeriod] = useState(3);
+  const [loading, setLoading] = useState(false);
   const query = firestore
     .collection("users")
     .doc(uid)
@@ -51,9 +53,19 @@ export function PremiumDialog(props) {
 
               <div>
                 <button
+                  className={loading ? styles["loading"] : ""}
                   onClick={(e) => {
                     e.preventDefault();
-                    sendToCustomerPortal();
+                    if (loading) return;
+                    setLoading(true);
+                    timeout(5000, () => {
+                      return sendToCustomerPortal().then(() => {
+                        // Add another delay for the navigation to commence/complete
+                        setTimeout(() => {
+                          setLoading(false);
+                        }, 2000);
+                      });
+                    });
                   }}
                 >
                   Manage Subscription
@@ -67,7 +79,17 @@ export function PremiumDialog(props) {
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  sendToStripe(uid, e.target.period.value);
+                  if (loading) return;
+                  setLoading(true);
+
+                  timeout(5000, () => {
+                    sendToStripe(uid, e.target.period.value).then(() => {
+                      // Add another delay for the navigation to commence/complete
+                      setTimeout(() => {
+                        setLoading(false);
+                      }, 2000);
+                    });
+                  });
                 }}
               >
                 <label>
@@ -100,7 +122,9 @@ export function PremiumDialog(props) {
                 </label>
                 Billed every {period} months. Cancel any time.
                 <label>
-                  <button>Subscribe</button>
+                  <button className={loading ? styles["loading"] : ""}>
+                    Subscribe
+                  </button>
                 </label>
               </form>
             </>

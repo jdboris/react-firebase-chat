@@ -317,7 +317,7 @@ exports.sendMessage = functions.https.onCall(async (data, context) => {
     username: user.username,
     photoUrl: authUser.photoURL || "",
     createdAt: timestamp,
-    premium: context.auth.token.stripeRole == "premium",
+    premium: context.auth.token.stripeRole === "premium",
   };
 
   if (data.conversationId != "messages") {
@@ -724,9 +724,13 @@ exports.uploadFile = functions.https.onCall(async (data, context) => {
 
   const { fromBuffer: fileTypeFromBuffer } = require("file-type");
   const crypto = require("crypto");
+  const premium = context.auth.token.stripeRole === "premium";
 
+  const megabyteSize = 1024 * 1024;
   // 10 Megabytes
-  const sizeLimit = 10 * 1024 * 1024;
+  const premiumSizeLimit = 10 * megabyteSize;
+  // 4 Megabytes
+  const sizeLimit = 4 * megabyteSize;
   const allowedTypes = ["image/jpeg", "image/jpeg", "image/png", "image/gif"];
 
   const { base64FileString, extension } = data;
@@ -738,8 +742,18 @@ exports.uploadFile = functions.https.onCall(async (data, context) => {
     "base64"
   );
 
-  if (imageBuffer.byteLength > sizeLimit) {
-    return { error: "File too large." };
+  if (!premium && imageBuffer.byteLength > sizeLimit) {
+    return {
+      error: `File too large (${
+        sizeLimit / megabyteSize
+      }MB limit). Upgrade to Premium for a higher limit.`,
+    };
+  }
+
+  if (imageBuffer.byteLength > premiumSizeLimit) {
+    return {
+      error: `File too large (${premiumSizeLimit / megabyteSize}MB limit).`,
+    };
   }
 
   const type = await fileTypeFromBuffer(imageBuffer);
