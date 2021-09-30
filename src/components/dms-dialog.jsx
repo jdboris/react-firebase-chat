@@ -5,6 +5,7 @@ import ReactPaginate from "react-paginate";
 import { conversationsRef, firestore, usersRef } from "../app";
 import styles from "../css/chat-room.module.css";
 import paginationStyles from "../css/pagination-controls.module.css";
+import { timeout } from "../utils";
 
 export function DmsDialog(props) {
   const { conversations } = props;
@@ -12,6 +13,7 @@ export function DmsDialog(props) {
   const [username, setUsername] = useState("");
   const [errors, setErrors] = useState([]);
   const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
   const itemsPerPage = props.itemsPerPage;
   const start = (page - 1) * itemsPerPage;
   const end = page * itemsPerPage;
@@ -75,57 +77,71 @@ export function DmsDialog(props) {
           <form
             onSubmit={async (e) => {
               e.preventDefault();
-              if (!username) {
-                setErrors(["Enter a username."]);
-                return;
-              }
-              const snapshot = await usersRef
-                .where("username", "==", username)
-                .get();
+              setLoading(true);
+              setErrors([]);
 
-              if (!snapshot.docs.length) {
-                setErrors(["User not found."]);
-                return;
-              }
+              timeout(5000, async () => {
+                if (!username) {
+                  setErrors(["Enter a username."]);
+                  return;
+                }
+                const snapshot = await usersRef
+                  .where("username", "==", username)
+                  .get();
 
-              if (snapshot.docs[0].id == props.uid) {
-                setErrors(["Cannot chat with yourself."]);
-                return;
-              }
+                if (!snapshot.docs.length) {
+                  setErrors(["User not found."]);
+                  return;
+                }
 
-              const conversationId = combineStrings([props.username, username]);
+                if (snapshot.docs[0].id === props.uid) {
+                  setErrors(["Cannot chat with yourself."]);
+                  return;
+                }
 
-              await conversationsRef.doc(conversationId).set(
-                {
-                  lastMessageSentAt: 0,
-                  // NOTE: This insanity is required for later queries with NoSQL
-                  userIds: [props.uid, snapshot.docs[0].id],
-                  users: {
-                    [props.uid]: {
-                      lastReadAt:
-                        firebase.firestore.FieldValue.serverTimestamp(),
-                    },
-                    [snapshot.docs[0].id]: {
-                      lastReadAt:
-                        firebase.firestore.FieldValue.serverTimestamp(),
+                const conversationId = combineStrings([
+                  props.username,
+                  username,
+                ]);
+
+                await conversationsRef.doc(conversationId).set(
+                  {
+                    lastMessageSentAt: 0,
+                    // NOTE: This insanity is required for later queries with NoSQL
+                    userIds: [props.uid, snapshot.docs[0].id],
+                    users: {
+                      [props.uid]: {
+                        lastReadAt:
+                          firebase.firestore.FieldValue.serverTimestamp(),
+                      },
+                      [snapshot.docs[0].id]: {
+                        lastReadAt:
+                          firebase.firestore.FieldValue.serverTimestamp(),
+                      },
                     },
                   },
-                },
-                { merge: true }
-              );
+                  { merge: true }
+                );
 
-              // await conversationsRef
-              //   .doc(conversationId)
-              //   .collection("messages");
+                // await conversationsRef
+                //   .doc(conversationId)
+                //   .collection("messages");
 
-              props.setDmMessagesRef(
-                firestore
-                  .collection("conversations")
-                  .doc(conversationId)
-                  .collection("messages")
-              );
+                props.setDmMessagesRef(
+                  firestore
+                    .collection("conversations")
+                    .doc(conversationId)
+                    .collection("messages")
+                );
 
-              props.requestClose();
+                props.requestClose();
+              })
+                .then(() => {
+                  setLoading(false);
+                })
+                .catch(() => {
+                  setErrors(["Something went wrong. Please try again."]);
+                });
             }}
           >
             {errors.map((error, i) => (
@@ -141,7 +157,9 @@ export function DmsDialog(props) {
               }}
               value={username}
             />{" "}
-            <button>Send Message</button>
+            <button className={loading ? styles["loading"] : ""}>
+              Send Message
+            </button>
           </form>
         </main>
         <footer className={paginationStyles["pagination-controls"]}>

@@ -1,9 +1,10 @@
 import CloseIcon from "@material-ui/icons/Close";
 import firebase from "firebase/app";
-import { default as React } from "react";
+import { default as React, useState } from "react";
 import { usersRef } from "../app";
 import styles from "../css/chat-room.module.css";
 import { uploadFile } from "../storage";
+import { timeout } from "../utils";
 import { ChatMessage } from "./chat-message";
 import { ColorInput } from "./color-input";
 import { SliderInput } from "./slider-input";
@@ -40,6 +41,7 @@ export function StyleEditorDialog(props) {
   //     ? usersRef.orderBy("username").where("isBanned", "==", true)
   //     : null;
   //   const [bannedUsers] = useCollectionData(query, { idField: "id" });
+  const [loading, setLoading] = useState(false);
 
   return (
     props.open && (
@@ -135,7 +137,11 @@ export function StyleEditorDialog(props) {
         </label>
         <label
           className={
-            styles["button"] + " " + (!premium ? styles["disabled"] : "")
+            styles["button"] +
+            " " +
+            (!premium ? styles["disabled"] : "") +
+            " " +
+            (loading ? styles["loading"] : "")
           }
           onClick={() => {
             if (!premium) return setPremiumPromptOpen(true);
@@ -144,25 +150,36 @@ export function StyleEditorDialog(props) {
           Upload Image
           <input
             type="file"
-            onChange={async (e) => {
-              try {
-                if (!e.target.files.length) {
-                  return;
-                }
-                const file = e.target.files[0];
-                const url = await uploadFile(file);
+            onChange={(e) => {
+              if (loading) return;
+              setLoading(true);
 
-                if (!url) {
-                  setErrors(["Error uploading file."]);
-                  return;
+              timeout(5000, async () => {
+                try {
+                  if (!e.target.files.length) {
+                    return;
+                  }
+                  const file = e.target.files[0];
+                  const url = await uploadFile(file);
+
+                  if (!url) {
+                    setErrors(["Error uploading file."]);
+                    return;
+                  }
+                  await usersRef.doc(user.uid).update({
+                    msgBgImg: url,
+                  });
+                  setMsgBgImg(url);
+                } catch (error) {
+                  setErrors([error]);
                 }
-                await usersRef.doc(user.uid).update({
-                  msgBgImg: url,
+              })
+                .then(() => {
+                  setLoading(false);
+                })
+                .catch((error) => {
+                  props.setErrors([error]);
                 });
-                setMsgBgImg(url);
-              } catch (error) {
-                setErrors([error]);
-              }
             }}
             disabled={!premium}
           />
