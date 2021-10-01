@@ -3,7 +3,7 @@ import CloseIcon from "@material-ui/icons/Close";
 import GavelIcon from "@material-ui/icons/Gavel";
 import MenuIcon from "@material-ui/icons/Menu";
 import firebase from "firebase/app";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useCollectionData, useDocument } from "react-firebase-hooks/firestore";
 import { auth, conversationsRef, usersRef } from "../app";
 import styles from "../css/chat-room.module.css";
@@ -29,7 +29,7 @@ import { UserStyleControls } from "./user-style-controls";
 
 export function ChatRoom(props) {
   const sendMessageCloud = firebase.functions().httpsCallable("sendMessage");
-  const messagesRef = props.messagesRef;
+  const {messagesRef, conversationRef} = props;
 
   // Fetch the current user's ID from Firebase Authentication.
   const authUser = props.user;
@@ -41,21 +41,6 @@ export function ChatRoom(props) {
     email: authUser.email,
     ...(userSnapshot ? userSnapshot.data() : {}),
   };
-
-  const markMessagesRead = async () => {
-    await props.messagesRef.parent.set(
-      {
-        // NOTE: Required for marking messages read
-        users: {
-          [user.uid]: {
-            lastReadAt: firebase.firestore.FieldValue.serverTimestamp(),
-            // lastReadAt: new firebase.firestore.Timestamp(1726757369, 337000000),
-          },
-        },
-      },
-      { merge: true }
-    );
-  }
 
   const dmsPerPage = 10;
   let query = user
@@ -128,8 +113,8 @@ export function ChatRoom(props) {
       setMessageValue("");
 
       await sendMessageCloud({
-        conversationId: messagesRef.parent
-          ? messagesRef.parent.id
+        conversationId: props.conversationRef
+          ? props.conversationRef.id
           : messagesRef.id,
         text,
         isDeleted: false,
@@ -234,6 +219,21 @@ export function ChatRoom(props) {
     if (!props.dms) {
       return;
     }
+    async function markMessagesRead() {
+      await props.conversationRef.set(
+        {
+          // NOTE: Required for marking messages read
+          users: {
+            [user.uid]: {
+              lastReadAt: firebase.firestore.FieldValue.serverTimestamp(),
+              // lastReadAt: new firebase.firestore.Timestamp(1726757369, 337000000),
+            },
+          },
+        },
+        { merge: true }
+      );
+    }
+
     markMessagesRead();
   }, [props.dms]);
 
@@ -438,6 +438,7 @@ export function ChatRoom(props) {
         open={isDmsOpen}
         username={user.username}
         uid={user.uid}
+        setConversationRef={props.setConversationRef}
         setDmMessagesRef={props.setDmMessagesRef}
         conversations={conversations}
         itemsPerPage={dmsPerPage}
