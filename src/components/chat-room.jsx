@@ -42,6 +42,21 @@ export function ChatRoom(props) {
     ...(userSnapshot ? userSnapshot.data() : {}),
   };
 
+  const markMessagesRead = async () => {
+    await props.messagesRef.parent.set(
+      {
+        // NOTE: Required for marking messages read
+        users: {
+          [user.uid]: {
+            lastReadAt: firebase.firestore.FieldValue.serverTimestamp(),
+            // lastReadAt: new firebase.firestore.Timestamp(1726757369, 337000000),
+          },
+        },
+      },
+      { merge: true }
+    );
+  }
+
   const dmsPerPage = 10;
   let query = user
     ? conversationsRef
@@ -214,27 +229,13 @@ export function ChatRoom(props) {
     messageInput.setSelectionRange(start, end);
   }, [selection]);
 
+
   useEffect(() => {
     if (!props.dms) {
       return;
     }
-
-    async function markMessagesRead() {
-      await props.messagesRef.parent.set(
-        {
-          // NOTE: Required for marking messages read
-          users: {
-            [user.uid]: {
-              lastReadAt: firebase.firestore.FieldValue.serverTimestamp(),
-              // lastReadAt: new firebase.firestore.Timestamp(1726757369, 337000000),
-            },
-          },
-        },
-        { merge: true }
-      );
-    }
     markMessagesRead();
-  }, [props.dms, user.uid, messages, props.messagesRef.parent]);
+  }, [props.dms]);
 
   return (
     <section className={styles["chat-section"]} onClickCapture={closeMenus}>

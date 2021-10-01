@@ -17,6 +17,8 @@ i functions: Finished "us-central1-onUserStatusChanged" in ~1
 -add batches (transactions)
 -accept donations (https://support.stripe.com/questions/how-to-accept-donations-through-stripe)
 -logging errors with @google-cloud/logging
+-investigate
+[Violation] Added non-passive event listener to a scroll-blocking <some> event. Consider marking event handler as 'passive' to make the page more responsive. See <URL>
 
 Future features:
 -custom emojis
