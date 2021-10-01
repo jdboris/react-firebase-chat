@@ -57,6 +57,12 @@ export function DmsDialog(props) {
                         (isUnread ? styles["unread-conversation"] : "")
                       }
                       onClick={async () => {
+                        
+                        await props.setConversationRef(
+                          firestore
+                            .collection("conversations")
+                            .doc(conversation.id)
+                        );
                         await props.setDmMessagesRef(
                           firestore
                             .collection("conversations")
@@ -128,7 +134,13 @@ export function DmsDialog(props) {
                 //   .doc(conversationId)
                 //   .collection("messages");
 
-                props.setDmMessagesRef(
+                await props.setConversationRef(
+                  firestore
+                    .collection("conversations")
+                    .doc(conversationId)
+                );
+
+                await props.setDmMessagesRef(
                   firestore
                     .collection("conversations")
                     .doc(conversationId)

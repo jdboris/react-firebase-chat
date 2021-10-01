@@ -65,6 +65,7 @@ export const getCustomerPortalLink = firebase
 function App() {
   const [user] = useAuthState(auth);
   const email = user && !user.isAnonymous ? user.email : "";
+  const [conversationRef, setConversationRef] = useState(null);
   const [dmMessagesRef, setDmMessagesRef] = useState(null);
 
   const url = new URL(window.location);
@@ -86,8 +87,8 @@ function App() {
 
   // NOTE: This is a safe usage of displayName
   const header =
-    dmMessagesRef && user
-      ? dmMessagesRef.parent.id
+    conversationRef && user
+      ? conversationRef.id
           .split(":")
           .filter((e) => e !== user.displayName)
           .toString()
@@ -100,6 +101,8 @@ function App() {
           {dmMessagesRef ? (
             <ChatRoom
               user={user}
+              conversationRef={conversationRef}
+              setConversationRef={setConversationRef}
               messagesRef={dmMessagesRef}
               setDmMessagesRef={setDmMessagesRef}
               header={header}
@@ -109,6 +112,7 @@ function App() {
             <ChatRoom
               user={user}
               messagesRef={messagesRef}
+              setConversationRef={setConversationRef}
               setDmMessagesRef={setDmMessagesRef}
             />
           )}
