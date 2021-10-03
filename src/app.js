@@ -78,25 +78,27 @@ function App() {
 
   // Force a logout to refresh the token
   if (url.searchParams.get("chat-email-verification")) {
-    fetch(decodeURIComponent(url.searchParams.get("chat-email-verification")))
+    const link = decodeURIComponent(
+      url.searchParams.get("chat-email-verification")
+    );
+    url.searchParams.delete("chat-email-verification");
+    const queryString = url.searchParams.toString();
+    const hash = window.location.hash;
+    window.history.replaceState(
+      {},
+      "",
+      `${window.location.pathname}${
+        queryString ? "?" + queryString : ""
+      }${hash}`
+    );
+
+    fetch(link)
       .then((response) => {
         return response.json();
       })
       .then((data) => {
-        console.log(data);
         logout().then(() => {
-          url.searchParams.delete("chat-email-verification");
-          const queryString = url.searchParams.toString();
-          const hash = window.location.hash;
-          window.history.replaceState(
-            {},
-            "",
-            `${window.location.pathname}${
-              queryString ? "?" + queryString : ""
-            }${hash}`
-          );
-
-          setAlerts(["Email verification successful!"]);
+          //setAlerts(["Email verification successful!"]);
         });
       });
   }
@@ -126,6 +128,7 @@ function App() {
           .toString()
       : "";
 
+  console.log(user);
   return (
     <div className={styles["chat-app"]}>
       {user ? (

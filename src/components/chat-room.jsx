@@ -266,6 +266,7 @@ export function ChatRoom(props) {
       />
 
       <UserStyleControls
+        uid={user.uid}
         open={isFormatOpen}
         premium={premium}
         menuOpenKey={menuOpenKey}
