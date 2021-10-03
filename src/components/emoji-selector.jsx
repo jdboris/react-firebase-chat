@@ -81,6 +81,8 @@ export function EmojiSelector(props) {
                   key={"emoji-" + i}
                   title={(props.premium ? emoji.names : freeNames)[i]}
                   onClick={() => {
+                    if (props.isAnonymous)
+                      return props.setErrors(["Create an account to do that."]);
                     props.onSelect(emojiChar);
                   }}
                 >
