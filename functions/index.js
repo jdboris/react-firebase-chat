@@ -303,7 +303,7 @@ exports.sendMessage = functions.https.onCall(async (data, context) => {
     data.conversationId !== "messages" &&
     !context.auth.token.email_verified
   ) {
-    return { error: "Must verify your email to do that." };
+    return { error: "Verify your email to do that." };
   }
 
   const user = await getUser(context.auth.uid);
@@ -709,6 +709,10 @@ exports.getOembed = functions.https.onCall(async (data, context) => {
 
 exports.uploadFile = functions.https.onCall(async (data, context) => {
   const user = await getUser(context.auth.uid);
+
+  if (context.auth.token.email == null) {
+    return { error: "Create an account to do that." };
+  }
 
   if (user.isBanned) {
     return { error: "You are banned." };

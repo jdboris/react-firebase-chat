@@ -7,7 +7,7 @@ import { sendToCustomerPortal, sendToStripe } from "../stripe";
 import { timeout } from "../utils";
 
 export function PremiumDialog(props) {
-  const { premium, uid } = props;
+  const { premium, isAnonymous, uid } = props;
   const [period, setPeriod] = useState(3);
   const [loading, setLoading] = useState(false);
   const query = firestore
@@ -72,6 +72,8 @@ export function PremiumDialog(props) {
                 </button>
               </div>
             </>
+          ) : isAnonymous ? (
+            <>Must create an account to upgrade to Premium.</>
           ) : (
             <>
               Upgrade to a Premium account for perks like more emojis, more

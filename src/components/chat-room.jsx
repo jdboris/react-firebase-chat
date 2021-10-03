@@ -109,7 +109,7 @@ export function ChatRoom(props) {
 
   const sendMessage = async (e) => {
     if (conversationRef && !user.emailVerified) {
-      setErrors(["Must verify your email to do that."]);
+      setErrors(["Verify your email to do that."]);
     }
 
     if (messageValue) {
@@ -269,8 +269,10 @@ export function ChatRoom(props) {
         uid={user.uid}
         open={isFormatOpen}
         premium={premium}
+        isAnonymous={user.email == null}
         menuOpenKey={menuOpenKey}
         setMenuOpenKey={setMenuOpenKey}
+        setErrors={setErrors}
         stylesEnabled={stylesEnabled}
         setStylesEnabled={setStylesEnabled}
         font={font}
@@ -494,6 +496,8 @@ export function ChatRoom(props) {
         </header>
         <div>
           <EmojiSelector
+            isAnonymous={user.email == null}
+            setErrors={setErrors}
             onSelect={(emojiChar) => {
               messageInput.focus();
               insertIntoInput(emojiChar + " ", messageInput);
@@ -547,6 +551,7 @@ export function ChatRoom(props) {
 
       <PremiumDialog
         open={isPremiumOpen}
+        isAnonymous={user.email == null}
         uid={user.uid}
         premium={premium}
         requestClose={() => {

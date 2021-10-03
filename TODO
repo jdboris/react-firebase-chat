@@ -1,4 +1,3 @@
--prevent anons from subscribing, setting styles, uploading profile image, etc...
 -add password reset option
 -add a reconnect button
 -optimization to reduce firestore reads (prevent dialogs from querying until they're opened)
