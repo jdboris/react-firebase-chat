@@ -17,8 +17,17 @@ service cloud.firestore {
       return request.resource.data.diff(resource.data).affectedKeys();
     }
 
+    function isLoggedIn() {
+      return request.auth.uid != null;
+    }
+
+    function isVerified() {
+      return request.auth.token.email_verified == true;
+    }
+
     match /messages/{docId} {
-      allow read: if request.auth.uid != null && (resource.data.isDeleted == false || currentUser().isModerator == true || currentUser().isAdmin == true);
+      allow read: if isLoggedIn() &&
+                  (resource.data.isDeleted == false || currentUser().isModerator == true || currentUser().isAdmin == true);
       allow update: if (currentUser().isModerator == true || currentUser().isAdmin == true) && 
                       // If the request only has the isDeleted field
                       // https://firebase.google.com/docs/firestore/security/rules-fields#allowing_only_certain_fields_to_be_changed
@@ -26,16 +35,16 @@ service cloud.firestore {
     }
 
     match /modActionLog/{docId} {
-      allow read: if request.auth.uid != null && currentUser().isAdmin == true;
-      allow create: if request.auth.uid != null && currentUser().isAdmin == true;
-      allow delete: if request.auth.uid != null && currentUser().isAdmin == true;
+      allow read: if isLoggedIn() && currentUser().isAdmin == true;
+      allow create: if isLoggedIn() && currentUser().isAdmin == true;
+      allow delete: if isLoggedIn() && currentUser().isAdmin == true;
     }
 
     match /settings/filteredWords {
-      allow read: if request.auth.uid != null && currentUser().isAdmin == true;
-      allow create: if request.auth.uid != null && currentUser().isAdmin == true;
-      allow update: if request.auth.uid != null && currentUser().isAdmin == true;
-      allow delete: if request.auth.uid != null && currentUser().isAdmin == true;
+      allow read: if isLoggedIn() && currentUser().isAdmin == true;
+      allow create: if isLoggedIn() && currentUser().isAdmin == true;
+      allow update: if isLoggedIn() && currentUser().isAdmin == true;
+      allow delete: if isLoggedIn() && currentUser().isAdmin == true;
     }
   
     match /userPresences/{docId} {
@@ -46,17 +55,17 @@ service cloud.firestore {
     }
   
     match /conversations/{docId} {
-      allow create: if request.auth.uid != null && request.auth.uid in request.resource.data.userIds;
-      allow read: if request.auth.uid != null && request.auth.uid in resource.data.userIds;
-      allow update: if request.auth.uid != null && request.auth.uid in resource.data.userIds;
+      allow create: if isLoggedIn() && isVerified() && request.auth.uid in request.resource.data.userIds;
+      allow read: if isLoggedIn() && request.auth.uid in resource.data.userIds;
+      allow update: if isLoggedIn() && request.auth.uid in resource.data.userIds;
     }
   
     match /conversations/{conversationId}/messages/{messageId} {
-      allow read: if request.auth.uid != null && (resource.data.isDeleted == false || currentUser().isModerator == true || currentUser().isAdmin == true);
+      allow create: if isLoggedIn() && isVerified();
+      allow read: if isLoggedIn() && (resource.data.isDeleted == false || currentUser().isModerator == true || currentUser().isAdmin == true);
     }
   
     match /users/{uid} {
-      allow create: if isDocOwner(uid);
       allow read: if true;
       allow update: if isDocOwner(uid)
                     // NOTE: Don't allow updating these keys
@@ -67,19 +76,18 @@ service cloud.firestore {
                             .hasAny(['msgBgImg', 'msgBgColor', 'msgBgTransparency', 'msgBgRepeat', 'msgBgPosition', 'msgBgImgTransparency'])
                             && (!affectedKeys().hasAny(['fontSize']) || request.resource.data.fontSize < 15 )));
       match /checkout_sessions/{id} {
-        allow read, write: if request.auth.uid == uid;
+        allow read, write: if isVerified() && request.auth.uid == uid;
       }
       match /subscriptions/{id} {
-        allow read: if request.auth.uid == uid;
+        allow read: if isVerified() && request.auth.uid == uid;
       }
     }
     
     function isDocOwner(docId) {
       // debug( request.auth.uid );
-      let isSignedIn = request.auth.uid != null;
       let isOwner = request.auth.uid == docId;
 
-      return isSignedIn && isOwner;
+      return isLoggedIn() && isOwner;
     }
 
     match /products/{id} {

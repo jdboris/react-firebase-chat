@@ -10,7 +10,7 @@ export function BanlistDialog(props) {
   const [username, setUsername] = useState("");
   const [errors, setErrors] = useState([]);
   const query = props.open
-    ? usersRef.orderBy("username").where("isBanned", "==", true)
+    ? usersRef.orderBy("lowercaseUsername").where("isBanned", "==", true)
     : null;
   const [bannedUsers] = useCollectionData(query, {
     idField: "id",
