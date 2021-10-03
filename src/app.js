@@ -10,6 +10,7 @@ import { AlertDialog } from "./components/alert-dialog";
 import { ChatRoom } from "./components/chat-room";
 import { SignInForm } from "./components/sign-in-form";
 import styles from "./css/chat-room.module.css";
+import { setQueryParam } from "./utils";
 
 const useEmulators = true;
 
@@ -82,16 +83,8 @@ function App() {
     const link = decodeURIComponent(
       url.searchParams.get("chat-email-verification")
     );
-    url.searchParams.delete("chat-email-verification");
-    const queryString = url.searchParams.toString();
-    const hash = window.location.hash;
-    window.history.replaceState(
-      {},
-      "",
-      `${window.location.pathname}${
-        queryString ? "?" + queryString : ""
-      }${hash}`
-    );
+
+    setQueryParam("chat-email-verification", null);
 
     fetch(link)
       .then((response) => {
@@ -99,24 +92,14 @@ function App() {
       })
       .then((data) => {
         logout().then(() => {
-          //setAlerts(["Email verification successful!"]);
+          setAlerts(["Email verification successful!"]);
         });
       });
   }
 
   // Force a logout to refresh the token
-  if (url.searchParams.get("chat-logout") && user) {
-    url.searchParams.delete("chat-logout");
-    const queryString = url.searchParams.toString();
-    const hash = window.location.hash;
-
-    window.history.replaceState(
-      {},
-      "",
-      `${window.location.pathname}${
-        queryString ? "?" + queryString : ""
-      }${hash}`
-    );
+  if (url.searchParams.get("chat-logout")) {
+    setQueryParam("chat-logout", null);
     logout();
   }
 
@@ -129,7 +112,6 @@ function App() {
           .toString()
       : "";
 
-  console.log(user);
   return (
     <div className={styles["chat-app"]}>
       {user ? (
@@ -156,7 +138,7 @@ function App() {
           )}
         </>
       ) : (
-        <SignInForm email={email} />
+        <SignInForm email={email} setAlerts={setAlerts} logout={logout} />
       )}
 
       <AlertDialog

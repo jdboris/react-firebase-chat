@@ -1,4 +1,6 @@
 export function translateError(error) {
+  if (!error.code) return error;
+
   const newError = { ...error };
 
   if (newError.code === "auth/wrong-password") {
