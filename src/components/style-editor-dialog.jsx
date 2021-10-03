@@ -135,56 +135,58 @@ export function StyleEditorDialog(props) {
             disabled={!premium}
           />
         </label>
-        <label
-          className={
-            styles["button"] +
-            " " +
-            (!premium ? styles["disabled"] : "") +
-            " " +
-            (loading ? styles["loading"] : "")
-          }
-          onClick={() => {
-            if (!premium) return setPremiumPromptOpen(true);
-          }}
-        >
-          Upload Image
-          <input
-            type="file"
-            onChange={(e) => {
-              if (loading) return;
-              setLoading(true);
-
-              timeout(5000, async () => {
-                try {
-                  if (!e.target.files.length) {
-                    return;
-                  }
-                  const file = e.target.files[0];
-                  const url = await uploadFile(file);
-
-                  if (!url) {
-                    setErrors(["Error uploading file."]);
-                    return;
-                  }
-                  await usersRef.doc(user.uid).update({
-                    msgBgImg: url,
-                  });
-                  setMsgBgImg(url);
-                } catch (error) {
-                  setErrors([error]);
-                  setLoading(false);
-                }
-              })
-                .then(() => {
-                  setLoading(false);
-                })
-                .catch((error) => {
-                  props.setErrors([error]);
-                  setLoading(false);
-                });
+        <label>
+          <label
+            className={
+              styles["button"] +
+              " " +
+              (!premium ? styles["disabled"] : "") +
+              " " +
+              (loading ? styles["loading"] : "")
+            }
+            onClick={() => {
+              if (!premium) return setPremiumPromptOpen(true);
             }}
-            disabled={!premium}
-          />
+          >
+            Upload Image
+            <input
+              type="file"
+              onChange={(e) => {
+                if (loading) return;
+                setLoading(true);
+
+                timeout(5000, async () => {
+                  try {
+                    if (!e.target.files.length) {
+                      return;
+                    }
+                    const file = e.target.files[0];
+                    const url = await uploadFile(file);
+
+                    if (!url) {
+                      setErrors(["Error uploading file."]);
+                      return;
+                    }
+                    await usersRef.doc(user.uid).update({
+                      msgBgImg: url,
+                    });
+                    setMsgBgImg(url);
+                  } catch (error) {
+                    setErrors([error]);
+                    setLoading(false);
+                  }
+                })
+                  .then(() => {
+                    setLoading(false);
+                  })
+                  .catch((error) => {
+                    props.setErrors([error]);
+                    setLoading(false);
+                  });
+              }}
+              disabled={!premium}
+            />
+          </label>
         </label>
         {msgBgImg && (
           <label
