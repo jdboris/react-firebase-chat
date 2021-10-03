@@ -28,12 +28,18 @@ ul {
 [type="text"],
 [type="password"],
 [type="email"],
-[type="number"] {
+[type="number"],
+[type="range"],
+[type="color"] {
   padding: 5px;
-  border: 1px solid grey;
+  border: 1px solid #ccc;
+  margin: 0px;
 }
 
 [type="color"] {
+  height: 30px;
+  border-radius: 0px;
+  padding: 0 3px;
   cursor: pointer;
 }
 
@@ -358,7 +364,7 @@ svg.gavel-icon {
   background: white;
   border: 1px solid rgb(222, 222, 222);
   color: black;
-  padding: 5px;
+  padding: 13px;
   font-size: 0.85em;
 
   position: absolute;
@@ -378,6 +384,10 @@ svg.gavel-icon {
 .dialog header svg {
   font-size: 1rem;
   cursor: pointer;
+}
+
+.dialog header {
+  margin-bottom: 10px;
 }
 
 .dialog ul {
@@ -418,15 +428,17 @@ svg.gavel-icon {
 
 .message-style-editor label {
   display: inline-block;
+  margin-top: 5px;
 }
 
-.message-style-editor > label:not(.button) {
+.message-style-editor > label {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.message-style-editor label:not(.button) > * {
+.message-style-editor label > * {
+  width: 100%;
   max-width: 50%;
 }
 
