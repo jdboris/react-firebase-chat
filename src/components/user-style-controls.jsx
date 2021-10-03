@@ -12,6 +12,7 @@ import { MenuWithButton } from "./menu-with-button";
 
 export function UserStyleControls(props) {
   const {
+    uid,
     stylesEnabled,
     setStylesEnabled,
     open,
@@ -30,7 +31,6 @@ export function UserStyleControls(props) {
     isStyleEditorOpen,
     setStyleEditorOpen,
   } = props;
-  const { uid } = auth.currentUser;
 
   const enabled = stylesEnabled;
 
