@@ -38,7 +38,7 @@ export function StyleEditorDialog(props) {
   } = props;
   //   const [username, setUsername] = useState("");
   //   const query = props.open
-  //     ? usersRef.orderBy("username").where("isBanned", "==", true)
+  //     ? usersRef.orderBy("lowercaseUsername").where("isBanned", "==", true)
   //     : null;
   //   const [bannedUsers] = useCollectionData(query, { idField: "id" });
   const [loading, setLoading] = useState(false);
@@ -172,6 +172,7 @@ export function StyleEditorDialog(props) {
                   setMsgBgImg(url);
                 } catch (error) {
                   setErrors([error]);
+                  setLoading(false);
                 }
               })
                 .then(() => {
@@ -179,6 +180,7 @@ export function StyleEditorDialog(props) {
                 })
                 .catch((error) => {
                   props.setErrors([error]);
+                  setLoading(false);
                 });
             }}
             disabled={!premium}

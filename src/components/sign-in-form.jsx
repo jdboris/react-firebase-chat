@@ -22,6 +22,7 @@ export function SignInForm(props) {
         setLoading(true);
         setErrors([]);
 
+        // NOTE: Do not call setLoading(false) after the timeout because the component will have unmounted by then
         timeout(10000, async () => {
           try {
             if (isNewUser) {
@@ -30,10 +31,12 @@ export function SignInForm(props) {
                 email: email,
                 password: password,
                 username: username,
+                returnUrl: window.location.href,
               });
 
               if (result.data.error) {
                 setErrors([result.data.error]);
+                setLoading(false);
                 return;
               }
             }
@@ -43,17 +46,16 @@ export function SignInForm(props) {
               .signInWithEmailAndPassword(email, password)
               .catch((error) => {
                 setErrors([translateError(error).message]);
+                setLoading(false);
               });
           } catch (error) {
             setErrors(["Something went wrong. Please try again."]);
-          }
-        })
-          .then(() => {
             setLoading(false);
-          })
-          .catch(() => {
-            setErrors(["Something went wrong. Please try again."]);
-          });
+          }
+        }).catch(() => {
+          setErrors(["Something went wrong. Please try again."]);
+          setLoading(false);
+        });
       }}
     >
       <fieldset disabled={loading}>
@@ -146,20 +148,19 @@ export function SignInForm(props) {
               const result = await signUp({ anonymous: true });
               if (result.data.error) {
                 setErrors([result.data.error]);
+                setLoading(false);
                 return;
               }
               await auth
                 .signInWithCustomToken(result.data.token)
                 .catch((error) => {
                   setErrors(["Something went wrong. Please try again."]);
+                  setLoading(false);
                 });
-            })
-              .then(() => {
-                setLoading(false);
-              })
-              .catch(() => {
-                setErrors(["Something went wrong. Please try again."]);
-              });
+            }).catch(() => {
+              setErrors(["Something went wrong. Please try again."]);
+              setLoading(false);
+            });
           }}
         >
           Chat Anonymously
