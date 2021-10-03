@@ -66,16 +66,21 @@ export function SignInForm(props) {
         ))}
 
         {loading && <div className={styles["loading-placeholder"]}></div>}
-        <input
-          type="email"
-          name="email"
-          autoComplete="username"
-          value={email}
-          onChange={(e) => {
-            setEmail(e.target.value);
-          }}
-          placeholder="Email"
-        />
+        <label
+          className={isNewUser ? styles["info-tooltip"] : ""}
+          data-text="Email verification will be required."
+        >
+          <input
+            type="email"
+            name="email"
+            autoComplete="username"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+            }}
+            placeholder="Email"
+          />
+        </label>
         {isNewUser ? (
           <input
             id="username"
