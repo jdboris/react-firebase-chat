@@ -63,6 +63,7 @@ export const getCustomerPortalLink = firebase
 
 function App() {
   const [user] = useAuthState(auth);
+
   const email = user && !user.isAnonymous ? user.email : "";
   const [conversationRef, setConversationRef] = useState(null);
   const [dmMessagesRef, setDmMessagesRef] = useState(null);

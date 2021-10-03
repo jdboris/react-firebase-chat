@@ -153,7 +153,7 @@ export function DmsDialog(props) {
                 .catch((error) => {
                   setLoading(false);
                   if (error.code === "permission-denied") {
-                    setErrors(["Must verify your email to do that."]);
+                    setErrors(["Verify your email to do that."]);
                     return;
                   }
                   setErrors(["Something went wrong. Please try again."]);
