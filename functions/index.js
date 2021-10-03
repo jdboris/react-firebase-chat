@@ -474,39 +474,6 @@ exports.signUp = functions.https.onCall(async (data, context) => {
   }
 });
 
-// exports.sendWelcomeEmail = functions.auth.user().onCreate((authUser) => {
-//   if (authUser.email) {
-//     // Admin SDK API to generate the email verification link.
-//     return admin
-//       .auth()
-//       .generateEmailVerificationLink(authUser.email)
-//       .then((link) => {
-//         const user = getUser(authUser.uid);
-//         const returnUrl = new URL(user.verifiedReturnUrl);
-//         returnUrl.searchParams.set(
-//           "chat-email-verification",
-//           encodeURIComponent(link)
-//         );
-
-//         // Construct email verification template, embed the link and send
-//         // using custom SMTP server.
-//         return sendVerificationEmail(
-//           authUser.email,
-//           authUser.displayName,
-//           returnUrl.href
-//         );
-//       })
-//       .then((response) => {
-//         //console.log("Email sent: " + response);
-//       })
-//       .catch((error) => {
-//         console.error(error);
-//       });
-//   } else {
-//     return null;
-//   }
-// });
-
 async function sendVerificationEmail(email, username, link) {
   const nodemailer = require("nodemailer");
   return new Promise((resolve, reject) => {
@@ -543,7 +510,7 @@ async function sendVerificationEmail(email, username, link) {
           <div class="header" style="display: block; max-width: 600px; margin: auto; text-align: center; background: #85a7cb; color: #fdfdfd; font-size: 30px; font-weight: bold; padding: 8px;">Chatpad</div>
           <div class="main" style="display: block; max-width: 600px; margin: auto; text-align: center; padding: 5px;">
             <p style="color: black;">Welcome to Chatpad! Please verify your email address.</p>
-            <a class="button-link" href="${link}" style="box-sizing: border-box; border-radius: 4px; background: #ff985c; color: #fdfdfd; padding: 5px; text-decoration: none; font-size: 1.5em; font-weight: bold; display: block; max-width: 100px; margin: auto;">verify</a>
+            <a class="button-link" href="${link}" style="box-sizing: border-box; border-radius: 4px; background: #ff985c; color: #fdfdfd; padding: 5px; text-decoration: none; font-size: 1.5em; font-weight: bold; display: block; max-width: 200px; margin: auto;">Verify Email</a>
           </div>
           <div class="footer" style="display: block; max-width: 600px; margin: auto; background: #f1f1f1; font-size: 10px; padding: 8px; color: #1d1d1d; text-align: center;">
             <a href="http://www.chatpad.app">chatpad.app</a>
@@ -562,6 +529,82 @@ async function sendVerificationEmail(email, username, link) {
     });
   });
 }
+
+exports.sendPasswordResetEmail = functions.https.onCall(
+  async (data, context) => {
+    try {
+      const link = await admin.auth().generatePasswordResetLink(data.email);
+      if (!link) {
+        return { error: "Something went wrong. Please try again." };
+      }
+
+      const returnUrl = new URL(data.returnUrl);
+      returnUrl.searchParams.set(
+        "chat-reset-password",
+        encodeURIComponent(link)
+      );
+
+      const nodemailer = require("nodemailer");
+      const transporter = nodemailer.createTransport({
+        host: "64.233.184.109",
+        tls: {
+          servername: "smtp.gmail.com",
+        },
+        port: 587,
+        // NOTE: Must set this to false, but TLS will still be used.
+        secure: false,
+        auth: {
+          user: functions.config().accounts.support.username,
+          pass: functions.config().accounts.support.password,
+        },
+      });
+
+      // NOTE: Use https://htmlemail.io/inline/
+      const mailOptions = {
+        from: functions.config().accounts.support.username,
+        to: data.email,
+        subject: "Chatpad password reset",
+        text: `
+          Chatpad has received a request to reset your password. Please visit ${returnUrl} to complete the reset. If you did not initiate this reset, you may ignore this message.
+        `,
+        html: `
+          <html>
+            <body>
+              <div class="header" style="display: block; max-width: 600px; margin: auto; text-align: center; background: #85a7cb; color: #fdfdfd; font-size: 30px; font-weight: bold; padding: 8px;">Chatpad</div>
+              <div class="main" style="display: block; max-width: 600px; margin: auto; text-align: center; padding: 5px;">
+                <p style="color: black;">Chatpad has received a request to reset your password. If you did not initiate this reset, you may ignore this message.</p>
+                <a class="button-link" href="${returnUrl}" style="box-sizing: border-box; border-radius: 4px; background: #ff985c; color: #fdfdfd; padding: 5px; text-decoration: none; font-size: 1.5em; font-weight: bold; display: block; max-width: 200px; margin: auto;">Reset Password</a>
+              </div>
+              <div class="footer" style="display: block; max-width: 600px; margin: auto; background: #f1f1f1; font-size: 10px; padding: 8px; color: #1d1d1d; text-align: center;">
+                <a href="http://www.chatpad.app">chatpad.app</a>
+              </div>
+            </body>
+          </html>
+        `,
+      };
+
+      await new Promise((resolve, reject) => {
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(info.response);
+          }
+        });
+      });
+
+      return {
+        message:
+          "Password reset request received. Check your email to continue.",
+      };
+    } catch (error) {
+      console.error(error);
+      return {
+        error: "Something went wrong. Please try again.",
+      };
+    }
+  }
+);
 
 // Create a new function which is triggered on changes to /status/{uid}
 // Note: This is a Realtime Database trigger, *not* Firestore.
