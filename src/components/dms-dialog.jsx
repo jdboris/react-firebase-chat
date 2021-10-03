@@ -57,7 +57,6 @@ export function DmsDialog(props) {
                         (isUnread ? styles["unread-conversation"] : "")
                       }
                       onClick={async () => {
-                        
                         await props.setConversationRef(
                           firestore
                             .collection("conversations")
@@ -93,7 +92,7 @@ export function DmsDialog(props) {
                   return;
                 }
                 const snapshot = await usersRef
-                  .where("username", "==", username)
+                  .where("lowercaseUsername", "==", username.toLowerCase())
                   .get();
 
                 if (!snapshot.docs.length) {
@@ -108,7 +107,7 @@ export function DmsDialog(props) {
 
                 const conversationId = combineStrings([
                   props.username,
-                  username,
+                  snapshot.docs[0].data().username,
                 ]);
 
                 await conversationsRef.doc(conversationId).set(
@@ -135,9 +134,7 @@ export function DmsDialog(props) {
                 //   .collection("messages");
 
                 await props.setConversationRef(
-                  firestore
-                    .collection("conversations")
-                    .doc(conversationId)
+                  firestore.collection("conversations").doc(conversationId)
                 );
 
                 await props.setDmMessagesRef(
@@ -153,7 +150,12 @@ export function DmsDialog(props) {
                   setLoading(false);
                   props.requestClose();
                 })
-                .catch(() => {
+                .catch((error) => {
+                  setLoading(false);
+                  if (error.code === "permission-denied") {
+                    setErrors(["Must verify your email to do that."]);
+                    return;
+                  }
                   setErrors(["Something went wrong. Please try again."]);
                 });
             }}
@@ -165,7 +167,7 @@ export function DmsDialog(props) {
             ))}
             <input
               type="text"
-              placeholder="username"
+              placeholder="Username"
               onInput={(e) => {
                 setUsername(e.target.value);
               }}

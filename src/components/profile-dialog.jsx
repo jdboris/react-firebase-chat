@@ -53,6 +53,7 @@ export function ProfileDialog(props) {
                   });
                 } catch (error) {
                   setErrors([error]);
+                  setLoading(false);
                 }
               }}
             />

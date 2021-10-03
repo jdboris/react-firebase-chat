@@ -3,9 +3,9 @@ import CloseIcon from "@material-ui/icons/Close";
 import GavelIcon from "@material-ui/icons/Gavel";
 import MenuIcon from "@material-ui/icons/Menu";
 import firebase from "firebase/app";
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useCollectionData, useDocument } from "react-firebase-hooks/firestore";
-import { auth, conversationsRef, usersRef } from "../app";
+import { conversationsRef, usersRef } from "../app";
 import styles from "../css/chat-room.module.css";
 import { fonts } from "../fonts";
 import { toggleSelectionMarkup } from "../markdown";
@@ -29,7 +29,7 @@ import { UserStyleControls } from "./user-style-controls";
 
 export function ChatRoom(props) {
   const sendMessageCloud = firebase.functions().httpsCallable("sendMessage");
-  const {messagesRef, conversationRef} = props;
+  const { messagesRef, conversationRef } = props;
 
   // Fetch the current user's ID from Firebase Authentication.
   const authUser = props.user;
@@ -39,6 +39,7 @@ export function ChatRoom(props) {
     uid: authUser.uid,
     photoUrl: authUser.photoURL,
     email: authUser.email,
+    emailVerified: authUser.emailVerified,
     ...(userSnapshot ? userSnapshot.data() : {}),
   };
 
@@ -107,15 +108,17 @@ export function ChatRoom(props) {
   let messageInput = useRef();
 
   const sendMessage = async (e) => {
+    if (conversationRef && !user.emailVerified) {
+      setErrors(["Must verify your email to do that."]);
+    }
+
     if (messageValue) {
       e.preventDefault();
       const text = messageValue;
       setMessageValue("");
 
       await sendMessageCloud({
-        conversationId: props.conversationRef
-          ? props.conversationRef.id
-          : messagesRef.id,
+        conversationId: conversationRef ? conversationRef.id : messagesRef.id,
         text,
         isDeleted: false,
         font,
@@ -214,13 +217,12 @@ export function ChatRoom(props) {
     messageInput.setSelectionRange(start, end);
   }, [selection]);
 
-
   useEffect(() => {
     if (!props.dms) {
       return;
     }
     async function markMessagesRead() {
-      await props.conversationRef.set(
+      await conversationRef.set(
         {
           // NOTE: Required for marking messages read
           users: {
@@ -235,7 +237,7 @@ export function ChatRoom(props) {
     }
 
     markMessagesRead();
-  }, [props.dms]);
+  }, [props.dms, conversationRef, user.uid]);
 
   return (
     <section className={styles["chat-section"]} onClickCapture={closeMenus}>
@@ -374,7 +376,7 @@ export function ChatRoom(props) {
           openKey={menuOpenKey}
           items={{
             "Log out": () => {
-              auth.signOut();
+              props.logout();
             },
             "Edit profile": () => {
               setProfileOpen(!isProfileOpen);
@@ -551,14 +553,12 @@ export function ChatRoom(props) {
         }}
       />
 
-      {errors.length > 0 && (
-        <ErrorDialog
-          errors={errors}
-          requestClose={() => {
-            setErrors([]);
-          }}
-        />
-      )}
+      <ErrorDialog
+        errors={errors}
+        requestClose={() => {
+          setErrors([]);
+        }}
+      />
 
       {!isOnline && (
         <div className={styles["chat-room-overlay"]}>
