@@ -30,7 +30,7 @@ async function getUser(uid) {
 async function markUserBanned(username) {
   const snapshot = await db
     .collection("users")
-    .where("username", "==", username)
+    .where("lowercaseUsername", "==", username.toLowerCase())
     .get();
 
   if (!snapshot.docs.length) {
@@ -92,7 +92,7 @@ exports.banUser = functions.https.onCall(async (username, context) => {
 async function markUserUnbanned(username) {
   const snapshot = await db
     .collection("users")
-    .where("username", "==", username)
+    .where("lowercaseUsername", "==", username.toLowerCase())
     .get();
 
   if (!snapshot.docs.length) {
@@ -154,7 +154,7 @@ exports.unbanUser = functions.https.onCall(async (username, context) => {
 async function grantModeratorRole(username) {
   const snapshot = await db
     .collection("users")
-    .where("username", "==", username)
+    .where("lowercaseUsername", "==", username.toLowerCase())
     .get();
 
   if (!snapshot.docs.length) {
@@ -222,7 +222,7 @@ exports.addModerator = functions.https.onCall(async (username, context) => {
 async function revokeModeratorRole(username) {
   const snapshot = await db
     .collection("users")
-    .where("username", "==", username)
+    .where("lowercaseUsername", "==", username.toLowerCase())
     .get();
 
   if (!snapshot.docs.length) {
@@ -299,6 +299,13 @@ exports.sendMessage = functions.https.onCall(async (data, context) => {
     return { error: "Must be logged in." };
   }
 
+  if (
+    data.conversationId !== "messages" &&
+    !context.auth.token.email_verified
+  ) {
+    return { error: "Must verify your email to do that." };
+  }
+
   const user = await getUser(context.auth.uid);
 
   if (user.isBanned) {
@@ -315,6 +322,7 @@ exports.sendMessage = functions.https.onCall(async (data, context) => {
     ...data,
     uid: context.auth.uid,
     username: user.username,
+    lowercaseUsername: user.username.toLowerCase(),
     photoUrl: authUser.photoURL || "",
     createdAt: timestamp,
     premium: context.auth.token.stripeRole === "premium",
@@ -378,7 +386,7 @@ exports.signUp = functions.https.onCall(async (data, context) => {
       // Require username to be unique
       const query = db
         .collection("users")
-        .where("username", "==", data.username);
+        .where("lowercaseUsername", "==", data.username.toLowerCase());
       const snapshot = await query.get();
       const docs = await snapshot.docs;
       if (docs.length > 0) {
@@ -397,8 +405,8 @@ exports.signUp = functions.https.onCall(async (data, context) => {
       anonSuffix = docs.length ? docs[0].data().anonSuffix + 1 : 0;
       data.username = "anon" + anonSuffix;
     }
-    let authError = null;
-    const userRecord = await admin
+
+    const authUser = await admin
       .auth()
       .createUser(
         data.anonymous
@@ -413,26 +421,44 @@ exports.signUp = functions.https.onCall(async (data, context) => {
             }
       )
       .catch((error) => {
-        authError = error;
+        return {
+          error: error.errorInfo
+            ? translateError(error).errorInfo.message
+            : "Something went wrong. Please try again.",
+        };
       });
-    if (authError) {
-      return {
-        error: authError.errorInfo
-          ? translateError(authError).errorInfo.message
-          : "Something went wrong. Please try again.",
-      };
+
+    if (!data.anonymous) {
+      const link = await admin
+        .auth()
+        .generateEmailVerificationLink(authUser.email);
+
+      const returnUrl = new URL(data.returnUrl);
+      returnUrl.searchParams.set(
+        "chat-email-verification",
+        encodeURIComponent(link)
+      );
+
+      // Construct email verification template, embed the link and send
+      // using custom SMTP server.
+      sendVerificationEmail(
+        authUser.email,
+        authUser.displayName,
+        returnUrl.href
+      );
     }
 
     // NOTE: Must create the document now to allow calling .update() later
-    await db.doc(`users/${userRecord.uid}`).set({
+    await db.doc(`users/${authUser.uid}`).set({
       username: data.username,
+      lowercaseUsername: data.username.toLowerCase(),
       isBanned: false,
       isModerator: false,
       isAdmin: false,
       ...(data.anonymous ? { anonSuffix: anonSuffix } : {}),
     });
 
-    const token = await admin.auth().createCustomToken(userRecord.uid);
+    const token = await admin.auth().createCustomToken(authUser.uid);
 
     // See the UserRecord reference doc for the contents of userRecord.
     return {
@@ -448,27 +474,38 @@ exports.signUp = functions.https.onCall(async (data, context) => {
   }
 });
 
-exports.sendWelcomeEmail = functions.auth.user().onCreate((user) => {
-  if (user.email) {
-    // Admin SDK API to generate the email verification link.
-    return admin
-      .auth()
-      .generateEmailVerificationLink(user.email)
-      .then((link) => {
-        // Construct email verification template, embed the link and send
-        // using custom SMTP server.
-        return sendVerificationEmail(user.email, user.displayName, link);
-      })
-      .then((response) => {
-        //console.log("Email sent: " + response);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  } else {
-    return null;
-  }
-});
+// exports.sendWelcomeEmail = functions.auth.user().onCreate((authUser) => {
+//   if (authUser.email) {
+//     // Admin SDK API to generate the email verification link.
+//     return admin
+//       .auth()
+//       .generateEmailVerificationLink(authUser.email)
+//       .then((link) => {
+//         const user = getUser(authUser.uid);
+//         const returnUrl = new URL(user.verifiedReturnUrl);
+//         returnUrl.searchParams.set(
+//           "chat-email-verification",
+//           encodeURIComponent(link)
+//         );
+
+//         // Construct email verification template, embed the link and send
+//         // using custom SMTP server.
+//         return sendVerificationEmail(
+//           authUser.email,
+//           authUser.displayName,
+//           returnUrl.href
+//         );
+//       })
+//       .then((response) => {
+//         //console.log("Email sent: " + response);
+//       })
+//       .catch((error) => {
+//         console.error(error);
+//       });
+//   } else {
+//     return null;
+//   }
+// });
 
 async function sendVerificationEmail(email, username, link) {
   const nodemailer = require("nodemailer");
@@ -492,67 +529,26 @@ async function sendVerificationEmail(email, username, link) {
       },
     });
 
-    // NOTE: Use https://www.campaignmonitor.com/resources/tools/css-inliner/
+    // NOTE: Use https://htmlemail.io/inline/
     const mailOptions = {
       from: functions.config().accounts.support.username,
       to: email,
       subject: "Welcome to Chatpad!",
       text: `
-          Welcome to Chatpad! Please visit ${link} to verify your email address.
+        Welcome to Chatpad! Please visit ${link} to verify your email address.
       `,
       html: `
       <html>
-          <head>
-              <style>
-
-                  .header, .footer, .main {
-                      display: block;
-                      max-width: 600px;
-                      margin: auto;
-                      text-align: center;
-                  }
-
-                  header {
-                      background: rgb(36, 36, 179);
-                      font-size: 30px;
-                      padding: 8px;
-                      text-align: center;
-                  }
-
-                  .footer {
-                      background: gray;
-                      font-size: 10px;
-                      padding: 8px;
-                      color: rgb(29, 29, 29);
-                      text-align: center;
-                  }
-
-                  p {
-                      text-align: initial;
-                  }
-
-                  .button-link {
-                      border-radius: 5px;
-                      background: rgb(36, 36, 179);
-                      color: rgb(196, 196, 196);
-                      padding: 10px;
-                      text-decoration: none;
-                      font-size: 1.5em;
-                  }
-              </style>
-          </head>
-          <body>
-              <div class="header" style="background-attachment:scroll;max-width:600px;background-color:rgb(36, 36, 179);background-image:none;background-repeat:repeat;background-position:top left;font-size:30px;padding-top:8px;padding-bottom:8px;padding-right:8px;padding-left:8px;text-align:center;display:block;margin-top:auto;margin-bottom:auto;margin-right:auto;margin-left:auto;" >Chatpad</div>
-              <div class="main" style="max-width:600px;text-align:center;display:block;margin-top:auto;margin-bottom:auto;margin-right:auto;margin-left:auto;" >
-                <p style="text-align:initial;" >
-                  Welcome to Chatpad! Please verify your email address.
-                </p>
-                <a class="button-link" href="${link}" style="background-attachment:scroll;border-radius:5px;background-color:rgb(36, 36, 179);background-image:none;background-repeat:repeat;background-position:top left;color:rgb(196, 196, 196);padding-top:10px;padding-bottom:10px;padding-right:10px;padding-left:10px;text-decoration:none;font-size:1.5em;" >Verify</a>
-              </div>
-              <div class="footer" style="background-attachment:scroll;max-width:600px;background-color:gray;background-image:none;background-repeat:repeat;background-position:top left;font-size:10px;padding-top:8px;padding-bottom:8px;padding-right:8px;padding-left:8px;color:rgb(29, 29, 29);text-align:center;display:block;margin-top:auto;margin-bottom:auto;margin-right:auto;margin-left:auto;" >
-                  <a href="http://www.chatpad.app">chatpad.app</a>
-              </div>
-          </body>
+        <body>
+          <div class="header" style="display: block; max-width: 600px; margin: auto; text-align: center; background: #85a7cb; color: #fdfdfd; font-size: 30px; font-weight: bold; padding: 8px;">Chatpad</div>
+          <div class="main" style="display: block; max-width: 600px; margin: auto; text-align: center; padding: 5px;">
+            <p style="color: black;">Welcome to Chatpad! Please verify your email address.</p>
+            <a class="button-link" href="${link}" style="box-sizing: border-box; border-radius: 4px; background: #ff985c; color: #fdfdfd; padding: 5px; text-decoration: none; font-size: 1.5em; font-weight: bold; display: block; max-width: 100px; margin: auto;">verify</a>
+          </div>
+          <div class="footer" style="display: block; max-width: 600px; margin: auto; background: #f1f1f1; font-size: 10px; padding: 8px; color: #1d1d1d; text-align: center;">
+            <a href="http://www.chatpad.app">chatpad.app</a>
+          </div>
+        </body>
       </html>
       `,
     };

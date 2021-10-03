@@ -44,6 +44,7 @@ export function MessageInputForm(props) {
                 e.target.value = "";
               } catch (error) {
                 props.setErrors([error]);
+                setLoading(false);
               }
             })
               .then(() => {
@@ -51,6 +52,7 @@ export function MessageInputForm(props) {
               })
               .catch((error) => {
                 props.setErrors([error]);
+                setLoading(false);
               });
           }}
         />

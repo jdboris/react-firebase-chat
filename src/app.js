@@ -6,11 +6,10 @@ import "firebase/functions";
 import "firebase/storage";
 import React, { useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
+import { AlertDialog } from "./components/alert-dialog";
 import { ChatRoom } from "./components/chat-room";
 import { SignInForm } from "./components/sign-in-form";
 import styles from "./css/chat-room.module.css";
-
-// import { SignOutButton } from "./components/sign-out-button";
 
 const useEmulators = true;
 
@@ -67,8 +66,41 @@ function App() {
   const email = user && !user.isAnonymous ? user.email : "";
   const [conversationRef, setConversationRef] = useState(null);
   const [dmMessagesRef, setDmMessagesRef] = useState(null);
+  const [alerts, setAlerts] = useState([]);
+
+  const logout = async () => {
+    await auth.signOut();
+    setConversationRef(null);
+    setDmMessagesRef(null);
+  };
 
   const url = new URL(window.location);
+
+  // Force a logout to refresh the token
+  if (url.searchParams.get("chat-email-verification")) {
+    fetch(decodeURIComponent(url.searchParams.get("chat-email-verification")))
+      .then((response) => {
+        return response.json();
+      })
+      .then((data) => {
+        console.log(data);
+        logout().then(() => {
+          url.searchParams.delete("chat-email-verification");
+          const queryString = url.searchParams.toString();
+          const hash = window.location.hash;
+          window.history.replaceState(
+            {},
+            "",
+            `${window.location.pathname}${
+              queryString ? "?" + queryString : ""
+            }${hash}`
+          );
+
+          setAlerts(["Email verification successful!"]);
+        });
+      });
+  }
+
   // Force a logout to refresh the token
   if (url.searchParams.get("chat-logout") && user) {
     url.searchParams.delete("chat-logout");
@@ -82,7 +114,7 @@ function App() {
         queryString ? "?" + queryString : ""
       }${hash}`
     );
-    auth.signOut();
+    logout();
   }
 
   // NOTE: This is a safe usage of displayName
@@ -105,6 +137,7 @@ function App() {
               setConversationRef={setConversationRef}
               messagesRef={dmMessagesRef}
               setDmMessagesRef={setDmMessagesRef}
+              logout={logout}
               header={header}
               dms={true}
             />
@@ -114,12 +147,20 @@ function App() {
               messagesRef={messagesRef}
               setConversationRef={setConversationRef}
               setDmMessagesRef={setDmMessagesRef}
+              logout={logout}
             />
           )}
         </>
       ) : (
         <SignInForm email={email} />
       )}
+
+      <AlertDialog
+        alerts={alerts}
+        requestClose={() => {
+          setAlerts([]);
+        }}
+      />
     </div>
   );
 }

@@ -1,5 +1,7 @@
 -prevent anons from subscribing, setting styles, uploading profile image, etc...
 -add email verification checks
+-fix email verification page
+-add password reset option
 -add a reconnect button
 -optimization to reduce firestore reads (prevent dialogs from querying until they're opened)
 -optimization to reduce re-renders
@@ -19,13 +21,20 @@ i functions: Finished "us-central1-onUserStatusChanged" in ~1
 -logging errors with @google-cloud/logging
 -investigate
 [Violation] Added non-passive event listener to a scroll-blocking <some> event. Consider marking event handler as 'passive' to make the page more responsive. See <URL>
+-investigate
+index.js:1 Warning: Can't perform a React state update on an unmounted component. This is a no-op, but it indicates a memory leak in your application. To fix, cancel all subscriptions and asynchronous tasks in a useEffect cleanup function.
+at SignInForm (http://localhost:3000/static/js/main.chunk.js:4680:89)
 
 Future features:
+-API for embedding the chat on other sites
+-allow blocking DMs
+-DM user by clicking their avatar
+-flagbanning
 -custom emojis
--API for embedding
+-gif searching
 -API for custom styling (badges for streamers, etc...)
 -more fonts (adobe source code pro)
--DM user by clicking their avatar
 -autocomplete @, DM username, mod username, and ban user username
 -add DM search, mod search, and banned user search
 -cropping/scaling profile images
+-disable anon posting
