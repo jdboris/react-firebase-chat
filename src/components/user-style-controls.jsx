@@ -3,7 +3,7 @@ import ArrowDropDownIcon from "@material-ui/icons/ArrowDropDown";
 import CloseIcon from "@material-ui/icons/Close";
 import FormatColorTextIcon from "@material-ui/icons/FormatColorText";
 import React from "react";
-import { auth, usersRef } from "../app";
+import { usersRef } from "../app";
 import styles from "../css/chat-room.module.css";
 import { fonts } from "../fonts";
 import { MARKUP_SYMBOLS } from "../markdown";
@@ -13,6 +13,8 @@ import { MenuWithButton } from "./menu-with-button";
 export function UserStyleControls(props) {
   const {
     uid,
+    isAnonymous,
+    setErrors,
     stylesEnabled,
     setStylesEnabled,
     open,
@@ -40,6 +42,8 @@ export function UserStyleControls(props) {
         <div className={styles["format-controls"]}>
           <span
             onClickCapture={() => {
+              if (isAnonymous)
+                return setErrors(["Create an account to do that."]);
               const newValue = !enabled;
               usersRef
                 .doc(uid)
@@ -65,6 +69,8 @@ export function UserStyleControls(props) {
                   items[
                     fontObj.name + (font.name === fontObj.name ? " ✓" : "")
                   ] = () => {
+                    if (isAnonymous)
+                      return setErrors(["Create an account to do that."]);
                     usersRef
                       .doc(uid)
                       .update({ font: fontObj })
@@ -88,6 +94,8 @@ export function UserStyleControls(props) {
                 // Convert to an object with reduce
                 items={[...Array(6).keys()].reduce((items, number) => {
                   items[9 + number] = () => {
+                    if (isAnonymous)
+                      return setErrors(["Create an account to do that."]);
                     usersRef
                       .doc(uid)
                       .update({
@@ -107,6 +115,8 @@ export function UserStyleControls(props) {
                       key={"premium-" + i}
                       className={!premium ? styles["disabled"] : ""}
                       onClickCapture={() => {
+                        if (isAnonymous)
+                          return setErrors(["Create an account to do that."]);
                         if (!premium) return setPremiumPromptOpen(true);
 
                         usersRef
@@ -153,6 +163,8 @@ export function UserStyleControls(props) {
               </em>
               <span
                 onClickCapture={() => {
+                  if (isAnonymous)
+                    return setErrors(["Create an account to do that."]);
                   setStyleEditorOpen(!isStyleEditorOpen);
                 }}
               >
@@ -172,15 +184,21 @@ export function UserStyleControls(props) {
                 <ColorInput
                   defaultValue={fontColor}
                   onChange={(e) => {
+                    if (isAnonymous)
+                      return setErrors(["Create an account to do that."]);
                     setFontColor(e.target.value);
                   }}
                   onChangeComplete={(e) => {
+                    if (isAnonymous)
+                      return setErrors(["Create an account to do that."]);
                     usersRef.doc(uid).update({
                       fontColor: e.target.value,
                     });
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
+                    if (isAnonymous)
+                      return setErrors(["Create an account to do that."]);
                   }}
                 />
               </MenuWithButton>
