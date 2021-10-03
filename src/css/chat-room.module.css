@@ -113,6 +113,53 @@ label [type="file"] {
   margin-left: auto;
 }
 
+.tooltip,
+.info-tooltip {
+  position: relative; /* making the .tooltip span a container for the tooltip text */
+}
+
+.info-tooltip::after {
+  content: "!";
+  position: absolute;
+  right: 5px;
+
+  font-size: 0.8em;
+  font-weight: bold;
+  color: white;
+  background-color: rgb(223 223 223);
+  border-radius: 1.2em;
+  height: 1.2em;
+  width: 1.2em;
+  margin: auto;
+  top: 0px;
+  bottom: 0px;
+  pointer-events: none;
+}
+
+.tooltip::before,
+.info-tooltip::before {
+  content: attr(data-text);
+  position: absolute;
+  top: -50%;
+  transform: translate(-50%, -50%);
+  left: 100%;
+  width: 200px;
+  padding: 6px;
+  border-radius: 2px;
+  background: #f5f5f5;
+  color: #7a7a7a;
+  text-align: center;
+  font-size: 0.8em;
+  border: 1px solid;
+
+  display: none; /* hide by default */
+}
+
+.tooltip:hover::before,
+.info-tooltip:hover::before {
+  display: block;
+}
+
 .yellow {
   color: yellow;
 }
@@ -562,6 +609,10 @@ button:disabled {
 
 .login-form fieldset > * {
   margin-bottom: 5px;
+}
+
+.login-form input {
+  width: 100%;
 }
 
 ul,
