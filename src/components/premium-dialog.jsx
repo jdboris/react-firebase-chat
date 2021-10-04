@@ -31,7 +31,7 @@ export function PremiumDialog(props) {
           />
         </header>
         <main>
-          {subscriptions ? (
+          {subscriptions && subscriptions.length ? (
             <>
               {subscriptions.map((subscription, i) => {
                 const expiration = new Date(Date.UTC(1970, 0, 1));

@@ -4,7 +4,7 @@ import "firebase/auth";
 import "firebase/firestore";
 import "firebase/functions";
 import "firebase/storage";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { AlertDialog } from "./components/alert-dialog";
 import { ChatRoom } from "./components/chat-room";
@@ -76,32 +76,20 @@ function App() {
     setDmMessagesRef(null);
   };
 
-  const url = new URL(window.location);
+  useEffect(() => {
+    const url = new URL(window.location);
 
-  // Force a logout to refresh the token
-  if (url.searchParams.get("chat-email-verification")) {
-    const link = decodeURIComponent(
-      url.searchParams.get("chat-email-verification")
-    );
+    if (url.searchParams.get("chat-email-verified")) {
+      // NOTE: The order matters
+      setAlerts(["Email verification successful!"]);
+      setQueryParam("chat-email-verified", null);
+    }
 
-    setQueryParam("chat-email-verification", null);
-
-    fetch(link)
-      .then((response) => {
-        return response.json();
-      })
-      .then((data) => {
-        logout().then(() => {
-          setAlerts(["Email verification successful!"]);
-        });
-      });
-  }
-
-  // Force a logout to refresh the token
-  if (url.searchParams.get("chat-logout")) {
-    setQueryParam("chat-logout", null);
-    logout();
-  }
+    if (url.searchParams.get("chat-logout")) {
+      setQueryParam("chat-logout", null);
+      logout();
+    }
+  }, []);
 
   // NOTE: This is a safe usage of displayName
   const header =
