@@ -395,19 +395,31 @@ exports.signUp = functions.https.onCall(async (data, context) => {
     );
 
     if (!data.anonymous) {
-      const link = await admin
-        .auth()
-        .generateEmailVerificationLink(authUser.email);
+      // const link = await admin
+      //   .auth()
+      //   .generateEmailVerificationLink(authUser.email);
+
+      // const returnUrl = new URL(data.returnUrl);
+      // returnUrl.searchParams.set(
+      //   "chat-email-verification",
+      //   encodeURIComponent(link)
+      // );
+
+      // // Construct email verification template, embed the link and send
+      // // using custom SMTP server.
+      // sendVerificationEmail(authUser.email, returnUrl.href);
 
       const returnUrl = new URL(data.returnUrl);
-      returnUrl.searchParams.set(
-        "chat-email-verification",
-        encodeURIComponent(link)
-      );
+      returnUrl.searchParams.set("chat-email-verified", 1);
+      returnUrl.searchParams.set("chat-logout", 1);
+
+      const link = await admin
+        .auth()
+        .generateEmailVerificationLink(authUser.email, { url: returnUrl.href });
 
       // Construct email verification template, embed the link and send
       // using custom SMTP server.
-      sendVerificationEmail(authUser.email, returnUrl.href);
+      sendVerificationEmail(authUser.email, link);
     }
 
     // NOTE: Must create the document now to allow calling .update() later
@@ -452,19 +464,28 @@ exports.resendVerificationEmail = functions.https.onCall(
       throw new HttpsError("already-exists", "Your email is already verified.");
     }
 
-    const link = await admin
-      .auth()
-      .generateEmailVerificationLink(context.auth.token.email);
+    // const link = await admin
+    //   .auth()
+    //   .generateEmailVerificationLink(context.auth.token.email);
+
+    // const returnUrl = new URL(data.returnUrl);
+    // returnUrl.searchParams.set(
+    //   "chat-email-verification",
+    //   encodeURIComponent(link)
+    // );
+    // await sendVerificationEmail(context.auth.token.email, returnUrl.href);
 
     const returnUrl = new URL(data.returnUrl);
-    returnUrl.searchParams.set(
-      "chat-email-verification",
-      encodeURIComponent(link)
-    );
+    returnUrl.searchParams.set("chat-email-verified", 1);
+    returnUrl.searchParams.set("chat-logout", 1);
 
-    // Construct email verification template, embed the link and send
-    // using custom SMTP server.
-    await sendVerificationEmail(context.auth.token.email, returnUrl.href);
+    const link = await admin
+      .auth()
+      .generateEmailVerificationLink(context.auth.token.email, {
+        url: returnUrl.href,
+      });
+
+    await sendVerificationEmail(context.auth.token.email, link);
 
     return {
       message: "Verification email sent. Check your inbox to continue.",
