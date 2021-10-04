@@ -18,6 +18,8 @@ i functions: Finished "us-central1-onUserStatusChanged" in ~1
 -logging errors with @google-cloud/logging
 -investigate
 [Violation] Added non-passive event listener to a scroll-blocking <some> event. Consider marking event handler as 'passive' to make the page more responsive. See <URL>
+-fix
+[DOM] Password forms should have (optionally hidden) username fields for accessibility:
 
 Future features:
 -API for embedding the chat on other sites

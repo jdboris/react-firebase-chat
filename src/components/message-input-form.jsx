@@ -4,6 +4,7 @@ import TextFormatIcon from "@material-ui/icons/TextFormat";
 import React, { useState } from "react";
 import { hexToRgb } from "../color";
 import styles from "../css/chat-room.module.css";
+import { translateError } from "../errors";
 import { MARKUP_SYMBOLS } from "../markdown";
 import { uploadFile } from "../storage";
 import { timeout } from "../utils";
@@ -11,7 +12,7 @@ import { timeout } from "../utils";
 export function MessageInputForm(props) {
   const [loading, setLoading] = useState(false);
   // Cap the font size for non-premium users
-  const fontSize = props.premium && props.fontSize >= 15 ? 15 : props.fontSize;
+  const fontSize = !props.premium && props.fontSize >= 15 ? 15 : props.fontSize;
 
   return (
     <form className={styles["message-form"]} onSubmit={props.sendMessage}>
@@ -22,37 +23,30 @@ export function MessageInputForm(props) {
 
         <input
           type="file"
-          onChange={async (e) => {
+          onChange={(e) => {
             if (loading) return;
             setLoading(true);
             timeout(5000, async () => {
-              try {
-                if (!e.target.files.length) {
-                  return;
-                }
-
-                const file = e.target.files[0];
-                const url = await uploadFile(file);
-
-                if (!url) {
-                  props.setErrors(["Error uploading file."]);
-                  return;
-                }
-
-                e.target.form.message.focus();
-                props.setMessageValue(props.messageValue + " " + url + " ");
-                e.target.value = "";
-              } catch (error) {
-                props.setErrors([error]);
-                setLoading(false);
+              if (!e.target.files.length) {
+                return;
               }
+
+              const file = e.target.files[0];
+              const url = await uploadFile(file);
+
+              if (!url) {
+                throw new Error("Error uploading file.");
+              }
+
+              e.target.form.message.focus();
+              props.setMessageValue(props.messageValue + " " + url + " ");
             })
-              .then(() => {
-                setLoading(false);
-              })
               .catch((error) => {
-                props.setErrors([error]);
+                props.setErrors([translateError(error).message]);
+              })
+              .finally(() => {
                 setLoading(false);
+                e.target.value = "";
               });
           }}
         />

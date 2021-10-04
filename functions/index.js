@@ -5,22 +5,13 @@ const admin = require("firebase-admin");
 //   projectId: process.env.GCLOUD_PROJECT,
 // });
 
+// Errors: https://firebase.google.com/docs/reference/functions/providers_https_.html#functionserrorcode
+
 admin.initializeApp();
 
 const db = admin.firestore();
 const OEMBED_PROVIDER_WHITELIST = ["YouTube", "Twitter"];
-
-function translateError(error) {
-  const newError = { ...error };
-
-  if (newError.errorInfo.code == "auth/wrong-password") {
-    newError.errorInfo.message = "Invalid email/password.";
-  } else if (newError.errorInfo.code == "auth/user-not-found") {
-    newError.errorInfo.message = "Invalid email/password.";
-  }
-
-  return newError;
-}
+const HttpsError = functions.https.HttpsError;
 
 async function getUser(uid) {
   const snapshot = await db.collection("users").doc(uid).get();
@@ -34,24 +25,18 @@ async function markUserBanned(username) {
     .get();
 
   if (!snapshot.docs.length) {
-    return {
-      error: "User not found.",
-    };
+    throw new HttpsError("not-found", "User not found.");
   }
 
   const user = await getUser(snapshot.docs[0].id);
 
   // If the user is banned already
   if (user.isBanned) {
-    return {
-      error: "User is already banned.",
-    };
+    throw new HttpsError("already-exists", "User is already banned.");
   }
 
-  if (user.isModerator === true) {
-    return {
-      error: "Cannot ban a moderator.",
-    };
+  if (user.isModerator) {
+    throw new HttpsError("permission-denied", "Cannot ban a moderator.");
   }
 
   await db
@@ -62,15 +47,16 @@ async function markUserBanned(username) {
 
 exports.banUser = functions.https.onCall(async (username, context) => {
   if (!context.auth.uid) {
-    return { error: "Must be logged in." };
+    throw new HttpsError("unauthenticated", "Must be logged in.");
   }
 
   const user = await getUser(context.auth.uid);
 
-  if (user.isModerator !== true) {
-    return {
-      error: "You must be a moderator to do that.",
-    };
+  if (!user.isModerator) {
+    throw new HttpsError(
+      "permission-denied",
+      "You must be a moderator to do that."
+    );
   }
 
   const result = await markUserBanned(username);
@@ -96,18 +82,14 @@ async function markUserUnbanned(username) {
     .get();
 
   if (!snapshot.docs.length) {
-    return {
-      error: "User not found.",
-    };
+    throw new HttpsError("not-found", "User not found.");
   }
 
   const user = await getUser(snapshot.docs[0].id);
 
   // If the user is not banned already
   if (!user.isBanned) {
-    return {
-      error: "User is not banned.",
-    };
+    throw new HttpsError("already-exists", "User is not banned.");
   }
 
   await db
@@ -118,21 +100,20 @@ async function markUserUnbanned(username) {
 
 exports.unbanUser = functions.https.onCall(async (username, context) => {
   if (!context.auth.uid) {
-    return { error: "Must be logged in." };
+    throw new HttpsError("unauthenticated", "Must be logged in.");
   }
 
   const user = await getUser(context.auth.uid);
 
-  if (user.isModerator !== true) {
-    return {
-      error: "You must be a moderator to do that.",
-    };
+  if (!user.isModerator) {
+    throw new HttpsError(
+      "permission-denied",
+      "You must be a moderator to do that."
+    );
   }
 
   if (user.isBanned) {
-    return {
-      error: "You are banned.",
-    };
+    throw new HttpsError("permission-denied", "You are banned.");
   }
 
   const result = await markUserUnbanned(username);
@@ -158,24 +139,18 @@ async function grantModeratorRole(username) {
     .get();
 
   if (!snapshot.docs.length) {
-    return {
-      error: "User not found.",
-    };
+    throw new HttpsError("not-found", "User not found.");
   }
 
   const user = await getUser(snapshot.docs[0].id);
 
   // If the user is a mod already
-  if (user.isModerator === true) {
-    return {
-      error: "User is already a mod.",
-    };
+  if (user.isModerator) {
+    throw new HttpsError("already-exists", "User is already a mod.");
   }
 
   if (user.isBanned) {
-    return {
-      error: "Cannot mod a banned user.",
-    };
+    throw new HttpsError("permission-denied", "Cannot mod a banned user.");
   }
 
   await db
@@ -186,21 +161,20 @@ async function grantModeratorRole(username) {
 
 exports.addModerator = functions.https.onCall(async (username, context) => {
   if (!context.auth.uid) {
-    return { error: "Must be logged in." };
+    throw new HttpsError("unauthenticated", "Must be logged in.");
   }
 
   const user = await getUser(context.auth.uid);
 
-  if (user.isModerator !== true) {
-    return {
-      error: "You must be a moderator to do that.",
-    };
+  if (!user.isModerator) {
+    throw new HttpsError(
+      "permission-denied",
+      "You must be a moderator to do that."
+    );
   }
 
-  if (user.isBanned === true) {
-    return {
-      error: "You are banned.",
-    };
+  if (user.isBanned) {
+    throw new HttpsError("permission-denied", "You are banned.");
   }
 
   const result = await grantModeratorRole(username);
@@ -226,18 +200,14 @@ async function revokeModeratorRole(username) {
     .get();
 
   if (!snapshot.docs.length) {
-    return {
-      error: "User not found.",
-    };
+    throw new HttpsError("not-found", "User not found.");
   }
 
   const user = await getUser(snapshot.docs[0].id);
 
   // If the user is not a mod already
   if (!user.isModerator) {
-    return {
-      error: "User is not a moderator.",
-    };
+    throw new HttpsError("already-exists", "User is not a moderator.");
   }
 
   await db
@@ -248,21 +218,20 @@ async function revokeModeratorRole(username) {
 
 exports.removeModerator = functions.https.onCall(async (username, context) => {
   if (!context.auth.uid) {
-    return { error: "Must be logged in." };
+    throw new HttpsError("unauthenticated", "Must be logged in.");
   }
 
   const user = await getUser(context.auth.uid);
 
-  if (user.isModerator !== true) {
-    return {
-      error: "You must be a moderator to do that.",
-    };
+  if (!user.isModerator) {
+    throw new HttpsError(
+      "permission-denied",
+      "You must be a moderator to do that."
+    );
   }
 
   if (user.isBanned) {
-    return {
-      error: "You are banned.",
-    };
+    throw new HttpsError("permission-denied", "You are banned.");
   }
 
   const result = await revokeModeratorRole(username);
@@ -296,20 +265,20 @@ async function filterWords(text) {
 
 exports.sendMessage = functions.https.onCall(async (data, context) => {
   if (!context.auth.uid) {
-    return { error: "Must be logged in." };
+    throw new HttpsError("unauthenticated", "Must be logged in.");
   }
 
   if (
     data.conversationId !== "messages" &&
     !context.auth.token.email_verified
   ) {
-    return { error: "Verify your email to do that." };
+    throw new HttpsError("permission-denied", "Verify your email to do that.");
   }
 
   const user = await getUser(context.auth.uid);
 
   if (user.isBanned) {
-    return { error: "You are banned." };
+    throw new HttpsError("permission-denied", "You are banned.");
   }
 
   const authUser = await admin.auth().getUser(context.auth.uid);
@@ -362,25 +331,31 @@ exports.signUp = functions.https.onCall(async (data, context) => {
 
     if (!data.anonymous) {
       if (data.username.match(/^anon\d+$/g)) {
-        return { error: "Invalid username (anonXXXX)." };
+        throw new HttpsError(
+          "invalid-argument",
+          "Invalid username (anonXXXX)."
+        );
       }
 
       if (data.username.length < 4) {
-        return {
-          error: "Username must be 4+ characters.",
-        };
+        throw new HttpsError(
+          "invalid-argument",
+          "Username must be 4+ characters."
+        );
       }
 
       if (!data.username.match(/^[a-z0-9]+$/i)) {
-        return {
-          error: "Username may only contain letters and numbers.",
-        };
+        throw new HttpsError(
+          "invalid-argument",
+          "Username may only contain letters and numbers."
+        );
       }
 
       if (data.password.length < 8) {
-        return {
-          error: "Password must be 8+ characters.",
-        };
+        throw new HttpsError(
+          "invalid-argument",
+          "Password must be 8+ characters."
+        );
       }
 
       // Require username to be unique
@@ -390,7 +365,7 @@ exports.signUp = functions.https.onCall(async (data, context) => {
       const snapshot = await query.get();
       const docs = await snapshot.docs;
       if (docs.length > 0) {
-        return { error: "Username taken." };
+        throw new HttpsError("invalid-argument", "Username taken.");
       }
     } else {
       // Select users whose names start with "anon"
@@ -406,27 +381,18 @@ exports.signUp = functions.https.onCall(async (data, context) => {
       data.username = "anon" + anonSuffix;
     }
 
-    const authUser = await admin
-      .auth()
-      .createUser(
-        data.anonymous
-          ? { displayName: data.username }
-          : {
-              email: data.email,
-              emailVerified: false,
-              password: data.password,
-              displayName: data.username,
-              // photoURL: "http://www.example.com/12345678/photo.png",
-              disabled: false,
-            }
-      )
-      .catch((error) => {
-        return {
-          error: error.errorInfo
-            ? translateError(error).errorInfo.message
-            : "Something went wrong. Please try again.",
-        };
-      });
+    const authUser = await admin.auth().createUser(
+      data.anonymous
+        ? { displayName: data.username }
+        : {
+            email: data.email,
+            emailVerified: false,
+            password: data.password,
+            displayName: data.username,
+            // photoURL: "http://www.example.com/12345678/photo.png",
+            disabled: false,
+          }
+    );
 
     if (!data.anonymous) {
       const link = await admin
@@ -441,11 +407,7 @@ exports.signUp = functions.https.onCall(async (data, context) => {
 
       // Construct email verification template, embed the link and send
       // using custom SMTP server.
-      sendVerificationEmail(
-        authUser.email,
-        authUser.displayName,
-        returnUrl.href
-      );
+      sendVerificationEmail(authUser.email, returnUrl.href);
     }
 
     // NOTE: Must create the document now to allow calling .update() later
@@ -465,16 +427,52 @@ exports.signUp = functions.https.onCall(async (data, context) => {
       ...(data.anonymous ? { token } : {}),
     };
   } catch (error) {
-    console.error(error);
-    return {
-      error: error.errorInfo
-        ? translateError(error).errorInfo.message
-        : "Something went wrong. Please try again.",
-    };
+    if (error.errorInfo) {
+      throw new HttpsError("unknown", error.errorInfo.message);
+    } else {
+      throw error;
+    }
   }
 });
 
-async function sendVerificationEmail(email, username, link) {
+exports.resendVerificationEmail = functions.https.onCall(
+  async (data, context) => {
+    if (!context.auth.uid) {
+      throw new HttpsError("unauthenticated", "Must be logged in.");
+    }
+
+    if (!context.auth.token.email) {
+      throw new HttpsError(
+        "permission-denied",
+        "Create an account to do that."
+      );
+    }
+
+    if (context.auth.token.email_verified) {
+      throw new HttpsError("already-exists", "Your email is already verified.");
+    }
+
+    const link = await admin
+      .auth()
+      .generateEmailVerificationLink(context.auth.token.email);
+
+    const returnUrl = new URL(data.returnUrl);
+    returnUrl.searchParams.set(
+      "chat-email-verification",
+      encodeURIComponent(link)
+    );
+
+    // Construct email verification template, embed the link and send
+    // using custom SMTP server.
+    await sendVerificationEmail(context.auth.token.email, returnUrl.href);
+
+    return {
+      message: "Verification email sent. Check your inbox to continue.",
+    };
+  }
+);
+
+async function sendVerificationEmail(email, link) {
   const nodemailer = require("nodemailer");
   return new Promise((resolve, reject) => {
     // https://support.google.com/a/answer/176600?hl=en
@@ -535,7 +533,10 @@ exports.sendPasswordResetEmail = functions.https.onCall(
     try {
       const link = await admin.auth().generatePasswordResetLink(data.email);
       if (!link) {
-        return { error: "Something went wrong. Please try again." };
+        throw new HttpsError(
+          "internal",
+          "Something went wrong. Please try again."
+        );
       }
 
       const returnUrl = new URL(data.returnUrl);
@@ -598,10 +599,10 @@ exports.sendPasswordResetEmail = functions.https.onCall(
           "Password reset request received. Check your email to continue.",
       };
     } catch (error) {
-      console.error(error);
-      return {
-        error: "Something went wrong. Please try again.",
-      };
+      throw new HttpsError(
+        "internal",
+        "Something went wrong. Please try again."
+      );
     }
   }
 );
@@ -646,7 +647,7 @@ async function getOembedProviders() {
   return fetch("https://oembed.com/providers.json")
     .then((response) => {
       if (!response.ok) {
-        throw new Error("Could not fetch oembed proviers.");
+        throw new HttpsError("unavailable", "Could not fetch oembed proviers.");
       }
 
       return response.json();
@@ -680,7 +681,7 @@ function escapeRegExExceptStar(string) {
 exports.getOembed = functions.https.onCall(async (data, context) => {
   const fetch = require("node-fetch");
   if (!context.auth.uid) {
-    return { error: "Must be logged in." };
+    throw new HttpsError("unauthenticated", "Must be logged in.");
   }
 
   const snapshot = await db.collection("settings").get("oembed");
@@ -754,15 +755,18 @@ exports.uploadFile = functions.https.onCall(async (data, context) => {
   const user = await getUser(context.auth.uid);
 
   if (context.auth.token.email == null) {
-    return { error: "Create an account to do that." };
+    throw new functions.https.HttpsError(
+      "permission-denied",
+      "Create an account to do that."
+    );
   }
 
   if (user.isBanned) {
-    return { error: "You are banned." };
+    throw new HttpsError("permission-denied", "You are banned.");
   }
 
   if (!context.auth.uid) {
-    return { error: "Must be logged in." };
+    throw new HttpsError("unauthenticated", "Must be logged in.");
   }
 
   const { fromBuffer: fileTypeFromBuffer } = require("file-type");
@@ -786,22 +790,24 @@ exports.uploadFile = functions.https.onCall(async (data, context) => {
   );
 
   if (!premium && imageBuffer.byteLength > sizeLimit) {
-    return {
-      error: `File too large (${
+    throw new HttpsError(
+      "invalid-argument",
+      `File too large (${
         sizeLimit / megabyteSize
-      }MB limit). Upgrade to Premium for a higher limit.`,
-    };
+      }MB limit). Upgrade to Premium for a higher limit.`
+    );
   }
 
   if (imageBuffer.byteLength > premiumSizeLimit) {
-    return {
-      error: `File too large (${premiumSizeLimit / megabyteSize}MB limit).`,
-    };
+    throw new HttpsError(
+      "invalid-argument",
+      `File too large (${premiumSizeLimit / megabyteSize}MB limit).`
+    );
   }
 
   const type = await fileTypeFromBuffer(imageBuffer);
   if (!type || !allowedTypes.includes(type.mime)) {
-    return { error: "Filetype not supported." };
+    throw new HttpsError("invalid-argument", "Filetype not supported.");
   }
 
   const imageByteArray = new Uint8Array(imageBuffer);

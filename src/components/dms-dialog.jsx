@@ -6,6 +6,7 @@ import { conversationsRef, firestore, usersRef } from "../app";
 import styles from "../css/chat-room.module.css";
 import paginationStyles from "../css/pagination-controls.module.css";
 import { timeout } from "../utils";
+import { translateError } from "../errors";
 
 export function DmsDialog(props) {
   const { conversations } = props;
@@ -88,21 +89,18 @@ export function DmsDialog(props) {
 
               timeout(5000, async () => {
                 if (!username) {
-                  setErrors(["Enter a username."]);
-                  return;
+                  throw new Error("Enter a username.");
                 }
                 const snapshot = await usersRef
                   .where("lowercaseUsername", "==", username.toLowerCase())
                   .get();
 
                 if (!snapshot.docs.length) {
-                  setErrors(["User not found."]);
-                  return;
+                  throw new Error("User not found.");
                 }
 
                 if (snapshot.docs[0].id === props.uid) {
-                  setErrors(["Cannot chat with yourself."]);
-                  return;
+                  throw new Error("Cannot chat with yourself.");
                 }
 
                 const conversationId = combineStrings([
@@ -156,7 +154,7 @@ export function DmsDialog(props) {
                     setErrors(["Verify your email to do that."]);
                     return;
                   }
-                  setErrors(["Something went wrong. Please try again."]);
+                  setErrors([translateError(error).message]);
                 });
             }}
           >

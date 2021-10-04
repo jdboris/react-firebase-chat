@@ -119,6 +119,7 @@ function App() {
           {dmMessagesRef ? (
             <ChatRoom
               user={user}
+              setAlerts={setAlerts}
               conversationRef={conversationRef}
               setConversationRef={setConversationRef}
               messagesRef={dmMessagesRef}
@@ -130,6 +131,7 @@ function App() {
           ) : (
             <ChatRoom
               user={user}
+              setAlerts={setAlerts}
               messagesRef={messagesRef}
               setConversationRef={setConversationRef}
               setDmMessagesRef={setDmMessagesRef}
