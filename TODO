@@ -35,3 +35,4 @@ Future features:
 -add DM search, mod search, and banned user search
 -cropping/scaling profile images
 -disable anon posting
+-fix the highlighting messages text in the wrong order problem

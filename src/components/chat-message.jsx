@@ -79,6 +79,7 @@ export function ChatMessage(props) {
   let {
     text,
     uid,
+    key,
     premium,
     photoUrl,
     createdAt,
@@ -110,129 +111,128 @@ export function ChatMessage(props) {
   function deleteMessage() {
     messagesRef.doc(props.message.id).update({ isDeleted: true });
   }
-
   return (
-    <>
-      <div
-        className={
-          styles["message"] +
-          " " +
-          styles[messageClass] +
-          " " +
-          (doesMentionCurrentUser ? styles["mention"] : "")
-        }
-        onMouseDown={(e) => {
-          mouseDownSpot = { x: e.pageX, y: e.pageY };
-        }}
-        onMouseUp={(e) => {
-          // Left click
-          if (e.button === 0 && mouseDownSpot) {
-            let a = mouseDownSpot.x - e.pageX;
-            let b = mouseDownSpot.y - e.pageY;
+    <div
+      key={key}
+      className={
+        styles["message"] +
+        " " +
+        styles[messageClass] +
+        " " +
+        (doesMentionCurrentUser ? styles["mention"] : "")
+      }
+      onMouseDown={(e) => {
+        mouseDownSpot = { x: e.pageX, y: e.pageY };
+      }}
+      onMouseUp={(e) => {
+        // Left click
+        if (e.button === 0 && mouseDownSpot) {
+          let a = mouseDownSpot.x - e.pageX;
+          let b = mouseDownSpot.y - e.pageY;
 
-            let distance = Math.sqrt(a * a + b * b);
+          let distance = Math.sqrt(a * a + b * b);
 
-            if (distance <= 2) {
-              props.onClick(username);
-              mouseDownSpot = null;
-            }
+          if (distance <= 2) {
+            props.onClick(username);
+            mouseDownSpot = null;
           }
-        }}
+        }
+      }}
+      style={
+        stylesEnabled && premium
+          ? {
+              backgroundColor: `rgba(${hexToRgb(bgColor)},${bgTransparency})`,
+            }
+          : {}
+      }
+    >
+      <div className={styles["mention-highlight"]}></div>
+      <div
+        className={styles["message-background-image"]}
         style={
           stylesEnabled && premium
             ? {
-                backgroundColor: `rgba(${hexToRgb(bgColor)},${bgTransparency})`,
+                backgroundImage: `url(${backgroundImage})`,
+                backgroundRepeat: msgBgRepeat,
+                backgroundPosition: msgBgPosition,
+                opacity: msgBgImgTransparency,
               }
             : {}
         }
-      >
-        <div
-          className={styles["message-background-image"]}
+      ></div>
+      {photoUrl ? (
+        <img className={styles["avatar"]} src={photoUrl} alt="profile" />
+      ) : (
+        <PersonIcon className={styles["avatar"]} />
+      )}
+      <span className={styles["message-details"]}>
+        <span className={styles["message-timestamp"]}>
+          {createdAt && createdAt.toDate().toLocaleString()}
+        </span>
+        {currentUser.isModerator && (
+          <button
+            onClick={() => {
+              banUser(username);
+            }}
+            // NOTE: Must stop propagation so clicking a link won't @ the poster
+            onMouseUp={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            <BlockIcon />
+          </button>
+        )}
+        {currentUser.isModerator && (
+          <button
+            onClick={deleteMessage}
+            // NOTE: Must stop propagation so clicking a link won't @ the poster
+            onMouseUp={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            X
+          </button>
+        )}
+      </span>
+      <div>
+        <span
+          className={styles["message-contents"]}
           style={
-            stylesEnabled && premium
+            stylesEnabled
               ? {
-                  backgroundImage: `url(${backgroundImage})`,
-                  backgroundRepeat: msgBgRepeat,
-                  backgroundPosition: msgBgPosition,
-                  opacity: msgBgImgTransparency,
+                  fontSize: fontSize + "pt",
+                  color: fontColor,
+                  fontFamily: font.style,
                 }
               : {}
           }
-        ></div>
-        {photoUrl ? (
-          <img className={styles["avatar"]} src={photoUrl} alt="profile" />
-        ) : (
-          <PersonIcon className={styles["avatar"]} />
-        )}
-        <span className={styles["message-details"]}>
-          <span className={styles["message-timestamp"]}>
-            {createdAt && createdAt.toDate().toLocaleString()}
-          </span>
-          {currentUser.isModerator && (
-            <button
-              onClick={() => {
-                banUser(username);
-              }}
-              // NOTE: Must stop propagation so clicking a link won't @ the poster
-              onMouseUp={(e) => {
-                e.stopPropagation();
-              }}
-            >
-              <BlockIcon />
-            </button>
-          )}
-          {currentUser.isModerator && (
-            <button
-              onClick={deleteMessage}
-              // NOTE: Must stop propagation so clicking a link won't @ the poster
-              onMouseUp={(e) => {
-                e.stopPropagation();
-              }}
-            >
-              X
-            </button>
-          )}
-        </span>
-        <div>
+        >
           <span
-            className={styles["message-contents"]}
-            style={
-              stylesEnabled
-                ? {
-                    fontSize: fontSize + "pt",
-                    color: fontColor,
-                    fontFamily: font.style,
-                  }
-                : {}
-            }
+            className={styles["message-username"]}
+            style={stylesEnabled ? { color: nameColor } : {}}
           >
-            <span
-              className={styles["message-username"]}
-              style={stylesEnabled ? { color: nameColor } : {}}
-            >
-              {username}:{" "}
-            </span>
-            {useMemo(() => {
-              return (
-                <ReactMarkdown
-                  components={{
-                    // NOTE: Must overwrite the built-in renderer to ensure the text of the link is the URL
-                    a: (props) => {
-                      return (
-                        <Link shouldComponentUpdate={false} href={props.href} />
-                      );
-                    },
-                  }}
-                  plugins={[gfm]}
-                  allowedElements={["p", "em", "strong", "u", "a"]}
-                >
-                  {text}
-                </ReactMarkdown>
-              );
-            }, [text])}
+            {username}:{" "}
           </span>
-        </div>
+          {useMemo(() => {
+            return (
+              <ReactMarkdown
+                components={{
+                  // NOTE: Must overwrite the built-in renderer to ensure the text of the link is the URL
+                  a: (props) => {
+                    return (
+                      <Link shouldComponentUpdate={false} href={props.href} />
+                    );
+                  },
+                }}
+                plugins={[gfm]}
+                allowedElements={["p", "em", "strong", "u", "a"]}
+              >
+                {text}
+              </ReactMarkdown>
+            );
+          }, [text])}
+        </span>
       </div>
-    </>
+    </div>
   );
 }
