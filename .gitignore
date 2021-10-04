@@ -31,4 +31,4 @@ yarn-error.log*
 .env
 
 # personal notes
-NOTES
+NOTES.txt

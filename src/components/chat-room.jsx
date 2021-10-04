@@ -519,9 +519,11 @@ export function ChatRoom(props) {
         requestClose={() => {
           setProfileOpen(false);
         }}
-        setErrrors={setErrors}
+        setErrors={setErrors}
+        setAlerts={props.setAlerts}
         photoUrl={photoUrl}
         setPhotoUrl={setPhotoUrl}
+        isVerified={user.emailVerified}
       />
 
       {isPremiumPromptOpen && (
