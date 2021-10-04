@@ -39,79 +39,78 @@ export function SignInForm(props) {
 
         // NOTE: Do not call setLoading(false) after the timeout because the component will have unmounted by then
         timeout(10000, async () => {
-          try {
-            if (passwordResetLink) {
-              if (password.length < 8) {
-                setLoading(false);
-                throw new Error("Password must be 8+ characters.");
-              }
-              let link = new URL(passwordResetLink);
-              link.searchParams.set("newPassword", password);
+          // try {
+          if (passwordResetLink) {
+            if (password.length < 8) {
+              throw new Error("Password must be 8+ characters.");
+            }
+            let link = new URL(passwordResetLink);
+            link.searchParams.set("newPassword", password);
 
-              const response = await fetch(link);
-              if (!response.ok) {
-                setQueryParam("chat-reset-password", null);
-                setPasswordResetLink("");
-                throw new Error(
-                  "Password reset request expired. Please initiate a new reset request."
-                );
-              }
-              await response.json();
-
-              props.setAlerts(["Password reset successful!"]);
+            const response = await fetch(link);
+            if (!response.ok) {
               setQueryParam("chat-reset-password", null);
               setPasswordResetLink("");
-              setLoading(false);
-              return;
+              throw new Error(
+                "Password reset request expired. Please initiate a new reset request."
+              );
             }
+            await response.json();
 
-            if (forgotPassword) {
-              const sendPasswordResetEmail = firebase
-                .app()
-                .functions()
-                .httpsCallable("sendPasswordResetEmail");
-              const result = await sendPasswordResetEmail({
-                email: email,
-                returnUrl: window.location.href,
-              });
-
-              if (result.data.error) {
-                throw result.data.error;
-              } else {
-                props.setAlerts([result.data.message]);
-              }
-
-              setLoading(false);
-              return;
-            }
-
-            if (isNewUser) {
-              const signUp = firebase.app().functions().httpsCallable("signUp");
-              const result = await signUp({
-                email: email,
-                password: password,
-                username: username,
-                returnUrl: window.location.href,
-              });
-
-              if (result.data.error) {
-                throw result.data.error;
-              }
-            }
-
-            // NOTE: Must must .catch instead of catch block because of auth bug (https://github.com/firebase/firebase-js-sdk/issues/2101)
-            await auth
-              .signInWithEmailAndPassword(email, password)
-              .catch((error) => {
-                setErrors([translateError(error).message]);
-                setLoading(false);
-              });
-          } catch (error) {
-            setErrors([translateError(error).message]);
+            props.setAlerts(["Password reset successful!"]);
+            setQueryParam("chat-reset-password", null);
+            setPasswordResetLink("");
             setLoading(false);
+            return;
           }
-        }).catch(() => {
-          setErrors(["Something went wrong. Please try again."]);
+
+          if (forgotPassword) {
+            const sendPasswordResetEmail = firebase
+              .app()
+              .functions()
+              .httpsCallable("sendPasswordResetEmail");
+            const result = await sendPasswordResetEmail({
+              email: email,
+              returnUrl: window.location.href,
+            });
+
+            if (result.data.error) {
+              throw result.data.error;
+            } else {
+              props.setAlerts([result.data.message]);
+            }
+
+            setLoading(false);
+            return;
+          }
+
+          if (isNewUser) {
+            const signUp = firebase.app().functions().httpsCallable("signUp");
+            const result = await signUp({
+              email: email,
+              password: password,
+              username: username,
+              returnUrl: window.location.href,
+            });
+
+            if (result.data.error) {
+              throw result.data.error;
+            }
+          }
+
+          // NOTE: Must must .catch instead of catch block because of auth bug (https://github.com/firebase/firebase-js-sdk/issues/2101)
+          await auth
+            .signInWithEmailAndPassword(email, password)
+            .catch((error) => {
+              setErrors([translateError(error).message]);
+              setLoading(false);
+            });
+          // } catch (error) {
+          //   setErrors([translateError(error).message]);
+          //   setLoading(false);
+          // }
+        }).catch((error) => {
+          setErrors([translateError(error).message]);
           setLoading(false);
         });
       }}
@@ -248,9 +247,7 @@ export function SignInForm(props) {
                   .httpsCallable("signUp");
                 const result = await signUp({ anonymous: true });
                 if (result.data.error) {
-                  setErrors([result.data.error]);
-                  setLoading(false);
-                  return;
+                  throw result.data.error;
                 }
                 await auth
                   .signInWithCustomToken(result.data.token)
@@ -258,8 +255,8 @@ export function SignInForm(props) {
                     setErrors(["Something went wrong. Please try again."]);
                     setLoading(false);
                   });
-              }).catch(() => {
-                setErrors(["Something went wrong. Please try again."]);
+              }).catch((error) => {
+                setErrors([translateError(error).message]);
                 setLoading(false);
               });
             }}

@@ -15,11 +15,7 @@ export async function uploadFile(file) {
           extension: file.name.split(".").pop(),
         })
           .then((result) => {
-            if ("error" in result.data) {
-              reject(result.data.error);
-            } else {
-              resolve(result.data.url);
-            }
+            resolve(result.data.url);
           })
           .catch((error) => {
             reject(error);

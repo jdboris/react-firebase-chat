@@ -156,31 +156,24 @@ export function StyleEditorDialog(props) {
                 setLoading(true);
 
                 timeout(5000, async () => {
-                  try {
-                    if (!e.target.files.length) {
-                      return;
-                    }
-                    const file = e.target.files[0];
-                    const url = await uploadFile(file);
-
-                    if (!url) {
-                      setErrors(["Error uploading file."]);
-                      return;
-                    }
-                    await usersRef.doc(user.uid).update({
-                      msgBgImg: url,
-                    });
-                    setMsgBgImg(url);
-                  } catch (error) {
-                    setErrors([error]);
-                    setLoading(false);
+                  if (!e.target.files.length) {
+                    return;
                   }
+                  const file = e.target.files[0];
+                  const url = await uploadFile(file);
+
+                  if (!url) {
+                    throw new Error("Error uploading file.");
+                  }
+                  await usersRef.doc(user.uid).update({
+                    msgBgImg: url,
+                  });
+                  setMsgBgImg(url);
                 })
-                  .then(() => {
-                    setLoading(false);
-                  })
                   .catch((error) => {
-                    props.setErrors([error]);
+                    props.setErrors([error.message]);
+                  })
+                  .finally(() => {
                     setLoading(false);
                   });
               }}

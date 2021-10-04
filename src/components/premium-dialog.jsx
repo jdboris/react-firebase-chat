@@ -7,7 +7,7 @@ import { sendToCustomerPortal, sendToStripe } from "../stripe";
 import { timeout } from "../utils";
 
 export function PremiumDialog(props) {
-  const { premium, isAnonymous, uid } = props;
+  const { isAnonymous, uid } = props;
   const [period, setPeriod] = useState(3);
   const [loading, setLoading] = useState(false);
   const query = firestore
@@ -31,7 +31,7 @@ export function PremiumDialog(props) {
           />
         </header>
         <main>
-          {premium ? (
+          {subscriptions ? (
             <>
               {subscriptions.map((subscription, i) => {
                 const expiration = new Date(Date.UTC(1970, 0, 1));
