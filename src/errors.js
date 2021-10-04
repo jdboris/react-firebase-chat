@@ -1,13 +1,15 @@
 export function translateError(error) {
   if (!error.code) return error;
 
-  const newError = { ...error };
-
-  if (newError.code === "auth/wrong-password") {
-    newError.message = "Invalid email/password.";
-  } else if (newError.code === "auth/user-not-found") {
-    newError.message = "Invalid email/password.";
+  if (error.code === "auth/wrong-password") {
+    error.message = "Invalid email/password.";
+  } else if (error.code === "auth/user-not-found") {
+    error.message = "Invalid email/password.";
   }
 
-  return newError;
+  if (!error.message) {
+    error.message = "Something went wrong. Please try again.";
+  }
+
+  return error;
 }
