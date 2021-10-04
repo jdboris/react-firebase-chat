@@ -96,6 +96,10 @@ export function SignInForm(props) {
             if (result.data.error) {
               throw result.data.error;
             }
+
+            props.setAlerts([
+              "Signup complete! Check your inbox to complete your email verification.",
+            ]);
           }
 
           // NOTE: Must must .catch instead of catch block because of auth bug (https://github.com/firebase/firebase-js-sdk/issues/2101)
