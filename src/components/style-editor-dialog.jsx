@@ -14,7 +14,6 @@ export function StyleEditorDialog(props) {
     user,
     premium,
     requestClose,
-    setErrors,
     setPremiumPromptOpen,
     messagesRef,
     fontSize,

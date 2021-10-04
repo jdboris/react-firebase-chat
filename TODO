@@ -1,4 +1,5 @@
 -add pagination to message list
+-mobile design
 -add latency compensation everywhere
 -add a reconnect button
 -optimization to reduce firestore reads (prevent dialogs from querying until they're opened)
