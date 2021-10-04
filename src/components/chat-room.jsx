@@ -253,7 +253,8 @@ export function ChatRoom(props) {
         )}
       </header>
       <MessageList
-        messages={messages}
+        messagesRef={messagesRef}
+        defaultMessages={messages}
         scrollToBottom={true}
         stylesEnabled={stylesEnabled}
         onMessageClick={(targetUsername) => {
@@ -262,7 +263,6 @@ export function ChatRoom(props) {
         }}
         sentMsgCount={sentMsgCount}
         currentUser={user}
-        messagesRef={messagesRef}
       />
 
       <UserStyleControls
