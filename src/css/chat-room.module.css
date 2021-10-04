@@ -287,6 +287,17 @@ label [type="file"] {
   margin-top: auto;
 }
 
+.messages-section > .pagination-controls {
+  display: flex;
+}
+
+.messages-section > .pagination-controls > button {
+  border-radius: 0px;
+  border: 1px solid grey;
+  flex-basis: 50%;
+  flex-grow: 1;
+}
+
 [data-format="*"] {
   font-style: italic;
 }
@@ -635,7 +646,6 @@ li {
 }
 
 .message {
-  border-left: 5px solid rgba(0, 0, 0, 0);
   position: relative;
   display: flex;
   align-items: flex-start;
@@ -643,7 +653,6 @@ li {
   border-top: 1px solid;
   font-size: 0.9rem;
   padding: 0 5px;
-  padding-left: 0px;
   background-size: 30% auto;
   z-index: 0;
 }
@@ -705,7 +714,14 @@ li {
   max-height: 120px;
 }
 
-.message.mention {
+.message .mention-highlight {
+  position: absolute;
+  left: 0px;
+  width: 0px;
+  margin: 0px;
+}
+
+.message.mention .mention-highlight {
   border-left: 5px solid rgb(255, 204, 0);
 }
 
