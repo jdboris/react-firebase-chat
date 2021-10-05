@@ -9,6 +9,8 @@ import { auth, banUser } from "../app";
 import { hexToRgb } from "../color";
 import styles from "../css/chat-room.module.css";
 import "../css/oembed.css";
+import { translateError } from "../errors";
+import { timeout } from "../utils";
 
 function Link(props) {
   const [children, setChildren] = useState(props.href);
@@ -172,7 +174,12 @@ export function ChatMessage(props) {
         {currentUser.isModerator && (
           <button
             onClick={() => {
-              banUser(username);
+              timeout(5000, async () => {
+                const result = await banUser(username);
+                props.setAlerts([result.data.message]);
+              }).catch((error) => {
+                props.setErrors([translateError(error).message]);
+              });
             }}
             // NOTE: Must stop propagation so clicking a link won't @ the poster
             onMouseUp={(e) => {

@@ -14,7 +14,7 @@ export function ModeratorsDialog(props) {
   const removeModerator = firebase.functions().httpsCallable("removeModerator");
 
   let query = props.open
-    ? usersRef.orderBy("username").where("isModerator", "==", true)
+    ? usersRef.orderBy("lowercaseUsername").where("isModerator", "==", true)
     : null;
 
   const [mods] = useCollectionData(query, { idField: "id" });
