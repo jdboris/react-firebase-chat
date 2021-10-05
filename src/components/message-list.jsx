@@ -29,15 +29,17 @@ export function MessageList(props) {
   return (
     <section ref={messageList} className={styles["messages-section"]}>
       <div className={styles["pagination-controls"]}>
-        {messages.length && messages[0].id !== defaultMessages[0].id && (
-          <button
-            onClick={() => {
-              setPaused(false);
-            }}
-          >
-            Jump to present
-          </button>
-        )}
+        {messages.length &&
+          defaultMessages &&
+          messages[0].id !== defaultMessages[0].id && (
+            <button
+              onClick={() => {
+                setPaused(false);
+              }}
+            >
+              Jump to present
+            </button>
+          )}
       </div>
 
       {messages &&
@@ -75,31 +77,33 @@ export function MessageList(props) {
           </button>
         )}
 
-        {messages.length && messages[0].id !== defaultMessages[0].id && (
-          <button
-            onClick={async () => {
-              setPaused(true);
-              const query = messagesRef
-                .where("isDeleted", "==", false)
-                .orderBy("createdAt", "desc")
-                .endBefore(messages[0].createdAt)
-                .limitToLast(25);
+        {messages.length &&
+          defaultMessages &&
+          messages[0].id !== defaultMessages[0].id && (
+            <button
+              onClick={async () => {
+                setPaused(true);
+                const query = messagesRef
+                  .where("isDeleted", "==", false)
+                  .orderBy("createdAt", "desc")
+                  .endBefore(messages[0].createdAt)
+                  .limitToLast(25);
 
-              const snapshot = await query.get();
-              const newMessages = snapshot.docs.map((doc) => {
-                return { id: doc.id, ...doc.data() };
-              });
+                const snapshot = await query.get();
+                const newMessages = snapshot.docs.map((doc) => {
+                  return { id: doc.id, ...doc.data() };
+                });
 
-              if (newMessages[0].id === defaultMessages[0].id) {
-                setPaused(false);
-              } else if (newMessages.length) {
-                setMessages(newMessages);
-              }
-            }}
-          >
-            Newer
-          </button>
-        )}
+                if (newMessages[0].id === defaultMessages[0].id) {
+                  setPaused(false);
+                } else if (newMessages.length) {
+                  setMessages(newMessages);
+                }
+              }}
+            >
+              Newer
+            </button>
+          )}
       </div>
     </section>
   );
