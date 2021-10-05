@@ -253,6 +253,8 @@ export function ChatRoom(props) {
         )}
       </header>
       <MessageList
+        setErrors={setErrors}
+        setAlerts={props.setAlerts}
         messagesRef={messagesRef}
         defaultMessages={messages}
         scrollToBottom={true}
