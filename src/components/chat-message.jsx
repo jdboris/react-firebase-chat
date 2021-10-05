@@ -97,7 +97,7 @@ export function ChatMessage(props) {
   } = props.message;
 
   // Cap the font size for non-premium users
-  fontSize = premium && fontSize >= 15 ? 15 : fontSize;
+  fontSize = !premium && fontSize >= 15 ? 15 : fontSize;
 
   const { currentUser, stylesEnabled, messagesRef } = props;
   const messageClass = uid === auth.currentUser.uid ? "sent" : "received";
