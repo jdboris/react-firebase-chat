@@ -1,3 +1,4 @@
+-fix the bug that prevents chat from scrolling down on receiving new messages sometimes
 -mobile design
 -add latency compensation everywhere
 -add a reconnect button
@@ -20,12 +21,14 @@ i functions: Finished "us-central1-onUserStatusChanged" in ~1
 [Violation] Added non-passive event listener to a scroll-blocking <some> event. Consider marking event handler as 'passive' to make the page more responsive. See <URL>
 -fix
 [DOM] Password forms should have (optionally hidden) username fields for accessibility:
+-upgrade firebase SDK to v9
 
 Future features:
 -API for embedding the chat on other sites
 -allow blocking DMs
 -DM user by clicking their avatar
 -flagbanning
+-easier image uploading (drag/drop into chat, paste file from clipboard, etc)
 -custom emojis
 -gif searching
 -API for custom styling (badges for streamers, etc...)
@@ -35,3 +38,4 @@ Future features:
 -cropping/scaling profile images
 -disable anon posting
 -fix the highlighting messages text in the wrong order problem
+-some kind of gambling polls
