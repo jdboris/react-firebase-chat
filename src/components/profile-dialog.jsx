@@ -85,9 +85,6 @@ export function ProfileDialog(props) {
                     .functions()
                     .httpsCallable("resendVerificationEmail");
 
-                  console.log({
-                    returnUrl: window.location.href,
-                  });
                   const result = await resendVerificationEmail({
                     returnUrl: window.location.href,
                   });

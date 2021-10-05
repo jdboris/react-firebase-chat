@@ -37,7 +37,7 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "username",
+          "fieldPath": "lowercaseUsername",
           "order": "ASCENDING"
         }
       ]
@@ -51,7 +51,7 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "username",
+          "fieldPath": "lowercaseUsername",
           "order": "ASCENDING"
         }
       ]

@@ -4,6 +4,8 @@ import { ChatMessage } from "./chat-message";
 
 export function MessageList(props) {
   const {
+    setErrors,
+    setAlerts,
     messagesRef,
     defaultMessages,
     stylesEnabled,
@@ -47,6 +49,8 @@ export function MessageList(props) {
         messages.map((msg) => (
           <ChatMessage
             key={msg.id}
+            setErrors={setErrors}
+            setAlerts={setAlerts}
             message={msg}
             stylesEnabled={stylesEnabled}
             onClick={onMessageClick}
