@@ -10,7 +10,7 @@
     "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^13.2.1",
     "emoji-dictionary": "^1.0.11",
-    "firebase": "^8.10.0",
+    "firebase": "^9.1.1",
     "firebase-tools": "^9.18.0",
     "is-image-url": "^1.1.8",
     "react": "^17.0.2",
