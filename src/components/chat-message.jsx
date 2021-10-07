@@ -1,16 +1,16 @@
 import BlockIcon from "@material-ui/icons/Block";
 import PersonIcon from "@material-ui/icons/Person";
-import firebase from "firebase/app";
+import firebase from "firebase/compat/app";
 import isImageUrl from "is-image-url";
 import React, { useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import gfm from "remark-gfm";
 import { auth, banUser } from "../app";
-import { hexToRgb } from "../color";
+import { hexToRgb } from "../utils/color";
 import styles from "../css/chat-room.module.css";
 import "../css/oembed.css";
-import { translateError } from "../errors";
-import { timeout } from "../utils";
+import { translateError } from "../utils/errors";
+import { timeout } from "../utils/utils";
 
 function Link(props) {
   const [children, setChildren] = useState(props.href);
