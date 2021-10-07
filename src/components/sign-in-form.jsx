@@ -1,6 +1,6 @@
 import firebase from "firebase/compat/app";
 import React, { useState } from "react";
-import { auth } from "../app";
+import { auth } from "./chat-room-app";
 import styles from "../css/chat-room.module.css";
 import { translateError } from "../utils/errors";
 import { setQueryParam, timeout } from "../utils/utils";

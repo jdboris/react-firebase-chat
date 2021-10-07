@@ -2,7 +2,7 @@ import CloseIcon from "@material-ui/icons/Close";
 import PersonIcon from "@material-ui/icons/Person";
 import PencilIcon from "@material-ui/icons/Create";
 import firebase from "firebase/compat/app";
-import { auth } from "../app";
+import { auth } from "./chat-room-app";
 import { default as React, useState } from "react";
 import styles from "../css/chat-room.module.css";
 import { uploadFile } from "../utils/storage";

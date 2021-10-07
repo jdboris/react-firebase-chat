@@ -2,7 +2,7 @@ import CloseIcon from "@material-ui/icons/Close";
 import { default as React, useState } from "react";
 import firebase from "firebase/compat/app";
 import ReactPaginate from "react-paginate";
-import { conversationsRef, firestore, usersRef } from "../app";
+import { conversationsRef, firestore, usersRef } from "./chat-room-app";
 import styles from "../css/chat-room.module.css";
 import paginationStyles from "../css/pagination-controls.module.css";
 import { timeout } from "../utils/utils";
