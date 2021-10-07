@@ -3,7 +3,7 @@ import firebase from "firebase/compat/app";
 import { default as React, useState } from "react";
 import { useDocumentData } from "react-firebase-hooks/firestore";
 import ReactPaginate from "react-paginate";
-import { settingsRef } from "../app";
+import { settingsRef } from "./chat-room-app";
 import styles from "../css/chat-room.module.css";
 import paginationStyles from "../css/pagination-controls.module.css";
 

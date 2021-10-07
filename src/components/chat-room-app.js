@@ -6,11 +6,11 @@ import "firebase/compat/functions";
 import "firebase/compat/storage";
 import React, { useEffect, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { AlertDialog } from "./components/alert-dialog";
-import { ChatRoom } from "./components/chat-room";
-import { SignInForm } from "./components/sign-in-form";
-import styles from "./css/chat-room.module.css";
-import { setQueryParam } from "./utils/utils";
+import { AlertDialog } from "./alert-dialog";
+import { ChatRoom } from "./chat-room";
+import { SignInForm } from "./sign-in-form";
+import styles from "../css/chat-room.module.css";
+import { setQueryParam } from "../utils/utils";
 
 const useEmulators = true;
 
@@ -59,7 +59,7 @@ export const getCustomerPortalLink = firebase
   .functions()
   .httpsCallable("ext-firestore-stripe-subscriptions-createPortalLink");
 
-function App() {
+function ChatRoomApp() {
   const [user] = useAuthState(auth);
 
   const email = user && !user.isAnonymous ? user.email : "";
@@ -138,4 +138,4 @@ function App() {
   );
 }
 
-export default App;
+export default ChatRoomApp;

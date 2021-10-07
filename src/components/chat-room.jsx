@@ -5,7 +5,7 @@ import MenuIcon from "@material-ui/icons/Menu";
 import firebase from "firebase/compat/app";
 import React, { useEffect, useRef, useState } from "react";
 import { useCollectionData, useDocument } from "react-firebase-hooks/firestore";
-import { conversationsRef, usersRef } from "../app";
+import { conversationsRef, usersRef } from "./chat-room-app";
 import styles from "../css/chat-room.module.css";
 import { fonts } from "../utils/fonts";
 import { toggleSelectionMarkup } from "../utils/markdown";

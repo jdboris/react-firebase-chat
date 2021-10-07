@@ -5,7 +5,7 @@ import isImageUrl from "is-image-url";
 import React, { useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import gfm from "remark-gfm";
-import { auth, banUser } from "../app";
+import { auth, banUser } from "./chat-room-app";
 import { hexToRgb } from "../utils/color";
 import styles from "../css/chat-room.module.css";
 import "../css/oembed.css";

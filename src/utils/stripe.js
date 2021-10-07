@@ -1,5 +1,5 @@
 import { loadStripe } from "@stripe/stripe-js";
-import { firestore } from "../app";
+import { firestore } from "../components/chat-room-app";
 import firebase from "firebase/compat/app";
 
 export async function sendToStripe(uid, priceId) {
