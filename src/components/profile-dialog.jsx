@@ -1,13 +1,13 @@
 import CloseIcon from "@material-ui/icons/Close";
 import PersonIcon from "@material-ui/icons/Person";
 import PencilIcon from "@material-ui/icons/Create";
-import firebase from "firebase/app";
+import firebase from "firebase/compat/app";
 import { auth } from "../app";
 import { default as React, useState } from "react";
 import styles from "../css/chat-room.module.css";
-import { uploadFile } from "../storage";
-import { timeout } from "../utils";
-import { translateError } from "../errors";
+import { uploadFile } from "../utils/storage";
+import { timeout } from "../utils/utils";
+import { translateError } from "../utils/errors";
 
 export function ProfileDialog(props) {
   const {

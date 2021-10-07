@@ -2,12 +2,12 @@ import CameraIcon from "@material-ui/icons/CameraAlt";
 import SmileIcon from "@material-ui/icons/SentimentVerySatisfied";
 import TextFormatIcon from "@material-ui/icons/TextFormat";
 import React, { useState } from "react";
-import { hexToRgb } from "../color";
+import { hexToRgb } from "../utils/color";
 import styles from "../css/chat-room.module.css";
-import { translateError } from "../errors";
-import { MARKUP_SYMBOLS } from "../markdown";
-import { uploadFile } from "../storage";
-import { timeout } from "../utils";
+import { translateError } from "../utils/errors";
+import { MARKUP_SYMBOLS } from "../utils/markdown";
+import { uploadFile } from "../utils/storage";
+import { timeout } from "../utils/utils";
 
 export function MessageInputForm(props) {
   const [loading, setLoading] = useState(false);

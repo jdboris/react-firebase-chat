@@ -5,8 +5,8 @@ import FormatColorTextIcon from "@material-ui/icons/FormatColorText";
 import React from "react";
 import { usersRef } from "../app";
 import styles from "../css/chat-room.module.css";
-import { fonts } from "../fonts";
-import { MARKUP_SYMBOLS } from "../markdown";
+import { fonts } from "../utils/fonts";
+import { MARKUP_SYMBOLS } from "../utils/markdown";
 import { ColorInput } from "./color-input";
 import { MenuWithButton } from "./menu-with-button";
 

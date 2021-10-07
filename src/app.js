@@ -1,35 +1,32 @@
-import "firebase/analytics";
-import firebase from "firebase/app";
-import "firebase/auth";
-import "firebase/firestore";
-import "firebase/functions";
-import "firebase/storage";
+import "firebase/compat/analytics";
+import firebase from "firebase/compat/app";
+import "firebase/compat/auth";
+import "firebase/compat/firestore";
+import "firebase/compat/functions";
+import "firebase/compat/storage";
 import React, { useEffect, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { AlertDialog } from "./components/alert-dialog";
 import { ChatRoom } from "./components/chat-room";
 import { SignInForm } from "./components/sign-in-form";
 import styles from "./css/chat-room.module.css";
-import { setQueryParam } from "./utils";
+import { setQueryParam } from "./utils/utils";
 
 const useEmulators = true;
 
-let databaseUrl = "https://stream-site-9ebd9-default-rtdb.firebaseio.com";
-
-if (window.location.hostname === "localhost" && useEmulators) {
-  databaseUrl = "http://localhost:9000/?ns=stream-site-9ebd9-default-rtdb";
-}
-
 firebase.initializeApp({
-  name: "stream-site-9ebd9",
+  name: process.env.REACT_APP_FIREBASE_APP_NAME,
   apiKey: process.env.REACT_APP_API_KEY,
-  authDomain: "stream-site-9ebd9.firebaseapp.com",
-  projectId: "stream-site-9ebd9",
-  storageBucket: "stream-site-9ebd9.appspot.com",
-  databaseURL: databaseUrl, // Realtime Database
-  messagingSenderId: "1008086677721",
-  appId: "1:1008086677721:web:e8ee668830765c3df626c8",
-  measurementId: "G-T9226MT70Q",
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  databaseURL:
+    window.location.hostname === "localhost" && useEmulators
+      ? process.env.REACT_APP_FIREBASE_LOCAL_DATABASE_URL
+      : process.env.REACT_APP_FIREBASE_DATABASE_URL, // Realtime Database
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGE_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID,
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID,
 });
 
 export const firestore = firebase.firestore();

@@ -1,10 +1,10 @@
 import CloseIcon from "@material-ui/icons/Close";
-import firebase from "firebase/app";
+import firebase from "firebase/compat/app";
 import { default as React, useState } from "react";
 import { usersRef } from "../app";
 import styles from "../css/chat-room.module.css";
-import { uploadFile } from "../storage";
-import { timeout } from "../utils";
+import { uploadFile } from "../utils/storage";
+import { timeout } from "../utils/utils";
 import { ChatMessage } from "./chat-message";
 import { ColorInput } from "./color-input";
 import { SliderInput } from "./slider-input";
