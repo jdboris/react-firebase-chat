@@ -1,12 +1,12 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import "./css/index.css";
-import App from "./app";
+import ChatRoomApp from "./components/chat-room-app";
 import * as serviceWorker from "./serviceWorker";
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <ChatRoomApp />
   </React.StrictMode>,
   document.getElementById("root")
 );

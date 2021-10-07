@@ -2,7 +2,7 @@ import CloseIcon from "@material-ui/icons/Close";
 import React, { useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import ReactPaginate from "react-paginate";
-import { modActionLogRef } from "../app";
+import { modActionLogRef } from "./chat-room-app";
 import styles from "../css/chat-room.module.css";
 import paginationStyles from "../css/pagination-controls.module.css";
 

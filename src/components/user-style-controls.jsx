@@ -3,7 +3,7 @@ import ArrowDropDownIcon from "@material-ui/icons/ArrowDropDown";
 import CloseIcon from "@material-ui/icons/Close";
 import FormatColorTextIcon from "@material-ui/icons/FormatColorText";
 import React from "react";
-import { usersRef } from "../app";
+import { usersRef } from "./chat-room-app";
 import styles from "../css/chat-room.module.css";
 import { fonts } from "../utils/fonts";
 import { MARKUP_SYMBOLS } from "../utils/markdown";
