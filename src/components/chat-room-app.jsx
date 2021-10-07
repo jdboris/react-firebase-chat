@@ -59,7 +59,7 @@ export const getCustomerPortalLink = firebase
   .functions()
   .httpsCallable("ext-firestore-stripe-subscriptions-createPortalLink");
 
-function ChatRoomApp() {
+export function ChatRoomApp() {
   const [user] = useAuthState(auth);
 
   const email = user && !user.isAnonymous ? user.email : "";
