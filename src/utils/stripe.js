@@ -1,6 +1,6 @@
 import { loadStripe } from "@stripe/stripe-js";
-import { firestore } from "./app";
-import firebase from "firebase/app";
+import { firestore } from "../app";
+import firebase from "firebase/compat/app";
 
 export async function sendToStripe(uid, priceId) {
   const returnUrl = new URL(window.location);

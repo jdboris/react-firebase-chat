@@ -1,5 +1,5 @@
-import firebase from "firebase/app";
-import "firebase/database";
+import firebase from "firebase/compat/app";
+import "firebase/compat/database";
 
 export function presence(uid, username, setIsOnline) {
   let offlineTimeout = null;

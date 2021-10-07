@@ -1,9 +1,9 @@
-import firebase from "firebase/app";
+import firebase from "firebase/compat/app";
 import React, { useState } from "react";
 import { auth } from "../app";
 import styles from "../css/chat-room.module.css";
-import { translateError } from "../errors";
-import { setQueryParam, timeout } from "../utils";
+import { translateError } from "../utils/errors";
+import { setQueryParam, timeout } from "../utils/utils";
 
 export function SignInForm(props) {
   const [username, setUsername] = useState("");

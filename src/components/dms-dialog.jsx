@@ -1,12 +1,12 @@
 import CloseIcon from "@material-ui/icons/Close";
 import { default as React, useState } from "react";
-import firebase from "firebase/app";
+import firebase from "firebase/compat/app";
 import ReactPaginate from "react-paginate";
 import { conversationsRef, firestore, usersRef } from "../app";
 import styles from "../css/chat-room.module.css";
 import paginationStyles from "../css/pagination-controls.module.css";
-import { timeout } from "../utils";
-import { translateError } from "../errors";
+import { timeout } from "../utils/utils";
+import { translateError } from "../utils/errors";
 
 export function DmsDialog(props) {
   const { conversations } = props;

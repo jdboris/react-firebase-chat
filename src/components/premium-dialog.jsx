@@ -3,8 +3,8 @@ import { default as React, useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import { firestore } from "../app";
 import styles from "../css/chat-room.module.css";
-import { sendToCustomerPortal, sendToStripe } from "../stripe";
-import { timeout } from "../utils";
+import { sendToCustomerPortal, sendToStripe } from "../utils/stripe";
+import { timeout } from "../utils/utils";
 
 export function PremiumDialog(props) {
   const { isAnonymous, uid } = props;
