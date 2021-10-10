@@ -11,8 +11,9 @@ import { ChatRoom } from "./chat-room";
 import { SignInForm } from "./sign-in-form";
 import styles from "../css/chat-room.module.css";
 import { setQueryParam } from "../utils/utils";
+import { propTypes } from "react-markdown";
 
-const useEmulators = true;
+const useEmulators = false;
 
 firebase.initializeApp({
   name: process.env.REACT_APP_FIREBASE_APP_NAME,
@@ -59,7 +60,7 @@ export const getCustomerPortalLink = firebase
   .functions()
   .httpsCallable("ext-firestore-stripe-subscriptions-createPortalLink");
 
-export function ChatRoomApp() {
+export function ChatRoomApp(props) {
   const [user] = useAuthState(auth);
 
   const email = user && !user.isAnonymous ? user.email : "";
@@ -72,6 +73,10 @@ export function ChatRoomApp() {
     setConversationRef(null);
     setDmMessagesRef(null);
   };
+
+  useEffect(() => {
+    props.onAuthChange(user);
+  }, [user]);
 
   useEffect(() => {
     const url = new URL(window.location);
