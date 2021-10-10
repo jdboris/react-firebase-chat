@@ -1,3 +1,7 @@
+* {
+  box-sizing: border-box;
+}
+
 a,
 .chat-app *.link {
   color: #0084eb;
