@@ -447,6 +447,29 @@ exports.signUp = functions.https.onCall(async (data, context) => {
   }
 });
 
+exports.authenticate = functions.https.onCall(async (data, context) => {
+  let user = null;
+
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(data.idToken, true);
+
+    user = {
+      ...(await getUser(decodedToken.uid)),
+      uid: decodedToken.uid,
+      email: decodedToken.email,
+      emailVerified: decodedToken.email_verified,
+    };
+  } catch (error) {
+    if (error.errorInfo) {
+      throw new HttpsError("unknown", error.errorInfo.message);
+    } else {
+      throw error;
+    }
+  }
+
+  return user;
+});
+
 exports.resendVerificationEmail = functions.https.onCall(
   async (data, context) => {
     if (!context.auth.uid) {
