@@ -115,12 +115,10 @@ export function DmsDialog(props) {
                     userIds: [props.uid, snapshot.docs[0].id],
                     users: {
                       [props.uid]: {
-                        lastReadAt:
-                          firebase.firestore.FieldValue.serverTimestamp(),
+                        lastReadAt: firebase.firestore.FieldValue.serverTimestamp(),
                       },
                       [snapshot.docs[0].id]: {
-                        lastReadAt:
-                          firebase.firestore.FieldValue.serverTimestamp(),
+                        lastReadAt: firebase.firestore.FieldValue.serverTimestamp(),
                       },
                     },
                   },
