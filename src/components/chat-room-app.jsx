@@ -90,7 +90,7 @@ export function ChatRoomApp(props) {
   };
 
   useEffect(() => {
-    props.onAuthChange(user);
+    props.onUserChange(user);
   }, [authUser, userSnapshot]);
 
   useEffect(() => {
