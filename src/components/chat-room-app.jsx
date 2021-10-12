@@ -5,6 +5,7 @@ import "firebase/compat/firestore";
 import "firebase/compat/functions";
 import "firebase/compat/storage";
 import React, { useEffect, useState } from "react";
+import { useDocument } from "react-firebase-hooks/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { AlertDialog } from "./alert-dialog";
 import { ChatRoom } from "./chat-room";
@@ -60,9 +61,24 @@ export const getCustomerPortalLink = firebase
   .httpsCallable("ext-firestore-stripe-subscriptions-createPortalLink");
 
 export function ChatRoomApp(props) {
-  const [user] = useAuthState(auth);
+  const [authUser] = useAuthState(auth);
 
-  const email = user && !user.isAnonymous ? user.email : "";
+  const [userSnapshot, isLoadingUser] = useDocument(
+    authUser ? usersRef.doc(authUser.uid) : null
+  );
+
+  const user =
+    authUser && userSnapshot
+      ? {
+          uid: authUser.uid,
+          photoUrl: authUser.photoURL,
+          email: authUser.email,
+          emailVerified: authUser.emailVerified,
+          ...userSnapshot.data(),
+        }
+      : null;
+
+  const email = authUser && !authUser.isAnonymous ? authUser.email : "";
   const [conversationRef, setConversationRef] = useState(null);
   const [dmMessagesRef, setDmMessagesRef] = useState(null);
   const [alerts, setAlerts] = useState([]);
@@ -75,7 +91,7 @@ export function ChatRoomApp(props) {
 
   useEffect(() => {
     props.onAuthChange(user);
-  }, [user]);
+  }, [authUser, userSnapshot]);
 
   useEffect(() => {
     const url = new URL(window.location);
@@ -94,10 +110,10 @@ export function ChatRoomApp(props) {
 
   // NOTE: This is a safe usage of displayName
   const header =
-    conversationRef && user
+    conversationRef && authUser
       ? conversationRef.id
           .split(":")
-          .filter((e) => e !== user.displayName)
+          .filter((e) => e !== authUser.displayName)
           .toString()
       : "";
 
@@ -108,6 +124,7 @@ export function ChatRoomApp(props) {
           {dmMessagesRef ? (
             <ChatRoom
               user={user}
+              isLoadingUser={isLoadingUser}
               setAlerts={setAlerts}
               conversationRef={conversationRef}
               setConversationRef={setConversationRef}
@@ -120,6 +137,7 @@ export function ChatRoomApp(props) {
           ) : (
             <ChatRoom
               user={user}
+              isLoadingUser={isLoadingUser}
               setAlerts={setAlerts}
               messagesRef={messagesRef}
               setConversationRef={setConversationRef}

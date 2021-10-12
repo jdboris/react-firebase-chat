@@ -4,7 +4,7 @@ import GavelIcon from "@material-ui/icons/Gavel";
 import MenuIcon from "@material-ui/icons/Menu";
 import firebase from "firebase/compat/app";
 import React, { useEffect, useRef, useState } from "react";
-import { useCollectionData, useDocument } from "react-firebase-hooks/firestore";
+import { useCollectionData } from "react-firebase-hooks/firestore";
 import { conversationsRef, usersRef } from "./chat-room-app";
 import styles from "../css/chat-room.module.css";
 import { fonts } from "../utils/fonts";
@@ -29,19 +29,7 @@ import { UserStyleControls } from "./user-style-controls";
 
 export function ChatRoom(props) {
   const sendMessageCloud = firebase.functions().httpsCallable("sendMessage");
-  const { messagesRef, conversationRef } = props;
-
-  // Fetch the current user's ID from Firebase Authentication.
-  const authUser = props.user;
-  let [userSnapshot, isLoadingUser] = useDocument(usersRef.doc(authUser.uid));
-
-  const user = {
-    uid: authUser.uid,
-    photoUrl: authUser.photoURL,
-    email: authUser.email,
-    emailVerified: authUser.emailVerified,
-    ...(userSnapshot ? userSnapshot.data() : {}),
-  };
+  const { messagesRef, conversationRef, user, isLoadingUser } = props;
 
   const dmsPerPage = 10;
   let query = user
