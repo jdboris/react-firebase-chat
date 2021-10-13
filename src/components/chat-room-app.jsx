@@ -90,7 +90,8 @@ export function ChatRoomApp(props) {
   };
 
   useEffect(() => {
-    props.onUserChange(user);
+    // NOTE: Must include the authUser in case idToken is required
+    props.onUserChange(authUser, user);
   }, [authUser, userSnapshot]);
 
   useEffect(() => {
