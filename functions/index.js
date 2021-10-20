@@ -461,7 +461,7 @@ exports.authenticate = functions.https.onCall(async (data, context) => {
     };
   } catch (error) {
     if (error.errorInfo) {
-      throw new HttpsError("unknown", error.errorInfo.message);
+      throw new HttpsError("invalid-argument", error.errorInfo.message);
     } else {
       throw error;
     }
