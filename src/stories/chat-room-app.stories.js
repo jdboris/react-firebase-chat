@@ -10,7 +10,7 @@ stories.add("App", () => {
 
   return (
     <ChatRoomApp
-      onAuthChange={(authUser) => {
+      onUserChange={(authUser) => {
         setUser(authUser);
       }}
     />
