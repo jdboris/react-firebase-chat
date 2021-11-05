@@ -388,6 +388,7 @@ svg.gavel-icon {
   right: 0;
   width: 370px;
   max-width: 100vw;
+  z-index: 1;
 }
 
 .dialog header {
