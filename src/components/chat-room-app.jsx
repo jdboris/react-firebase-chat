@@ -5,7 +5,12 @@ import "firebase/compat/firestore";
 import "firebase/compat/functions";
 import "firebase/compat/storage";
 import React, { useEffect, useState } from "react";
-import { useDocument } from "react-firebase-hooks/firestore";
+import {
+  useCollection,
+  useCollectionData,
+  useDocument,
+  useDocumentData,
+} from "react-firebase-hooks/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { AlertDialog } from "./alert-dialog";
 import { ChatRoom } from "./chat-room";
@@ -53,6 +58,7 @@ export const usersRef = firestore.collection("users");
 export const modActionLogRef = firestore.collection("modActionLog");
 export const settingsRef = firestore.collection("settings");
 const messagesRef = firestore.collection("messages");
+const callbacksRef = firestore.collection("callbacks");
 
 export const banUser = firebase.functions().httpsCallable("banUser");
 export const unbanUser = firebase.functions().httpsCallable("unbanUser");
@@ -60,8 +66,15 @@ export const getCustomerPortalLink = firebase
   .functions()
   .httpsCallable("ext-firestore-stripe-subscriptions-createPortalLink");
 
-export function ChatRoomApp(props) {
+export function ChatRoomApp({ onUserChange, callbackToTrigger, callbacks }) {
   const [authUser] = useAuthState(auth);
+
+  const [callbacksTriggered] = useCollectionData(
+    callbacksRef.orderBy("triggeredAt", "desc").limit(1),
+    {
+      idField: "id",
+    }
+  );
 
   const [userSnapshot, isLoadingUser] = useDocument(
     authUser ? usersRef.doc(authUser.uid) : null
@@ -91,8 +104,48 @@ export function ChatRoomApp(props) {
 
   useEffect(() => {
     // NOTE: Must include the authUser in case idToken is required
-    props.onUserChange(authUser, user);
+    onUserChange(authUser, user);
   }, [authUser, userSnapshot]);
+
+  const callbackTriggered =
+    callbacksTriggered && callbacksTriggered.length
+      ? callbacksTriggered[0]
+      : { id: 0 };
+
+  useEffect(() => {
+    if (callbackTriggered.id) {
+      const lastTriggeredId = localStorage.getItem("callbackTriggered.id");
+      if (lastTriggeredId !== callbackTriggered.id) {
+        const callback =
+          callbacks && callbacks.length
+            ? callbacks.find((callback) => {
+                return callback.name == callbackTriggered.name;
+              })
+            : null;
+
+        if (callback) {
+          callback(...callbackTriggered.arguments);
+          localStorage.setItem("callbackTriggered.id", callbackTriggered.id);
+        }
+      }
+    }
+  }, [callbackTriggered.id]);
+
+  useEffect(() => {
+    if (callbackToTrigger && callbacks) {
+      const callback = callbacks.find((callback) => {
+        return callback.name == callbackToTrigger.name;
+      });
+      if (callback) {
+        // TODO: Add doc to callbacks collection, to be called on all clients
+        callbacksRef.add({
+          name: callbackToTrigger.name,
+          arguments: callbackToTrigger.arguments,
+          triggeredAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+      }
+    }
+  }, [callbackToTrigger, callbacks]);
 
   useEffect(() => {
     const url = new URL(window.location);
