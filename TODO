@@ -1,5 +1,7 @@
 -fix the bug that prevents chat from scrolling down on receiving new messages sometimes
 -mobile design
+-give visitors anonymous account by default
+-change log out button to sign up button for anonymous users
 -add latency compensation everywhere
 -add a reconnect button
 -optimization to reduce firestore reads (prevent dialogs from querying until they're opened)
@@ -27,6 +29,8 @@ Future features:
 -API for embedding the chat on other sites
 -allow blocking DMs
 -DM user by clicking their avatar
+-gifting Premium
+-Premium messages (only viewable by Premium users)
 -flagbanning
 -easier image uploading (drag/drop into chat, paste file from clipboard, etc)
 -custom emojis

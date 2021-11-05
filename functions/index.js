@@ -460,6 +460,9 @@ exports.authenticate = functions.https.onCall(async (data, context) => {
       emailVerified: decodedToken.email_verified,
     };
   } catch (error) {
+    // TODO: CHECK THIS ERROR AFTER A LOGIN ATTEMPT WITH AN EXPIRED TOKEN.
+    //       COMMUNICATE THE FACT THAT IT HAS EXPIRED IN THE RESPONSE
+    // console.log(error);
     if (error.errorInfo) {
       throw new HttpsError("invalid-argument", error.errorInfo.message);
     } else {

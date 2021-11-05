@@ -110,5 +110,10 @@ service cloud.firestore {
     match /oembedProviders/{docId} {
       allow read: if true;
     }
+
+    match /callbacks/{docId} {
+      allow create: if currentUser().isAdmin == true;
+      allow read: if true;
+    }
   }
 }
