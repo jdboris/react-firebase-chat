@@ -237,7 +237,6 @@ label [type="file"] {
 }
 
 .chat-app {
-  max-width: 728px;
   margin: 0 auto;
   background-color: black;
   font-family: sans-serif;
