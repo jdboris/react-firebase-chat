@@ -5,18 +5,13 @@ import "firebase/compat/firestore";
 import "firebase/compat/functions";
 import "firebase/compat/storage";
 import React, { useEffect, useState } from "react";
-import {
-  useCollection,
-  useCollectionData,
-  useDocument,
-  useDocumentData,
-} from "react-firebase-hooks/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
+import { useCollectionData, useDocument } from "react-firebase-hooks/firestore";
+import styles from "../css/chat-room.module.css";
+import { setQueryParam } from "../utils/utils";
 import { AlertDialog } from "./alert-dialog";
 import { ChatRoom } from "./chat-room";
 import { SignInForm } from "./sign-in-form";
-import styles from "../css/chat-room.module.css";
-import { setQueryParam } from "../utils/utils";
 
 const useEmulators = process.env.REACT_APP_USE_EMULATORS === "true";
 
@@ -66,7 +61,12 @@ export const getCustomerPortalLink = firebase
   .functions()
   .httpsCallable("ext-firestore-stripe-subscriptions-createPortalLink");
 
-export function ChatRoomApp({ onUserChange, callbackToTrigger, callbacks }) {
+export function ChatRoomApp({
+  className,
+  onUserChange,
+  callbackToTrigger,
+  callbacks,
+}) {
   const [authUser] = useAuthState(auth);
 
   const [callbacksTriggered] = useCollectionData(
@@ -172,7 +172,7 @@ export function ChatRoomApp({ onUserChange, callbackToTrigger, callbacks }) {
       : "";
 
   return (
-    <div className={styles["chat-app"]}>
+    <div className={className + " " + styles["chat-app"]}>
       {user ? (
         <>
           {dmMessagesRef ? (
