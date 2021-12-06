@@ -26,6 +26,7 @@ import { PremiumDialog } from "./premium-dialog";
 import { ProfileDialog } from "./profile-dialog";
 import { StyleEditorDialog } from "./style-editor-dialog";
 import { UserStyleControls } from "./user-style-controls";
+import { LogInForm } from "./log-in-form";
 
 export function ChatRoom(props) {
   const sendMessageCloud = firebase.functions().httpsCallable("sendMessage");
@@ -61,7 +62,11 @@ export function ChatRoom(props) {
   const [messageValue, setMessageValue] = useState("");
   const [onlineUsers, setOnlineUsers] = useState([]);
 
-  const [photoUrl, setPhotoUrl] = useState(user.photoUrl);
+  // NOTE: Required for useEffect dependencies
+  const userId = user ? user.uid : null;
+  const username = user ? user.username : null;
+
+  const [photoUrl, setPhotoUrl] = useState(user ? user.photoUrl : null);
   const [font, setFont] = useState(fonts[0]);
   const [fontSize, setFontSize] = useState(13);
   const [fontColor, setFontColor] = useState("#000000");
@@ -83,6 +88,7 @@ export function ChatRoom(props) {
   const [isModsOpen, setModsOpen] = useState(false);
   const [isModActionLogOpen, setModActionLogOpen] = useState(false);
   const [isFilteredWordsOpen, setFilteredWordsOpen] = useState(false);
+  const [isLoginOpen, setLoginOpen] = useState(false);
 
   const [menuOpenKey, setMenuOpenKey] = useState(0);
   const [isEmojisOpen, setEmojisOpen] = useState(false);
@@ -139,12 +145,12 @@ export function ChatRoom(props) {
   });
 
   useEffect(() => {
-    if (isLoadingUser || !user.username) {
+    if (isLoadingUser || !user || !username) {
       return;
     }
 
     usersRef
-      .doc(user.uid)
+      .doc(userId)
       .get()
       .then((doc) => {
         if (doc.exists) {
@@ -169,7 +175,7 @@ export function ChatRoom(props) {
         }
       });
 
-    const unsubPresence = presence(user.uid, user.username, setIsOnline);
+    const unsubPresence = presence(userId, username, setIsOnline);
 
     const unsubOnlineUsers = firebase
       .firestore()
@@ -195,8 +201,8 @@ export function ChatRoom(props) {
       unsubPresence();
       unsubOnlineUsers();
     };
-    // NOTE: isLoadingUser for loading new user, user.uid for cleanup when logging out
-  }, [isLoadingUser, user.uid, user.username]);
+    // NOTE: isLoadingUser for loading new user, userId for cleanup when logging out
+  }, [isLoadingUser, userId, username]);
 
   useEffect(() => {
     if (!selection) return;
@@ -214,7 +220,7 @@ export function ChatRoom(props) {
         {
           // NOTE: Required for marking messages read
           users: {
-            [user.uid]: {
+            [userId]: {
               lastReadAt: firebase.firestore.FieldValue.serverTimestamp(),
               // lastReadAt: new firebase.firestore.Timestamp(1726757369, 337000000),
             },
@@ -225,7 +231,7 @@ export function ChatRoom(props) {
     }
 
     markMessagesRead();
-  }, [props.dms, conversationRef, user.uid]);
+  }, [props.dms, conversationRef, userId]);
 
   return (
     <section className={styles["chat-section"]} onClickCapture={closeMenus}>
@@ -255,32 +261,34 @@ export function ChatRoom(props) {
         currentUser={user}
       />
 
-      <UserStyleControls
-        uid={user.uid}
-        open={isFormatOpen}
-        premium={premium}
-        isAnonymous={user.email == null}
-        menuOpenKey={menuOpenKey}
-        setMenuOpenKey={setMenuOpenKey}
-        setErrors={setErrors}
-        stylesEnabled={stylesEnabled}
-        setStylesEnabled={setStylesEnabled}
-        font={font}
-        setFont={setFont}
-        fontSize={fontSize}
-        setFontSize={setFontSize}
-        messageInput={messageInput}
-        setMessageValue={setMessageValue}
-        setStyleEditorOpen={setStyleEditorOpen}
-        isStyleEditorOpen={isStyleEditorOpen}
-        fontColor={fontColor}
-        setFontColor={setFontColor}
-        toggleSelectionMarkup={(symbol) => {
-          return toggleSelectionMarkup(messageInput, symbol);
-        }}
-        setSelection={setSelection}
-        setPremiumPromptOpen={setPremiumPromptOpen}
-      />
+      {user && (
+        <UserStyleControls
+          uid={user.uid}
+          open={isFormatOpen}
+          premium={premium}
+          isAnonymous={user.email == null}
+          menuOpenKey={menuOpenKey}
+          setMenuOpenKey={setMenuOpenKey}
+          setErrors={setErrors}
+          stylesEnabled={stylesEnabled}
+          setStylesEnabled={setStylesEnabled}
+          font={font}
+          setFont={setFont}
+          fontSize={fontSize}
+          setFontSize={setFontSize}
+          messageInput={messageInput}
+          setMessageValue={setMessageValue}
+          setStyleEditorOpen={setStyleEditorOpen}
+          isStyleEditorOpen={isStyleEditorOpen}
+          fontColor={fontColor}
+          setFontColor={setFontColor}
+          toggleSelectionMarkup={(symbol) => {
+            return toggleSelectionMarkup(messageInput, symbol);
+          }}
+          setSelection={setSelection}
+          setPremiumPromptOpen={setPremiumPromptOpen}
+        />
+      )}
 
       <MessageInputForm
         premium={premium}
@@ -339,7 +347,7 @@ export function ChatRoom(props) {
           />
         </span>
 
-        {user.isModerator && (
+        {user && user.isModerator && (
           <MenuWithButton
             button={<GavelIcon className={styles["gavel-icon"]} />}
             openKey={menuOpenKey}
@@ -368,9 +376,17 @@ export function ChatRoom(props) {
           button={<MenuIcon />}
           openKey={menuOpenKey}
           items={{
-            "Log out": () => {
-              props.logout();
-            },
+            ...(user
+              ? {
+                  "Log out": () => {
+                    props.logout();
+                  },
+                }
+              : {
+                  "Signup/Login": () => {
+                    setLoginOpen(!isLoginOpen);
+                  },
+                }),
             "Edit profile": () => {
               setProfileOpen(!isProfileOpen);
             },
@@ -381,35 +397,37 @@ export function ChatRoom(props) {
         />
       </div>
 
-      <StyleEditorDialog
-        open={isStyleEditorOpen}
-        premium={premium}
-        requestClose={() => {
-          setStyleEditorOpen(false);
-        }}
-        setErrors={setErrors}
-        setPremiumPromptOpen={setPremiumPromptOpen}
-        messagesRef={messagesRef}
-        user={user}
-        fontSize={fontSize}
-        fontColor={fontColor}
-        font={font}
-        msgBgImg={msgBgImg}
-        nameColor={nameColor}
-        msgBgColor={msgBgColor}
-        msgBgTransparency={msgBgTransparency}
-        msgBgRepeat={msgBgRepeat}
-        msgBgPosition={msgBgPosition}
-        msgBgImgTransparency={msgBgImgTransparency}
-        stylesEnabled={stylesEnabled}
-        setNameColor={setNameColor}
-        setMsgBgColor={setMsgBgColor}
-        setMsgBgTransparency={setMsgBgTransparency}
-        setMsgBgImg={setMsgBgImg}
-        setMsgBgRepeat={setMsgBgRepeat}
-        setMsgBgPosition={setMsgBgPosition}
-        setMsgBgImgTransparency={setMsgBgImgTransparency}
-      />
+      {user && (
+        <StyleEditorDialog
+          open={isStyleEditorOpen}
+          premium={premium}
+          requestClose={() => {
+            setStyleEditorOpen(false);
+          }}
+          setErrors={setErrors}
+          setPremiumPromptOpen={setPremiumPromptOpen}
+          messagesRef={messagesRef}
+          user={user}
+          fontSize={fontSize}
+          fontColor={fontColor}
+          font={font}
+          msgBgImg={msgBgImg}
+          nameColor={nameColor}
+          msgBgColor={msgBgColor}
+          msgBgTransparency={msgBgTransparency}
+          msgBgRepeat={msgBgRepeat}
+          msgBgPosition={msgBgPosition}
+          msgBgImgTransparency={msgBgImgTransparency}
+          stylesEnabled={stylesEnabled}
+          setNameColor={setNameColor}
+          setMsgBgColor={setMsgBgColor}
+          setMsgBgTransparency={setMsgBgTransparency}
+          setMsgBgImg={setMsgBgImg}
+          setMsgBgRepeat={setMsgBgRepeat}
+          setMsgBgPosition={setMsgBgPosition}
+          setMsgBgImgTransparency={setMsgBgImgTransparency}
+        />
+      )}
 
       {isUsersOpen && (
         <div className={styles["dialog"]}>
@@ -429,18 +447,20 @@ export function ChatRoom(props) {
         </div>
       )}
 
-      <DmsDialog
-        open={isDmsOpen}
-        username={user.username}
-        uid={user.uid}
-        setConversationRef={props.setConversationRef}
-        setDmMessagesRef={props.setDmMessagesRef}
-        conversations={conversations}
-        itemsPerPage={dmsPerPage}
-        requestClose={() => {
-          setDmsOpen(false);
-        }}
-      />
+      {user && (
+        <DmsDialog
+          open={isDmsOpen}
+          username={user.username}
+          uid={user.uid}
+          setConversationRef={props.setConversationRef}
+          setDmMessagesRef={props.setDmMessagesRef}
+          conversations={conversations}
+          itemsPerPage={dmsPerPage}
+          requestClose={() => {
+            setDmsOpen(false);
+          }}
+        />
+      )}
 
       <ModeratorsDialog
         open={isModsOpen}
@@ -486,7 +506,7 @@ export function ChatRoom(props) {
         </header>
         <div>
           <EmojiSelector
-            isAnonymous={user.email == null}
+            isAnonymous={!user || user.email == null}
             setErrors={setErrors}
             onSelect={(emojiChar) => {
               messageInput.focus();
@@ -504,17 +524,19 @@ export function ChatRoom(props) {
         </div>
       </div>
 
-      <ProfileDialog
-        open={isProfileOpen}
-        requestClose={() => {
-          setProfileOpen(false);
-        }}
-        setErrors={setErrors}
-        setAlerts={props.setAlerts}
-        photoUrl={photoUrl}
-        setPhotoUrl={setPhotoUrl}
-        isVerified={user.emailVerified}
-      />
+      {user && (
+        <ProfileDialog
+          open={isProfileOpen}
+          requestClose={() => {
+            setProfileOpen(false);
+          }}
+          setErrors={setErrors}
+          setAlerts={props.setAlerts}
+          photoUrl={photoUrl}
+          setPhotoUrl={setPhotoUrl}
+          isVerified={user.emailVerified}
+        />
+      )}
 
       {isPremiumPromptOpen && (
         <div className={styles["dialog"]}>
@@ -541,14 +563,26 @@ export function ChatRoom(props) {
         </div>
       )}
 
-      <PremiumDialog
-        open={isPremiumOpen}
-        isAnonymous={user.email == null}
-        uid={user.uid}
-        premium={premium}
+      {user && (
+        <PremiumDialog
+          open={isPremiumOpen}
+          isAnonymous={user.email == null}
+          uid={user.uid}
+          premium={premium}
+          requestClose={() => {
+            setPremiumOpen(false);
+          }}
+        />
+      )}
+
+      <LogInForm
+        open={isLoginOpen}
+        errors={errors}
         requestClose={() => {
-          setPremiumOpen(false);
+          setLoginOpen(false);
         }}
+        setAlerts={props.setAlerts}
+        logout={props.logout}
       />
 
       <ErrorDialog
