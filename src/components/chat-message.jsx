@@ -5,7 +5,7 @@ import isImageUrl from "is-image-url";
 import React, { useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import gfm from "remark-gfm";
-import { auth, banUser } from "./chat-room-app";
+import { banUser } from "./chat-room-app";
 import { hexToRgb } from "../utils/color";
 import styles from "../css/chat-room.module.css";
 import "../css/oembed.css";
@@ -102,7 +102,8 @@ export function ChatMessage(props) {
   fontSize = !premium && fontSize >= 15 ? 15 : fontSize;
 
   const { currentUser, stylesEnabled, messagesRef } = props;
-  const messageClass = uid === auth.currentUser.uid ? "sent" : "received";
+  const messageClass =
+    currentUser && uid === currentUser.uid ? "sent" : "received";
 
   let mouseDownSpot = null;
 
@@ -171,7 +172,7 @@ export function ChatMessage(props) {
         <span className={styles["message-timestamp"]}>
           {createdAt && createdAt.toDate().toLocaleString()}
         </span>
-        {currentUser.isModerator && (
+        {currentUser && currentUser.isModerator && (
           <button
             onClick={() => {
               timeout(5000, async () => {
@@ -189,7 +190,7 @@ export function ChatMessage(props) {
             <BlockIcon />
           </button>
         )}
-        {currentUser.isModerator && (
+        {currentUser && currentUser.isModerator && (
           <button
             onClick={deleteMessage}
             // NOTE: Must stop propagation so clicking a link won't @ the poster

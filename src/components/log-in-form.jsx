@@ -1,3 +1,4 @@
+import CloseIcon from "@material-ui/icons/Close";
 import firebase from "firebase/compat/app";
 import React, { useState } from "react";
 import { auth } from "./chat-room-app";
@@ -5,7 +6,7 @@ import styles from "../css/chat-room.module.css";
 import { translateError } from "../utils/errors";
 import { setQueryParam, timeout } from "../utils/utils";
 
-export function SignInForm(props) {
+export function LogInForm(props) {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState(props.email);
   const [password, setPassword] = useState("");
@@ -15,22 +16,24 @@ export function SignInForm(props) {
   const [errors, setErrors] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const url = new URL(window.location);
+  if (props.open) {
+    const url = new URL(window.location);
 
-  // Force a logout to refresh the token
-  if (url.searchParams.get("chat-reset-password") && !passwordResetLink) {
-    const link = decodeURIComponent(
-      url.searchParams.get("chat-reset-password")
-    );
+    // Force a logout to refresh the token
+    if (url.searchParams.get("chat-reset-password") && !passwordResetLink) {
+      const link = decodeURIComponent(
+        url.searchParams.get("chat-reset-password")
+      );
 
-    setPasswordResetLink(link);
+      setPasswordResetLink(link);
 
-    props.logout();
+      props.logout();
+    }
   }
 
-  return (
+  return props.open ? (
     <form
-      className={styles["login-form"]}
+      className={styles["login-form"] + " " + styles["dialog"]}
       onSubmit={(e) => {
         e.preventDefault();
         if (loading) return;
@@ -106,9 +109,12 @@ export function SignInForm(props) {
           await auth
             .signInWithEmailAndPassword(email, password)
             .catch((error) => {
-              setErrors([translateError(error).message]);
-              setLoading(false);
+              throw error;
+              // setErrors([translateError(error).message]);
+              // setLoading(false);
             });
+
+          props.requestClose();
           // } catch (error) {
           //   setErrors([translateError(error).message]);
           //   setLoading(false);
@@ -119,6 +125,22 @@ export function SignInForm(props) {
         });
       }}
     >
+      <header>
+        {isNewUser ? "Signup" : "Login"}
+        <CloseIcon
+          onClick={() => {
+            setUsername("");
+            setEmail("");
+            setPassword("");
+            setIsNewUser(false);
+            setForgotPassword(false);
+            setPasswordResetLink("");
+            setErrors([]);
+            setLoading(false);
+            props.requestClose();
+          }}
+        />
+      </header>
       <fieldset disabled={loading}>
         {errors.map((error, i) => (
           <div key={i} className={styles["error"]}>
@@ -256,9 +278,9 @@ export function SignInForm(props) {
                 await auth
                   .signInWithCustomToken(result.data.token)
                   .catch((error) => {
-                    setErrors(["Something went wrong. Please try again."]);
-                    setLoading(false);
+                    throw new Error("Something went wrong. Please try again.");
                   });
+                props.requestClose();
               }).catch((error) => {
                 setErrors([translateError(error).message]);
                 setLoading(false);
@@ -270,5 +292,7 @@ export function SignInForm(props) {
         )}
       </fieldset>
     </form>
+  ) : (
+    <></>
   );
 }

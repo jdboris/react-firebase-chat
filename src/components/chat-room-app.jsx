@@ -11,7 +11,7 @@ import styles from "../css/chat-room.module.css";
 import { setQueryParam } from "../utils/utils";
 import { AlertDialog } from "./alert-dialog";
 import { ChatRoom } from "./chat-room";
-import { SignInForm } from "./sign-in-form";
+import { LogInForm } from "./log-in-form";
 
 const useEmulators = process.env.REACT_APP_USE_EMULATORS === "true";
 
@@ -173,37 +173,36 @@ export function ChatRoomApp({
 
   return (
     <div className={className + " " + styles["chat-app"]}>
-      {user ? (
-        <>
-          {dmMessagesRef ? (
-            <ChatRoom
-              user={user}
-              isLoadingUser={isLoadingUser}
-              setAlerts={setAlerts}
-              conversationRef={conversationRef}
-              setConversationRef={setConversationRef}
-              messagesRef={dmMessagesRef}
-              setDmMessagesRef={setDmMessagesRef}
-              logout={logout}
-              header={header}
-              dms={true}
-            />
-          ) : (
-            <ChatRoom
-              user={user}
-              isLoadingUser={isLoadingUser}
-              setAlerts={setAlerts}
-              messagesRef={messagesRef}
-              setConversationRef={setConversationRef}
-              setDmMessagesRef={setDmMessagesRef}
-              logout={logout}
-            />
-          )}
-        </>
-      ) : (
-        <SignInForm email={email} setAlerts={setAlerts} logout={logout} />
-      )}
-
+      {/* {user ? ( */}
+      <>
+        {dmMessagesRef ? (
+          <ChatRoom
+            user={user}
+            isLoadingUser={isLoadingUser}
+            setAlerts={setAlerts}
+            conversationRef={conversationRef}
+            setConversationRef={setConversationRef}
+            messagesRef={dmMessagesRef}
+            setDmMessagesRef={setDmMessagesRef}
+            logout={logout}
+            header={header}
+            dms={true}
+          />
+        ) : (
+          <ChatRoom
+            user={user}
+            isLoadingUser={isLoadingUser}
+            setAlerts={setAlerts}
+            messagesRef={messagesRef}
+            setConversationRef={setConversationRef}
+            setDmMessagesRef={setDmMessagesRef}
+            logout={logout}
+          />
+        )}
+      </>
+      {/*  ) : ( {" "}
+      <LogInForm email={email} setAlerts={setAlerts} logout={logout} />
+       )} */}
       <AlertDialog
         alerts={alerts}
         requestClose={() => {
