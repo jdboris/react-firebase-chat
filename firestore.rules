@@ -6,11 +6,16 @@ service cloud.firestore {
     }
 
     function currentUser() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return request.auth != null ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data : null;
     }
 
     function isPremium() {
       return request.auth.token.stripeRole == "premium";
+    }
+
+    function isAdmin() {
+      let user = currentUser();
+      return user != null && user.isAdmin;
     }
 
     function affectedKeys() {
@@ -112,7 +117,7 @@ service cloud.firestore {
     }
 
     match /callbacks/{docId} {
-      allow create: if currentUser().isAdmin == true;
+      allow create: if isAdmin();
       allow read: if true;
     }
   }
