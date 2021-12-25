@@ -11,7 +11,6 @@ import styles from "../css/chat-room.module.css";
 import { setQueryParam } from "../utils/utils";
 import { AlertDialog } from "./alert-dialog";
 import { ChatRoom } from "./chat-room";
-import { LogInForm } from "./log-in-form";
 
 const useEmulators = process.env.REACT_APP_USE_EMULATORS === "true";
 
