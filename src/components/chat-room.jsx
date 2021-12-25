@@ -163,9 +163,6 @@ export function ChatRoom(props) {
   }, []);
 
   useEffect(() => {
-    console.log("NEW userId: ", userId);
-    console.log("NEW username: ", username);
-
     const [unsubPresence, disconnectPresence] = presence(
       userId,
       username,
@@ -174,7 +171,6 @@ export function ChatRoom(props) {
 
     if (!user || !username) {
       return () => {
-        console.log("UNSUBSCRIBING 1");
         unsubPresence();
         disconnectPresence();
       };
@@ -215,7 +211,6 @@ export function ChatRoom(props) {
     fetchPremium();
 
     return () => {
-      console.log("UNSUBSCRIBING 2");
       unsubPresence();
       disconnectPresence();
     };

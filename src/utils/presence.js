@@ -31,7 +31,7 @@ export function presence(uid, username, setIsOnline) {
     lastChanged: firebase.firestore.FieldValue.serverTimestamp(),
     username,
   };
-  console.log("PRESENCE UID: " + typeof uid);
+
   subscribe();
 
   // const unsubToken = firebase.auth().onIdTokenChanged(function (user) {
@@ -50,7 +50,6 @@ export function presence(uid, username, setIsOnline) {
   // });
 
   function disconnect() {
-    console.log("MANUAL DISCONNECT STARTED (" + uid + ")...");
     userPresenceRef.set(isOfflineForFirestore);
     userPresenceDatabaseRef.set(isOfflineForDatabase);
   }
@@ -65,7 +64,6 @@ export function presence(uid, username, setIsOnline) {
 
     uid = userPresenceDatabaseRef.key;
 
-    console.log("uid: ", uid);
     userPresenceRef = firebase.firestore().collection("userPresences").doc(uid);
 
     firebase
@@ -82,11 +80,9 @@ export function presence(uid, username, setIsOnline) {
 
           // CONNECTED?
         } else {
-          console.log("REATIME DATABASE CONNECTED!");
           disconnectRef = userPresenceDatabaseRef.onDisconnect();
           disconnectRef.set(isOfflineForDatabase).then(function (temp) {
             // ONLINE
-            console.log("REATIME DATABASE CONNECTED (2)!");
             userPresenceDatabaseRef.set(isOnlineForDatabase);
 
             // We'll also add Firestore set here for when we come online.
@@ -102,7 +98,6 @@ export function presence(uid, username, setIsOnline) {
 
         // CONNECTED?
         if (isOnline) {
-          console.log("FIRESTORE CONNECTED(" + uid + ")!");
           if (offlineTimeout !== null) {
             clearTimeout(offlineTimeout);
             offlineTimeout = null;
@@ -110,7 +105,6 @@ export function presence(uid, username, setIsOnline) {
           }
           // DISCONNECTED?
         } else {
-          console.log("FIRESTORE DISCONNECTED(" + uid + ")!");
           if (offlineTimeout === null) {
             // Wait for 3 seconds before telling the user the connection was lost
             offlineTimeout = setTimeout(() => {
