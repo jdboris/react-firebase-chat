@@ -17,12 +17,12 @@ stories.add("App", () => {
 
   return (
     <ChatRoomApp
-      callbacks={[
-        function test(x) {
-          console.log(x);
-        },
-      ]}
-      callbackToTrigger={callbackToTrigger}
+      // callbacks={[
+      //   function test(x) {
+      //     console.log(x);
+      //   },
+      // ]}
+      // callbackToTrigger={callbackToTrigger}
       onUserChange={(authUser) => {
         setUser(authUser);
       }}

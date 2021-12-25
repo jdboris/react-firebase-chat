@@ -145,8 +145,39 @@ export function ChatRoom(props) {
   });
 
   useEffect(() => {
-    if (isLoadingUser || !user || !username) {
-      return;
+    const unsubOnlineUsers = firebase
+      .firestore()
+      .collection("userPresences")
+      .where("isOnline", "==", true)
+      .onSnapshot(function (snapshot) {
+        setOnlineUsers(
+          snapshot.docs.map((doc) => {
+            return doc.data();
+          })
+        );
+      });
+
+    return () => {
+      unsubOnlineUsers();
+    };
+  }, []);
+
+  useEffect(() => {
+    console.log("NEW userId: ", userId);
+    console.log("NEW username: ", username);
+
+    const [unsubPresence, disconnectPresence] = presence(
+      userId,
+      username,
+      setIsOnline
+    );
+
+    if (!user || !username) {
+      return () => {
+        console.log("UNSUBSCRIBING 1");
+        unsubPresence();
+        disconnectPresence();
+      };
     }
 
     usersRef
@@ -175,20 +206,6 @@ export function ChatRoom(props) {
         }
       });
 
-    const unsubPresence = presence(userId, username, setIsOnline);
-
-    const unsubOnlineUsers = firebase
-      .firestore()
-      .collection("userPresences")
-      .where("isOnline", "==", true)
-      .onSnapshot(function (snapshot) {
-        setOnlineUsers(
-          snapshot.docs.map((doc) => {
-            return doc.data();
-          })
-        );
-      });
-
     async function fetchPremium() {
       const idTokenResult = await firebase
         .auth()
@@ -198,11 +215,13 @@ export function ChatRoom(props) {
     fetchPremium();
 
     return () => {
+      console.log("UNSUBSCRIBING 2");
       unsubPresence();
-      unsubOnlineUsers();
+      disconnectPresence();
     };
+
     // NOTE: isLoadingUser for loading new user, userId for cleanup when logging out
-  }, [isLoadingUser, userId, username]);
+  }, [userId]);
 
   useEffect(() => {
     if (!selection) return;
@@ -378,7 +397,7 @@ export function ChatRoom(props) {
           items={{
             ...(user
               ? {
-                  "Log out": () => {
+                  "Log out": async () => {
                     props.logout();
                   },
                 }
@@ -441,7 +460,7 @@ export function ChatRoom(props) {
           </header>
           <ul>
             {onlineUsers.map((user, i) => {
-              return <li key={i}>{user.username}</li>;
+              return user.username && <li key={i}>{user.username}</li>;
             })}
           </ul>
         </div>
