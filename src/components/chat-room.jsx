@@ -334,6 +334,8 @@ export function ChatRoom(props) {
         isFormatOpen={isFormatOpen}
         setFormatOpen={setFormatOpen}
         msgBgImgTransparency={msgBgImgTransparency}
+        userId={userId}
+        setLoginOpen={setLoginOpen}
       />
 
       <div className={styles["chat-controls"]}>
@@ -594,7 +596,7 @@ export function ChatRoom(props) {
       )}
 
       <LogInForm
-        open={isLoginOpen}
+        open={!userId && !isLoadingUser && isLoginOpen}
         errors={errors}
         requestClose={() => {
           setLoginOpen(false);

@@ -15,7 +15,17 @@ export function MessageInputForm(props) {
   const fontSize = !props.premium && props.fontSize >= 15 ? 15 : props.fontSize;
 
   return (
-    <form className={styles["message-form"]} onSubmit={props.sendMessage}>
+    <form
+      className={styles["message-form"]}
+      onSubmit={props.sendMessage}
+      onFocus={(e) => {
+        if (!props.userId) {
+          e.preventDefault();
+          e.target.blur();
+          props.setLoginOpen(true);
+        }
+      }}
+    >
       <label className={!loading ? styles["pointer"] : ""}>
         <div className={loading ? styles["loading-placeholder"] : ""}>
           <CameraIcon className={styles["camera-icon"] + " "} />
