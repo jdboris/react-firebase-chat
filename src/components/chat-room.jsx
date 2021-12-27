@@ -61,6 +61,9 @@ export function ChatRoom(props) {
   const [isOnline, setIsOnline] = useState(true);
   const [messageValue, setMessageValue] = useState("");
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const unknownUserCount = onlineUsers.reduce((total, user) => {
+    return total + (user.username ? 0 : 1);
+  }, 0);
 
   // NOTE: Required for useEffect dependencies
   const userId = user ? user.uid : null;
@@ -458,6 +461,7 @@ export function ChatRoom(props) {
               return user.username && <li key={i}>{user.username}</li>;
             })}
           </ul>
+          {unknownUserCount > 0 && `${unknownUserCount} unknown user(s)`}
         </div>
       )}
 
