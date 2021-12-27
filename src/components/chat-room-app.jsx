@@ -66,7 +66,7 @@ export function ChatRoomApp({
   callbackToTrigger,
   callbacks,
 }) {
-  const [authUser] = useAuthState(auth);
+  const [authUser, isLoadingAuth] = useAuthState(auth);
 
   const [callbacksTriggered] = useCollectionData(
     callbacksRef.orderBy("triggeredAt", "desc").limit(1),
@@ -75,9 +75,15 @@ export function ChatRoomApp({
     }
   );
 
-  const [userSnapshot, isLoadingUser] = useDocument(
+  const [userSnapshot, isLoadingUserDoc] = useDocument(
     authUser ? usersRef.doc(authUser.uid) : null
   );
+
+  // If either is loading or they don't match yet
+  const isLoadingUser =
+    isLoadingAuth ||
+    isLoadingUserDoc ||
+    (authUser != null && (!userSnapshot || authUser.uid != userSnapshot.id));
 
   const user =
     authUser && userSnapshot
