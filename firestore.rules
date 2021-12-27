@@ -6,7 +6,7 @@ service cloud.firestore {
     }
 
     function currentUser() {
-      return request.auth != null ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data : null;
+      return isLoggedIn() ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data : null;
     }
 
     function isPremium() {
@@ -23,7 +23,7 @@ service cloud.firestore {
     }
 
     function isLoggedIn() {
-      return request.auth.uid != null;
+      return request.auth != null && request.auth.uid != null;
     }
 
     function isVerified() {
@@ -35,8 +35,7 @@ service cloud.firestore {
     }
 
     match /messages/{docId} {
-      allow read: if isLoggedIn() &&
-                  (resource.data.isDeleted == false || currentUser().isModerator == true || currentUser().isAdmin == true);
+      allow read: if resource.data.isDeleted == false || isLoggedIn() && (currentUser().isModerator == true || currentUser().isAdmin == true);
       allow update: if (currentUser().isModerator == true || currentUser().isAdmin == true) && 
                       // If the request only has the isDeleted field
                       // https://firebase.google.com/docs/firestore/security/rules-fields#allowing_only_certain_fields_to_be_changed
