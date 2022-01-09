@@ -1,12 +1,11 @@
 {
   "name": "react-firebase-chat",
-  "version": "1.2.5",
+  "version": "1.3.0",
   "description": "A realtime chat app component built with React and Firebase.",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "scripts": {
     "prepare": "npm run build",
-    "test": "echo \"Error: no test specified\" && exit 1",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook",
     "build": "rollup -c"
