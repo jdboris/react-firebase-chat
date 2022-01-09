@@ -1,3 +1,20 @@
+const SUPPORTED_IMAGE_EXTENSIONS = [
+  "apng",
+  "avif",
+  "gif",
+  "jpg",
+  "jpeg",
+  "jfif",
+  "pjpeg",
+  "pjp",
+  "png",
+  "svg",
+  "webp",
+  "bmp",
+  "ico",
+  "cur",
+];
+
 export function insertIntoInput(newText, el = document.activeElement) {
   if (el.setRangeText) {
     const [start, end] = [el.selectionStart, el.selectionEnd];
@@ -34,4 +51,9 @@ export function setQueryParam(key, value) {
     "",
     `${window.location.pathname}${queryString ? "?" + queryString : ""}${hash}`
   );
+}
+
+export function isImageUrl(urlString) {
+  let url = new URL(urlString);
+  return SUPPORTED_IMAGE_EXTENSIONS.includes(url.pathname.split(".").pop());
 }
