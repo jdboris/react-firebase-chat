@@ -616,7 +616,7 @@ export function ChatRoom(props) {
         <div className={styles["chat-room-overlay"]}>
           <div className={styles["overlay-message"]}>
             <div>Connection failed.</div>
-            <div>Attemtping reconnect...</div>
+            <div>Attempting reconnect...</div>
           </div>
         </div>
       )}
