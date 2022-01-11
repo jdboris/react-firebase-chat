@@ -1,3 +1,4 @@
+-change to npm package instead of installing from github repo to improve build times
 -fix npm caching old version of this repo when installed from github
 -fix the bug that prevents chat from scrolling down on receiving new messages sometimes
 -mobile design
