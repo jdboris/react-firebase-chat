@@ -457,7 +457,8 @@ exports.authenticate = functions.https.onCall(async (data, context) => {
       ...(await getUser(decodedToken.uid)),
       uid: decodedToken.uid,
       email: decodedToken.email,
-      emailVerified: decodedToken.email_verified,
+      // NOTE: Must convert to boolean because Firebase sometimes sets it to null
+      emailVerified: Boolean(decodedToken.email_verified),
     };
   } catch (error) {
     // TODO: CHECK THIS ERROR AFTER A LOGIN ATTEMPT WITH AN EXPIRED TOKEN.
