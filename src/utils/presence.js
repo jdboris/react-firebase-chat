@@ -109,7 +109,7 @@ export function presence(uid, username, setIsOnline) {
             // Wait for 3 seconds before telling the user the connection was lost
             offlineTimeout = setTimeout(() => {
               setIsOnline(false);
-            }, 3000);
+            }, 10000);
           }
         }
       }
