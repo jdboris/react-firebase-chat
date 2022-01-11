@@ -1,5 +1,4 @@
--change to npm package instead of installing from github repo to improve build times
--fix npm caching old version of this repo when installed from github
+-fix bug keeping some users marked as present even after they leave (unless it's just caused by the server shutting down while user is present)
 -fix the bug that prevents chat from scrolling down on receiving new messages sometimes
 -mobile design
 -give visitors anonymous account by default
