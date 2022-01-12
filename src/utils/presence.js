@@ -109,7 +109,7 @@ export function presence(uid, username, setIsOnline) {
             // Wait for 3 seconds before telling the user the connection was lost
             offlineTimeout = setTimeout(() => {
               setIsOnline(false);
-            }, 10000);
+            }, 5000);
           }
         }
       }
@@ -118,6 +118,9 @@ export function presence(uid, username, setIsOnline) {
 
   // Remove all the listeners
   function unsubscribe() {
+    if (offlineTimeout !== null) {
+      clearTimeout(offlineTimeout);
+    }
     firebase.database().ref(".info/connected").off("value");
     if (unsubPresence) unsubPresence();
     // if (unsubToken) unsubToken();
