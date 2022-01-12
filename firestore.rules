@@ -85,10 +85,10 @@ service cloud.firestore {
                             .hasAny(['msgBgImg', 'msgBgColor', 'msgBgTransparency', 'msgBgRepeat', 'msgBgPosition', 'msgBgImgTransparency'])
                             && (!affectedKeys().hasAny(['fontSize']) || request.resource.data.fontSize < 15 )));
       match /checkout_sessions/{id} {
-        allow read, write: if isVerified() && request.auth.uid == uid;
+        allow read, write: if request.auth.uid == uid;
       }
       match /subscriptions/{id} {
-        allow read: if isVerified() && request.auth.uid == uid;
+        allow read: if request.auth.uid == uid;
       }
     }
     
