@@ -110,8 +110,9 @@ export function LogInForm(props) {
             .signInWithEmailAndPassword(email, password)
             .catch((error) => {
               throw error;
-              // setErrors([translateError(error).message]);
-              // setLoading(false);
+            })
+            .finally(() => {
+              setLoading(false);
             });
 
           props.requestClose();
@@ -119,13 +120,10 @@ export function LogInForm(props) {
           //   setErrors([translateError(error).message]);
           //   setLoading(false);
           // }
-        })
-          .catch((error) => {
-            setErrors([translateError(error).message]);
-          })
-          .finally(() => {
-            setLoading(false);
-          });
+        }).catch((error) => {
+          setErrors([translateError(error).message]);
+          setLoading(false);
+        });
       }}
     >
       <header>
