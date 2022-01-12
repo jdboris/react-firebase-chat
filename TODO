@@ -1,3 +1,12 @@
+-fix stream info form icon not loading in firefox (saying "badge" instead)
+-fix image embedding with capital file extensions
+-fix posting ">"
+-fix highlighting @ messages
+-fix messages not loading the first time
+-fix stream auto refreshing
+-fix premium checkout
+-fix stream/banner not loading sometimes (CORS) (https://i.imgur.com/Jw2daUp.png)
+-limit vertical size of message
 -fix bug keeping some users marked as present even after they leave (unless it's just caused by the server shutting down while user is present)
 -fix the bug that prevents chat from scrolling down on receiving new messages sometimes
 -mobile design
@@ -45,3 +54,4 @@ Future features:
 -disable anon posting
 -fix the highlighting messages text in the wrong order problem
 -some kind of gambling polls
+-add infinite scrolling option
