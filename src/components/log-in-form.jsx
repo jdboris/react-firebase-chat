@@ -113,6 +113,7 @@ export function LogInForm(props) {
             })
             .finally(() => {
               setLoading(false);
+              setPassword("");
             });
 
           props.requestClose();
