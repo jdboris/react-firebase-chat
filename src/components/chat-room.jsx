@@ -111,7 +111,8 @@ export function ChatRoom(props) {
 
     if (messageValue) {
       e.preventDefault();
-      const text = messageValue;
+      // NOTE: Escape the > character because ReactMarkdown sanitizes it for some reason
+      const text = messageValue.replace(/[>]/g, "\\$&");
       setMessageValue("");
 
       await sendMessageCloud({
