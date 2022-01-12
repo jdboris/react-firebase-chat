@@ -85,12 +85,7 @@ export function PremiumDialog(props) {
                   setLoading(true);
 
                   timeout(5000, () => {
-                    sendToStripe(uid, e.target.period.value).then(() => {
-                      // Add another delay for the navigation to commence/complete
-                      setTimeout(() => {
-                        setLoading(false);
-                      }, 2000);
-                    });
+                    sendToStripe(uid, e.target.period.value, setLoading);
                   });
                 }}
               >
