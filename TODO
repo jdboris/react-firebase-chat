@@ -1,7 +1,6 @@
 -fix stream info form icon not loading in firefox (saying "badge" instead)
 -fix image embedding with capital file extensions
 -fix posting ">"
--fix highlighting @ messages
 -fix messages not loading the first time
 -fix stream auto refreshing
 -fix premium checkout
