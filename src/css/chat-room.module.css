@@ -283,7 +283,6 @@ label [type="file"] {
   color: initial;
   margin-bottom: 0.3em;
   width: 100%;
-  min-height: 300px;
 }
 
 .messages-section > :last-child {
@@ -497,7 +496,6 @@ svg.gavel-icon {
 
 .message-form {
   display: flex;
-  min-height: 100px;
   font-size: 1.5rem;
   align-items: center;
   width: 100%;
@@ -689,7 +687,7 @@ li {
   font-family: Arial, Helvetica, sans-serif;
   font-weight: bold;
   vertical-align: middle;
-  font-size: 12pt;
+  font-size: 10pt;
 }
 
 .message-contents {
@@ -711,6 +709,8 @@ li {
   word-break: break-word;
   margin: 0px;
   display: inline;
+  /* NOTE: This may screw something up  */
+  vertical-align: middle;
 }
 
 .message img {
@@ -745,6 +745,7 @@ li {
 
 .message-timestamp {
   /* width: 100%; */
+  opacity: 0.75;
 }
 
 .message-details > * {
