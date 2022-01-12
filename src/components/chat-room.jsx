@@ -397,6 +397,12 @@ export function ChatRoom(props) {
           items={{
             ...(user
               ? {
+                  "Edit profile": () => {
+                    setProfileOpen(!isProfileOpen);
+                  },
+                  Premium: () => {
+                    setPremiumOpen(!isPremiumOpen);
+                  },
                   "Log out": async () => {
                     props.logout();
                   },
@@ -406,12 +412,6 @@ export function ChatRoom(props) {
                     setLoginOpen(!isLoginOpen);
                   },
                 }),
-            "Edit profile": () => {
-              setProfileOpen(!isProfileOpen);
-            },
-            Premium: () => {
-              setPremiumOpen(!isPremiumOpen);
-            },
           }}
         />
       </div>
