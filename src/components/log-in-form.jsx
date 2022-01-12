@@ -8,7 +8,7 @@ import { setQueryParam, timeout } from "../utils/utils";
 
 export function LogInForm(props) {
   const [username, setUsername] = useState("");
-  const [email, setEmail] = useState(props.email);
+  const [email, setEmail] = useState(props.email ? props.email : "");
   const [password, setPassword] = useState("");
   const [isNewUser, setIsNewUser] = useState(false);
   const [forgotPassword, setForgotPassword] = useState(false);
@@ -160,7 +160,7 @@ export function LogInForm(props) {
             <input
               type="email"
               name="email"
-              autoComplete="username"
+              autoComplete="email"
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
