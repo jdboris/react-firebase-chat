@@ -106,13 +106,18 @@ export function ChatMessage(props) {
 
   let mouseDownSpot = null;
 
-  const doesMentionCurrentUser = new RegExp(`@${username}\\b`, "g").test(text);
+  const doesMentionCurrentUser = currentUser
+    ? new RegExp(`@${currentUser.username}\\b`, "g").test(text)
+    : false;
 
-  text = text.replace(new RegExp(`@${username}\\b`, "g"), `**@${username}**`);
+  if (doesMentionCurrentUser) {
+    text = text.replace(new RegExp(`@${username}\\b`, "g"), `**@${username}**`);
+  }
 
   function deleteMessage() {
     messagesRef.doc(props.message.id).update({ isDeleted: true });
   }
+
   return (
     <div
       key={key}
