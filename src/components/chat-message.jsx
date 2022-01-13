@@ -1,5 +1,5 @@
-import BlockIcon from "@material-ui/icons/Block";
-import PersonIcon from "@material-ui/icons/Person";
+import { Person as PersonIcon } from "@mui/icons-material";
+import { Block as BlockIcon } from "@mui/icons-material";
 import firebase from "firebase/compat/app";
 import React, { useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";

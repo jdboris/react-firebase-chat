@@ -1,7 +1,7 @@
-import ChatBubbleIcon from "@material-ui/icons/ChatBubble";
-import CloseIcon from "@material-ui/icons/Close";
-import GavelIcon from "@material-ui/icons/Gavel";
-import MenuIcon from "@material-ui/icons/Menu";
+import { ChatBubble as ChatBubbleIcon } from "@mui/icons-material";
+import { Close as CloseIcon } from "@mui/icons-material";
+import { Gavel as GavelIcon } from "@mui/icons-material";
+import { Menu as MenuIcon } from "@mui/icons-material";
 import firebase from "firebase/compat/app";
 import React, { useEffect, useRef, useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";

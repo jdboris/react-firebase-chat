@@ -1,3 +1,4 @@
+-fix input validation errors in login/signup
 -fix stream info form icon not loading in firefox (saying "badge" instead)
 -fix messages not loading the first time
 -fix stream auto refreshing
