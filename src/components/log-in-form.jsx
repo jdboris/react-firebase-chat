@@ -1,4 +1,4 @@
-import CloseIcon from "@material-ui/icons/Close";
+import { Close as CloseIcon } from "@mui/icons-material";
 import firebase from "firebase/compat/app";
 import React, { useState } from "react";
 import { auth } from "./chat-room-app";
