@@ -1,4 +1,4 @@
-import CloseIcon from "@material-ui/icons/Close";
+import { Close as CloseIcon } from "@mui/icons-material";
 import { default as React, useState } from "react";
 import firebase from "firebase/compat/app";
 import ReactPaginate from "react-paginate";
@@ -115,10 +115,12 @@ export function DmsDialog(props) {
                     userIds: [props.uid, snapshot.docs[0].id],
                     users: {
                       [props.uid]: {
-                        lastReadAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        lastReadAt:
+                          firebase.firestore.FieldValue.serverTimestamp(),
                       },
                       [snapshot.docs[0].id]: {
-                        lastReadAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        lastReadAt:
+                          firebase.firestore.FieldValue.serverTimestamp(),
                       },
                     },
                   },
