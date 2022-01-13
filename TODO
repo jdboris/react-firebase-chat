@@ -1,4 +1,3 @@
--fix page reloading when hitting enter in empty chat box on firefox
 -fix stream info form icon not loading in firefox (saying "badge" instead)
 -fix messages not loading the first time
 -fix stream auto refreshing
