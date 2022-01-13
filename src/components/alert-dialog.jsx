@@ -1,4 +1,4 @@
-import CloseIcon from "@material-ui/icons/Close";
+import { Close as CloseIcon } from "@mui/icons-material";
 import { default as React } from "react";
 import styles from "../css/chat-room.module.css";
 
@@ -8,6 +8,7 @@ export function AlertDialog(props) {
       <div className={styles["dialog"] + " " + styles["error-dialog"]}>
         <header>
           <span></span>
+
           <CloseIcon
             onClick={() => {
               props.requestClose();

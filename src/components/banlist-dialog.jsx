@@ -1,4 +1,4 @@
-import CloseIcon from "@material-ui/icons/Close";
+import { Close as CloseIcon } from "@mui/icons-material";
 import { default as React, useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import ReactPaginate from "react-paginate";

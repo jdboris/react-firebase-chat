@@ -1,6 +1,6 @@
-import CloseIcon from "@material-ui/icons/Close";
-import PersonIcon from "@material-ui/icons/Person";
-import PencilIcon from "@material-ui/icons/Create";
+import { Close as CloseIcon } from "@mui/icons-material";
+import { Person as PersonIcon } from "@mui/icons-material";
+import { Create as PencilIcon } from "@mui/icons-material";
 import firebase from "firebase/compat/app";
 import { auth } from "./chat-room-app";
 import { default as React, useState } from "react";
