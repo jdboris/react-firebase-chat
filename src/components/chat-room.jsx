@@ -105,12 +105,13 @@ export function ChatRoom(props) {
   let messageInput = useRef();
 
   const sendMessage = async (e) => {
+    e.preventDefault();
+
     if (conversationRef && !user.emailVerified) {
       setErrors(["Verify your email to do that."]);
     }
 
     if (messageValue) {
-      e.preventDefault();
       // NOTE: Escape the > character because ReactMarkdown sanitizes it for some reason
       const text = messageValue.replace(/[>]/g, "\\$&");
       setMessageValue("");
