@@ -56,6 +56,8 @@ export function presence(uid, username, setIsOnline) {
 
   // Add all the listeners
   function subscribe() {
+    window.addEventListener("beforeunload", disconnect);
+
     // Create a reference to this user's specific status node.
     // This is where we will store data about being online/offline.
     userPresenceDatabaseRef = uid
@@ -118,6 +120,7 @@ export function presence(uid, username, setIsOnline) {
 
   // Remove all the listeners
   function unsubscribe() {
+    window.removeEventListener("beforeunload", disconnect);
     if (offlineTimeout !== null) {
       clearTimeout(offlineTimeout);
     }
