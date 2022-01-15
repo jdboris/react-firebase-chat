@@ -386,7 +386,7 @@ svg.gavel-icon {
   left: 0;
   right: 0;
   width: 370px;
-  max-width: 100vw;
+  max-width: 100%;
   z-index: 1;
 }
 
