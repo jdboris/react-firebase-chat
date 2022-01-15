@@ -35,7 +35,7 @@ service cloud.firestore {
     }
 
     match /messages/{docId} {
-      allow read: if resource.data.isDeleted == false || isLoggedIn() && (currentUser().isModerator == true || currentUser().isAdmin == true);
+      allow read: if resource.data.isDeleted == false || (isLoggedIn() && (currentUser().isModerator == true || currentUser().isAdmin == true));
       allow update: if (currentUser().isModerator == true || currentUser().isAdmin == true) && 
                       // If the request only has the isDeleted field
                       // https://firebase.google.com/docs/firestore/security/rules-fields#allowing_only_certain_fields_to_be_changed
