@@ -1,5 +1,4 @@
--add periodic role call to mark users offline if they aren't present
--fix youtube embed size
+-fix phantom users presence bug (unless it's just caused by the server shutting down while user is present)
 -fix input validation errors in login/signup
 -fix stream info form icon not loading in firefox (saying "badge" instead)
 -fix stream auto refreshing
@@ -7,7 +6,7 @@
 -limit vertical size of message
 -fix the bug that prevents chat from scrolling down on receiving new messages sometimes
 -mobile design
--give visitors anonymous account by default
+-add periodic role call to mark users offline if they aren't present
 -change log out button to sign up button for anonymous users
 -add latency compensation everywhere
 -add a reconnect button
