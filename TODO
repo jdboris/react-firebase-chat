@@ -1,6 +1,4 @@
--fix phantom users presence bug (unless it's just caused by the server shutting down while user is present)
 -fix input validation errors in login/signup
--fix stream info form icon not loading in firefox (saying "badge" instead)
 -fix stream auto refreshing
 -fix stream/banner not loading sometimes (CORS) (https://i.imgur.com/Jw2daUp.png)
 -limit vertical size of message
