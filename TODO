@@ -1,10 +1,10 @@
+-add periodic role call to mark users offline if they aren't present
+-fix youtube embed size
 -fix input validation errors in login/signup
 -fix stream info form icon not loading in firefox (saying "badge" instead)
--fix messages not loading the first time
 -fix stream auto refreshing
 -fix stream/banner not loading sometimes (CORS) (https://i.imgur.com/Jw2daUp.png)
 -limit vertical size of message
--fix bug keeping some users marked as present even after they leave (unless it's just caused by the server shutting down while user is present)
 -fix the bug that prevents chat from scrolling down on receiving new messages sometimes
 -mobile design
 -give visitors anonymous account by default
