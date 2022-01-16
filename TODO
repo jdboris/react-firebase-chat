@@ -1,6 +1,5 @@
 - fix stream/banner not loading sometimes (CORS) (https://i.imgur.com/Jw2daUp.png)
   - NEEDS TESTING
-- Fix moderator permissions (don't allow adding or removing mods)
 - limit vertical size of message
 - fix the bug that prevents chat from scrolling down on receiving new messages sometimes
 - mobile design
