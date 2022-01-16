@@ -121,15 +121,8 @@ export function ChatRoomApp({
     if (callbackTriggered.id) {
       const lastTriggeredId = localStorage.getItem("callbackTriggered.id");
       if (lastTriggeredId !== callbackTriggered.id) {
-        const callback =
-          callbacks && callbacks.length
-            ? callbacks.find((callback) => {
-                return callback.name == callbackTriggered.name;
-              })
-            : null;
-
-        if (callback) {
-          callback(...callbackTriggered.arguments);
+        if (callbackTriggered.name in callbacks) {
+          callbacks[callbackTriggered.name](...callbackTriggered.arguments);
           localStorage.setItem("callbackTriggered.id", callbackTriggered.id);
         }
       }
@@ -138,10 +131,7 @@ export function ChatRoomApp({
 
   useEffect(() => {
     if (callbackToTrigger && callbacks) {
-      const callback = callbacks.find((callback) => {
-        return callback.name == callbackToTrigger.name;
-      });
-      if (callback) {
+      if (callbackToTrigger.name in callbacks) {
         // TODO: Add doc to callbacks collection, to be called on all clients
         callbacksRef.add({
           name: callbackToTrigger.name,
