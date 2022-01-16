@@ -11,6 +11,10 @@ a,
   background: none;
 }
 
+.message-contents a {
+  padding: 0px;
+}
+
 @keyframes rotation {
   from {
     transform: rotate(0deg);
