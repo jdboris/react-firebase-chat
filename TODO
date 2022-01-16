@@ -1,9 +1,10 @@
-- make message timestamp more human readable format
+- sometimes user record doesn't show up in mysql users table
+- fix premium subscription not redirecting (stripId of undefined)
+- fix stream not automatically changing
 - message sizing (make timestamp smaller)
 - @'s not bolding
 - remove line breaks before and after normal hyperlinks
-- fix stream/banner not loading sometimes (CORS) (https://i.imgur.com/Jw2daUp.png)
-  - NEEDS TESTING
+- fix images resizing when uploading
 - limit vertical size of message
 - fix the bug that prevents chat from scrolling down on receiving new messages sometimes
 - mobile design
@@ -34,6 +35,8 @@
 
 Feature Roadmap:
 
+- click on name in "people here now" to @
+- @everyone for moderators/admins
 - spam prevention (sending limit)
 - lights and fx options
 - stream size controls
