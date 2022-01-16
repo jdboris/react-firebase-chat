@@ -14,7 +14,6 @@ import { timeout, isImageUrl } from "../utils/utils";
 function Link(props) {
   const [children, setChildren] = useState(props.href);
   const [providerName, setProviderName] = useState("");
-  const [isInline, setInline] = useState(false);
 
   useEffect(() => {
     const getOembed = firebase.functions().httpsCallable("getOembed");
@@ -26,7 +25,7 @@ function Link(props) {
           <span dangerouslySetInnerHTML={{ __html: result.data.html }}></span>
         );
       } else if (isImageUrl(props.href)) {
-        setInline(true);
+        setProviderName("image");
         setChildren(
           <a
             href={props.href}
@@ -68,8 +67,7 @@ function Link(props) {
       onMouseUp={(e) => {
         e.stopPropagation();
       }}
-      data-provider={providerName}
-      style={isInline ? { display: "inline" } : {}}
+      data-provider={providerName ? providerName : null}
     >
       {children}
     </span>
@@ -254,6 +252,10 @@ export function ChatMessage(props) {
                 components={{
                   // NOTE: Must overwrite the built-in renderer to ensure the text of the link is the URL
                   a: (props) => {
+                    console.log(props.href.trim());
+                    if (!props.href.trim().includes(".")) {
+                      return <span>{props.href}</span>;
+                    }
                     return (
                       <Link shouldComponentUpdate={false} href={props.href} />
                     );
