@@ -283,10 +283,13 @@ export function LogInForm(props) {
                     throw new Error("Something went wrong. Please try again.");
                   });
                 props.requestClose();
-              }).catch((error) => {
-                setErrors([translateError(error).message]);
-                setLoading(false);
-              });
+              })
+                .catch((error) => {
+                  setErrors([translateError(error).message]);
+                })
+                .finally(() => {
+                  setLoading(false);
+                });
             }}
           >
             Chat Anonymously
