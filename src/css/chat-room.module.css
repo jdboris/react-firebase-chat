@@ -695,6 +695,7 @@ li {
   padding-top: 15px;
   padding-bottom: 5px;
   width: 100%;
+  overflow: hidden;
 }
 
 .message > div {
