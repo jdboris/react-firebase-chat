@@ -1,7 +1,7 @@
 import { Person as PersonIcon } from "@mui/icons-material";
 import { Block as BlockIcon } from "@mui/icons-material";
 import firebase from "firebase/compat/app";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import gfm from "remark-gfm";
 import { banUser } from "./chat-room-app";
@@ -95,8 +95,11 @@ export function ChatMessage(props) {
     msgBgImgTransparency,
   } = props.message;
 
+  const messageContents = useRef();
+
   const date = new Date();
   const createdAtDate = createdAt ? createdAt.toDate() : null;
+  const [expanded, setExpanded] = useState(false);
 
   // Cap the font size for non-premium users
   fontSize = !premium && fontSize >= 15 ? 15 : fontSize;
@@ -229,16 +232,18 @@ export function ChatMessage(props) {
       </span>
       <div>
         <span
+          ref={messageContents}
           className={styles["message-contents"]}
-          style={
-            stylesEnabled
+          style={{
+            ...(stylesEnabled
               ? {
                   fontSize: fontSize + "px",
                   color: fontColor,
                   fontFamily: font.style,
                 }
-              : {}
-          }
+              : {}),
+            ...(expanded ? { maxHeight: "initial" } : { maxHeight: "300px" }),
+          }}
         >
           <span
             className={styles["message-username"]}
@@ -269,6 +274,30 @@ export function ChatMessage(props) {
             );
           }, [text])}
         </span>
+
+        {messageContents.current &&
+          messageContents.current.offsetHeight >= 300 &&
+          (expanded == false ? (
+            <div
+              className={styles["show-more"] + " " + styles["link"]}
+              onMouseUp={(e) => {
+                e.stopPropagation();
+                setExpanded(true);
+              }}
+            >
+              Show more...
+            </div>
+          ) : (
+            <div
+              className={styles["show-less"] + " " + styles["link"]}
+              onMouseUp={(e) => {
+                e.stopPropagation();
+                setExpanded(false);
+              }}
+            >
+              Show less...
+            </div>
+          ))}
       </div>
     </div>
   );
