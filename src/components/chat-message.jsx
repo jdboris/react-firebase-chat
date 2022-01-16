@@ -230,7 +230,7 @@ export function ChatMessage(props) {
           </button>
         )}
       </span>
-      <div>
+      <div className={expanded && styles["expanded"]}>
         <span
           ref={messageContents}
           className={styles["message-contents"]}
