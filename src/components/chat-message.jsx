@@ -97,6 +97,9 @@ export function ChatMessage(props) {
     msgBgImgTransparency,
   } = props.message;
 
+  const date = new Date();
+  const createdAtDate = createdAt ? createdAt.toDate() : null;
+
   // Cap the font size for non-premium users
   fontSize = !premium && fontSize >= 15 ? 15 : fontSize;
 
@@ -174,7 +177,24 @@ export function ChatMessage(props) {
       )}
       <span className={styles["message-details"]}>
         <span className={styles["message-timestamp"]}>
-          {createdAt && createdAt.toDate().toLocaleString()}
+          {createdAt &&
+            createdAtDate.toLocaleString(
+              "en-US",
+              !(
+                createdAtDate.getMonth() == date.getMonth() &&
+                createdAtDate.getDate() == date.getDate() &&
+                createdAtDate.getYear() == date.getYear()
+              )
+                ? {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                    hour12: true,
+                  }
+                : {
+                    timeStyle: "short",
+                    hour12: true,
+                  }
+            )}
         </span>
         {currentUser && currentUser.isModerator && (
           <button

@@ -733,7 +733,6 @@ li {
 .message-details {
   position: absolute;
   display: flex;
-  align-items: flex-end;
   top: 0px;
   right: 0px;
   font-size: 0.75rem;
@@ -746,7 +745,8 @@ li {
 
 .message-timestamp {
   /* width: 100%; */
-  opacity: 0.75;
+  opacity: 0.7;
+  font-size: 0.7em;
 }
 
 .message-details > * {
