@@ -1,51 +1,53 @@
--fix input validation errors in login/signup
--fix stream auto refreshing
--fix stream/banner not loading sometimes (CORS) (https://i.imgur.com/Jw2daUp.png)
--limit vertical size of message
--fix the bug that prevents chat from scrolling down on receiving new messages sometimes
--mobile design
--add periodic role call to mark users offline if they aren't present
--change log out button to sign up button for anonymous users
--add latency compensation everywhere
--add a reconnect button
--optimization to reduce firestore reads (prevent dialogs from querying until they're opened)
--optimization to reduce re-renders
--consider resizing images, and/or make thumbnails -https://firebase.google.com/docs/storage/extend-with-functions#example_image_transformation
--shorten image urls https://firebase.google.com/docs/dynamic-links/rest
--consider specifying "function location" to reduce latency (i.e. between functions and storage) -https://firebase.google.com/docs/functions/locations
--investigate
-i functions: Beginning execution of "us-central1-onUserStatusChanged"
-i functions: Finished "us-central1-onUserStatusChanged" in ~1s
-(node:3492) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 log listeners added to [EventEmitter]. Use emitter.setMaxListeners() to increase limit
-i functions: Beginning execution of "us-central1-onUserStatusChanged"
-i functions: Finished "us-central1-onUserStatusChanged" in ~1
--security audit (prevent updating, prevent selecting email, etc...)
--add batches (transactions)
--accept donations (https://support.stripe.com/questions/how-to-accept-donations-through-stripe)
--allow embedding image URLs containing a colon (i.e. https://hips.hearstapps.com/hmg-prod.s3.amazonaws.com/images/dog-puppy-on-garden-royalty-free-image-1586966191.jpg?crop=1.00xw:0.669xh;0,0.190xh&resize=1200:*). Open an issue here: https://github.com/remarkjs/remark-gfm or possibly here: https://github.com/remarkjs/react-markdown
--logging errors with @google-cloud/logging
--investigate
-[Violation] Added non-passive event listener to a scroll-blocking <some> event. Consider marking event handler as 'passive' to make the page more responsive. See <URL>
--fix
-[DOM] Password forms should have (optionally hidden) username fields for accessibility:
--upgrade firebase SDK to v9
+- fix stream/banner not loading sometimes (CORS) (https://i.imgur.com/Jw2daUp.png)
+  - NEEDS TESTING
+- Fix moderator permissions (don't allow adding or removing mods)
+- fix input validation errors in login/signup
+- limit vertical size of message
+- fix the bug that prevents chat from scrolling down on receiving new messages sometimes
+- mobile design
+- add periodic role call to mark users offline if they aren't present
+- change log out button to sign up button for anonymous users
+- add latency compensation everywhere
+- optimization to reduce firestore reads (prevent dialogs from querying until they're opened)
+- optimization to reduce re-renders
+- consider resizing images, and/or make thumbnails -https://firebase.google.com/docs/storage/extend-with-functions#example_image_transformation
+- shorten image urls https://firebase.google.com/docs/dynamic-links/rest
+- consider specifying "function location" to reduce latency (i.e. between functions and storage) -https://firebase.google.com/docs/functions/locations
+- investigate
+  i functions: Beginning execution of "us-central1-onUserStatusChanged"
+  i functions: Finished "us-central1-onUserStatusChanged" in ~1s
+  (node:3492) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 log listeners added to [EventEmitter]. Use emitter.setMaxListeners() to increase limit
+  i functions: Beginning execution of "us-central1-onUserStatusChanged"
+  i functions: Finished "us-central1-onUserStatusChanged" in ~1
+- security audit (prevent updating, prevent selecting email, etc...)
+- add batches (transactions)
+- allow embedding image URLs containing a colon (i.e. https://hips.hearstapps.com/hmg-prod.s3.amazonaws.com/images/dog-puppy-on-garden-royalty-free-image-1586966191.jpg?crop=1.00xw:0.669xh;0,0.190xh&resize=1200:*). Open an issue here: https://github.com/remarkjs/remark-gfm or possibly here: https://github.com/remarkjs/react-markdown
+- logging errors with @google-cloud/logging
+- investigate
+  [Violation] Added non-passive event listener to a scroll-blocking <some> event. Consider marking event handler as 'passive' to make the page more responsive. See <URL>
+- fix
+  [DOM] Password forms should have (optionally hidden) username fields for accessibility:
+- upgrade firebase SDK to v9
 
 Future features:
--API for embedding the chat on other sites
--allow blocking DMs
--DM user by clicking their avatar
--gifting Premium
--Premium messages (only viewable by Premium users)
--flagbanning
--easier image uploading (drag/drop into chat, paste file from clipboard, etc)
--custom emojis
--gif searching
--API for custom styling (badges for streamers, etc...)
--more fonts (adobe source code pro)
--autocomplete @, DM username, mod username, and ban user username
--add DM search, mod search, and banned user search
--cropping/scaling profile images
--disable anon posting
--fix the highlighting messages text in the wrong order problem
--some kind of gambling polls
--add infinite scrolling option
+
+- accept donations (https://support.stripe.com/questions/how-to-accept-donations-through-stripe)
+- autocomplete @, DM username, mod username, and ban user username
+- DM user by clicking their avatar
+- chat in separate window
+- gifting Premium
+- flagbanning
+- allow blocking DMs
+- Premium messages (only viewable by Premium users)
+- easier image uploading (drag/drop into chat, paste file from clipboard, etc)
+- custom emojis
+- gif searching
+- API for custom styling (badges for streamers, etc...)
+- more fonts (adobe source code pro)
+- add DM search, mod search, and banned user search
+- cropping/scaling profile images
+- disable anon posting
+- fix the mouse selecting messages text in the wrong order problem
+- some kind of gambling polls
+- add infinite scrolling option
+- reconnect button
