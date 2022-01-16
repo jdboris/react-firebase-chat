@@ -373,14 +373,14 @@ export function ChatRoom(props) {
             button={<GavelIcon className={styles["gavel-icon"]} />}
             openKey={menuOpenKey}
             items={{
-              "Manage Moderators": () => {
-                setModsOpen(!isModsOpen);
-              },
               Banlist: () => {
                 setBanlistOpen(!isBanlistOpen);
               },
               ...(user.isAdmin
                 ? {
+                    "Manage Moderators": () => {
+                      setModsOpen(!isModsOpen);
+                    },
                     "Mod Action Log": () => {
                       setModActionLogOpen(!isModActionLogOpen);
                     },
@@ -484,12 +484,14 @@ export function ChatRoom(props) {
         />
       )}
 
-      <ModeratorsDialog
-        open={isModsOpen}
-        requestClose={() => {
-          setModsOpen(false);
-        }}
-      />
+      {user && user.isAdmin && (
+        <ModeratorsDialog
+          open={isModsOpen}
+          requestClose={() => {
+            setModsOpen(false);
+          }}
+        />
+      )}
 
       <BanlistDialog
         open={isBanlistOpen}

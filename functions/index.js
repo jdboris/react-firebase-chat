@@ -166,10 +166,10 @@ exports.addModerator = functions.https.onCall(async (username, context) => {
 
   const user = await getUser(context.auth.uid);
 
-  if (!user.isModerator) {
+  if (!user.isAdmin) {
     throw new HttpsError(
       "permission-denied",
-      "You must be a moderator to do that."
+      "You must be an admin to do that."
     );
   }
 
