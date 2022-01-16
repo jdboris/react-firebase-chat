@@ -87,6 +87,14 @@ export function LogInForm(props) {
             return;
           }
 
+          if (!email) {
+            throw new Error("Please enter your email address.");
+          }
+
+          if (!password) {
+            throw new Error("Please enter a password.");
+          }
+
           if (isNewUser) {
             const signUp = firebase.app().functions().httpsCallable("signUp");
             const result = await signUp({
