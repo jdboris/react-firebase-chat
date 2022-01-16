@@ -5,8 +5,7 @@
   - NEEDS TESTING
 - fix stream not automatically changing
   - NEEDS TESTING
-- fix "www." being considered a hyperlink
-- remove line breaks before and after normal hyperlinks
+- add IP+cookie to bans
 - fix images resizing when uploading
 - limit vertical size of message
 - fix the bug that prevents chat from scrolling down on receiving new messages sometimes
