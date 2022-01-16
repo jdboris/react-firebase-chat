@@ -1,4 +1,3 @@
-- allow returning to present messages with "newer" button
 - sometimes user record doesn't show up in mysql users table
   - INVESTIGATE: confirmation email failing to send while other user records are created asynchronously in tandem
 - fix premium subscription not redirecting (stripId of undefined)
@@ -7,11 +6,9 @@
   - NEEDS TESTING
 - add IP+cookie to bans
 - fix images resizing when uploading
-- limit vertical size of message
 - fix the bug that prevents chat from scrolling down on receiving new messages sometimes
 - mobile design
 - add periodic role call to mark users offline if they aren't present
-- change log out button to sign up button for anonymous users
 - add latency compensation everywhere
 - optimization to reduce firestore reads (prevent dialogs from querying until they're opened)
 - optimization to reduce re-renders
@@ -29,16 +26,12 @@
 - fix the mouse selecting messages text in the wrong order problem
 - allow embedding image URLs containing a colon (i.e. https://hips.hearstapps.com/hmg-prod.s3.amazonaws.com/images/dog-puppy-on-garden-royalty-free-image-1586966191.jpg?crop=1.00xw:0.669xh;0,0.190xh&resize=1200:*). Open an issue here: https://github.com/remarkjs/remark-gfm or possibly here: https://github.com/remarkjs/react-markdown
 - logging errors with @google-cloud/logging
-- investigate
-  [Violation] Added non-passive event listener to a scroll-blocking <some> event. Consider marking event handler as 'passive' to make the page more responsive. See <URL>
-- fix
-  [DOM] Password forms should have (optionally hidden) username fields for accessibility:
 - upgrade firebase SDK to v9
 
 Feature Roadmap:
 
-- click on name in "people here now" to @
 - @everyone for moderators/admins
+- click on name in "people here now" to @
 - spam prevention (sending limit)
 - lights and fx options
 - stream size controls
