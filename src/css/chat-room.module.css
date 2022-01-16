@@ -711,6 +711,11 @@ li {
   height: 100%;
 }
 
+.message > div.expanded {
+  /* To make room for "show less" button */
+  padding-bottom: 1em;
+}
+
 .message p {
   /* white-space: pre-wrap; */
   word-break: break-word;
