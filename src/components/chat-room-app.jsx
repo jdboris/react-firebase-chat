@@ -121,7 +121,7 @@ export function ChatRoomApp({
     if (callbackTriggered.id) {
       const lastTriggeredId = localStorage.getItem("callbackTriggered.id");
       if (lastTriggeredId !== callbackTriggered.id) {
-        if (callbackTriggered.name in callbacks) {
+        if (callbacks && callbackTriggered.name in callbacks) {
           callbacks[callbackTriggered.name](...callbackTriggered.arguments);
           localStorage.setItem("callbackTriggered.id", callbackTriggered.id);
         }
