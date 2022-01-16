@@ -114,7 +114,10 @@ export function ChatMessage(props) {
     : false;
 
   if (doesMentionCurrentUser) {
-    text = text.replace(new RegExp(`@${username}\\b`, "g"), `**@${username}**`);
+    text = text.replace(
+      new RegExp(`@${currentUser.username}\\b`, "g"),
+      `**@${currentUser.username}**`
+    );
   }
 
   function deleteMessage() {

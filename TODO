@@ -1,8 +1,11 @@
+- allow returning to present messages with "newer" button
 - sometimes user record doesn't show up in mysql users table
+  - INVESTIGATE: confirmation email failing to send while other user records are created asynchronously in tandem
 - fix premium subscription not redirecting (stripId of undefined)
+  - NEEDS TESTING
 - fix stream not automatically changing
-- message sizing (make timestamp smaller)
-- @'s not bolding
+  - NEEDS TESTING
+- fix "www." being considered a hyperlink
 - remove line breaks before and after normal hyperlinks
 - fix images resizing when uploading
 - limit vertical size of message
