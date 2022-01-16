@@ -1,3 +1,7 @@
+- make message timestamp more human readable format
+- message sizing (make timestamp smaller)
+- @'s not bolding
+- remove line breaks before and after normal hyperlinks
 - fix stream/banner not loading sometimes (CORS) (https://i.imgur.com/Jw2daUp.png)
   - NEEDS TESTING
 - limit vertical size of message
@@ -30,6 +34,12 @@
 
 Feature Roadmap:
 
+- spam prevention (sending limit)
+- lights and fx options
+- stream size controls
+- ping sound when @'d
+- confirmation modal on banning and deleting
+- easy stream channel adding
 - accept donations (https://support.stripe.com/questions/how-to-accept-donations-through-stripe)
 - autocomplete @, DM username, mod username, and ban user username
 - DM user by clicking their avatar
