@@ -728,7 +728,7 @@ function escapeRegExExceptStar(string) {
 
 exports.getOembed = functions.https.onCall(async (data, context) => {
   const fetch = require("node-fetch");
-  if (!context.auth.uid) {
+  if (!context.auth || !context.auth.uid) {
     throw new HttpsError("unauthenticated", "Must be logged in.");
   }
 
