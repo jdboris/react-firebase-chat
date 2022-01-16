@@ -1,7 +1,6 @@
 - fix stream/banner not loading sometimes (CORS) (https://i.imgur.com/Jw2daUp.png)
   - NEEDS TESTING
 - Fix moderator permissions (don't allow adding or removing mods)
-- fix input validation errors in login/signup
 - limit vertical size of message
 - fix the bug that prevents chat from scrolling down on receiving new messages sometimes
 - mobile design
@@ -21,6 +20,7 @@
   i functions: Finished "us-central1-onUserStatusChanged" in ~1
 - security audit (prevent updating, prevent selecting email, etc...)
 - add batches (transactions)
+- fix the mouse selecting messages text in the wrong order problem
 - allow embedding image URLs containing a colon (i.e. https://hips.hearstapps.com/hmg-prod.s3.amazonaws.com/images/dog-puppy-on-garden-royalty-free-image-1586966191.jpg?crop=1.00xw:0.669xh;0,0.190xh&resize=1200:*). Open an issue here: https://github.com/remarkjs/remark-gfm or possibly here: https://github.com/remarkjs/react-markdown
 - logging errors with @google-cloud/logging
 - investigate
@@ -29,7 +29,7 @@
   [DOM] Password forms should have (optionally hidden) username fields for accessibility:
 - upgrade firebase SDK to v9
 
-Future features:
+Feature Roadmap:
 
 - accept donations (https://support.stripe.com/questions/how-to-accept-donations-through-stripe)
 - autocomplete @, DM username, mod username, and ban user username
@@ -47,7 +47,6 @@ Future features:
 - add DM search, mod search, and banned user search
 - cropping/scaling profile images
 - disable anon posting
-- fix the mouse selecting messages text in the wrong order problem
 - some kind of gambling polls
 - add infinite scrolling option
 - reconnect button
