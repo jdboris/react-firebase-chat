@@ -11,6 +11,7 @@ import { fonts } from "../utils/fonts";
 import { toggleSelectionMarkup } from "../utils/markdown";
 import { presence } from "../utils/presence";
 import { insertIntoInput } from "../utils/utils";
+import { translateError } from "../utils/errors";
 import { BanlistDialog } from "./banlist-dialog";
 // import { getProviders } from "../oembed";
 import { DmsDialog } from "./dms-dialog";
@@ -101,38 +102,52 @@ export function ChatRoom(props) {
   const [selection, setSelection] = useState({ start: 0, end: 0 });
 
   const [sentMsgCount, setSentMsgCount] = useState(0);
+  const [timestamps, setTimestamps] = useState([]);
 
   let messageInput = useRef();
 
   const sendMessage = async (e) => {
     e.preventDefault();
 
-    if (conversationRef && !user.emailVerified) {
-      setErrors(["Verify your email to do that."]);
+    if (timestamps[4] && Date.now() - timestamps[4] < 4000) {
+      return;
     }
+    // NOTE: Escape the > character because ReactMarkdown sanitizes it for some reason
+    const text = messageValue.replace(/[>]/g, "\\$&");
 
-    if (messageValue) {
-      // NOTE: Escape the > character because ReactMarkdown sanitizes it for some reason
-      const text = messageValue.replace(/[>]/g, "\\$&");
-      setMessageValue("");
+    try {
+      if (conversationRef && !user.emailVerified) {
+        throw new Error("Verify your email to do that.");
+      }
 
-      await sendMessageCloud({
-        conversationId: conversationRef ? conversationRef.id : messagesRef.id,
-        text,
-        isDeleted: false,
-        font,
-        fontSize,
-        fontColor,
-        backgroundImage: msgBgImg,
-        bgColor: msgBgColor,
-        nameColor,
-        bgTransparency: msgBgTransparency,
-        msgBgRepeat,
-        msgBgPosition,
-        msgBgImgTransparency,
-      });
+      if (text) {
+        setMessageValue("");
 
-      setSentMsgCount(sentMsgCount + 1);
+        setTimestamps((timestamps) => {
+          return [Date.now(), ...timestamps];
+        });
+
+        await sendMessageCloud({
+          conversationId: conversationRef ? conversationRef.id : messagesRef.id,
+          text,
+          isDeleted: false,
+          font,
+          fontSize,
+          fontColor,
+          backgroundImage: msgBgImg,
+          bgColor: msgBgColor,
+          nameColor,
+          bgTransparency: msgBgTransparency,
+          msgBgRepeat,
+          msgBgPosition,
+          msgBgImgTransparency,
+        });
+
+        setSentMsgCount(sentMsgCount + 1);
+      }
+    } catch (error) {
+      setMessageValue(text + messageValue);
+      setErrors([translateError(error).message]);
     }
   };
 
