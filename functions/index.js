@@ -264,6 +264,13 @@ async function filterWords(text) {
 }
 
 exports.sendMessage = functions.https.onCall(async (data, context) => {
+  if (data.text.length > 2000) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Message too long (2000 character limit)."
+    );
+  }
+
   if (!context.auth.uid) {
     throw new HttpsError("unauthenticated", "Must be logged in.");
   }
