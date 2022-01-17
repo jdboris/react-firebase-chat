@@ -5,7 +5,6 @@
 - fix stream not automatically changing
   - NEEDS TESTING
 - add IP+cookie to bans
-- fix images resizing when uploading
 - fix the bug that prevents chat from scrolling down on receiving new messages sometimes
 - mobile design
 - add periodic role call to mark users offline if they aren't present
@@ -26,13 +25,14 @@
 - fix the mouse selecting messages text in the wrong order problem
 - allow embedding image URLs containing a colon (i.e. https://hips.hearstapps.com/hmg-prod.s3.amazonaws.com/images/dog-puppy-on-garden-royalty-free-image-1586966191.jpg?crop=1.00xw:0.669xh;0,0.190xh&resize=1200:*). Open an issue here: https://github.com/remarkjs/remark-gfm or possibly here: https://github.com/remarkjs/react-markdown
 - logging errors with @google-cloud/logging
+- investigate:
+  [Violation] Added non-passive event listener to a scroll-blocking <some> event. Consider marking event handler as 'passive' to make the page more responsive. See <URL>
 - upgrade firebase SDK to v9
 
 Feature Roadmap:
 
 - @everyone for moderators/admins
 - click on name in "people here now" to @
-- spam prevention (sending limit)
 - lights and fx options
 - stream size controls
 - ping sound when @'d
