@@ -1,3 +1,4 @@
+- allow logging in with username
 - sometimes user record doesn't show up in mysql users table
   - INVESTIGATE: confirmation email failing to send while other user records are created asynchronously in tandem
 - fix premium subscription not redirecting (stripId of undefined)
@@ -31,29 +32,34 @@
 
 Feature Roadmap:
 
+New Features:
+
+- flagbanning
+- easier image uploading (drag/drop into chat, paste file from clipboard, etc)
+- custom emojis
+- gif searching
+- DM user by clicking their avatar
+- Premium messages (only viewable by Premium users)
+- more fonts (adobe source code pro)
+- some kind of gambling polls
+
+Old/boring Features:
+
+- stream size controls
 - @everyone for moderators/admins
 - click on name in "people here now" to @
+- gifting Premium
 - lights and fx options
-- stream size controls
 - ping sound when @'d
 - confirmation modal on banning and deleting
 - easy stream channel adding
 - accept donations (https://support.stripe.com/questions/how-to-accept-donations-through-stripe)
 - autocomplete @, DM username, mod username, and ban user username
-- DM user by clicking their avatar
 - chat in separate window
-- gifting Premium
-- flagbanning
 - allow blocking DMs
-- Premium messages (only viewable by Premium users)
-- easier image uploading (drag/drop into chat, paste file from clipboard, etc)
-- custom emojis
-- gif searching
 - API for custom styling (badges for streamers, etc...)
-- more fonts (adobe source code pro)
 - add DM search, mod search, and banned user search
 - cropping/scaling profile images
 - disable anon posting
-- some kind of gambling polls
-- add infinite scrolling option
 - reconnect button
+- add infinite scrolling option
