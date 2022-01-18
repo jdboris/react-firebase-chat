@@ -1,16 +1,16 @@
-- allow logging in with username
 - sometimes user record doesn't show up in mysql users table
   - INVESTIGATE: confirmation email failing to send while other user records are created asynchronously in tandem
 - fix premium subscription not redirecting (stripId of undefined)
   - NEEDS TESTING
 - fix stream not automatically changing
   - NEEDS TESTING
-- add IP+cookie to bans
 - fix the bug that prevents chat from scrolling down on receiving new messages sometimes
 - mobile design
 - add periodic role call to mark users offline if they aren't present
 - add latency compensation everywhere
-- optimization to reduce firestore reads (prevent dialogs from querying until they're opened)
+- optimization to reduce firestore reads
+  - prevent dialogs from querying until they're opened
+  - aggregate pages of messages for reading
 - optimization to reduce re-renders
 - consider resizing images, and/or make thumbnails -https://firebase.google.com/docs/storage/extend-with-functions#example_image_transformation
 - shorten image urls https://firebase.google.com/docs/dynamic-links/rest
@@ -29,6 +29,7 @@
 - investigate:
   [Violation] Added non-passive event listener to a scroll-blocking <some> event. Consider marking event handler as 'passive' to make the page more responsive. See <URL>
 - upgrade firebase SDK to v9
+- allow logging in with username
 
 Feature Roadmap:
 
