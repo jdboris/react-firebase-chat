@@ -179,57 +179,6 @@ export function ChatMessage(props) {
       ) : (
         <PersonIcon className={styles["avatar"]} />
       )}
-      <span className={styles["message-details"]}>
-        <span className={styles["message-timestamp"]}>
-          {createdAt &&
-            createdAtDate.toLocaleString(
-              "en-US",
-              !(
-                createdAtDate.getMonth() == date.getMonth() &&
-                createdAtDate.getDate() == date.getDate() &&
-                createdAtDate.getYear() == date.getYear()
-              )
-                ? {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                    hour12: true,
-                  }
-                : {
-                    timeStyle: "short",
-                    hour12: true,
-                  }
-            )}
-        </span>
-        {currentUser && currentUser.isModerator && (
-          <button
-            onClick={() => {
-              timeout(5000, async () => {
-                const result = await banUser(username);
-                props.setAlerts([result.data.message]);
-              }).catch((error) => {
-                props.setErrors([translateError(error).message]);
-              });
-            }}
-            // NOTE: Must stop propagation so clicking a link won't @ the poster
-            onMouseUp={(e) => {
-              e.stopPropagation();
-            }}
-          >
-            <BlockIcon />
-          </button>
-        )}
-        {currentUser && currentUser.isModerator && (
-          <button
-            onClick={deleteMessage}
-            // NOTE: Must stop propagation so clicking a link won't @ the poster
-            onMouseUp={(e) => {
-              e.stopPropagation();
-            }}
-          >
-            X
-          </button>
-        )}
-      </span>
       <div className={expanded ? styles["expanded"] : ""}>
         <span
           ref={messageContents}
@@ -299,6 +248,57 @@ export function ChatMessage(props) {
             </div>
           ))}
       </div>
+      <span className={styles["message-details"]}>
+        <span className={styles["message-timestamp"]}>
+          {createdAt &&
+            createdAtDate.toLocaleString(
+              "en-US",
+              !(
+                createdAtDate.getMonth() == date.getMonth() &&
+                createdAtDate.getDate() == date.getDate() &&
+                createdAtDate.getYear() == date.getYear()
+              )
+                ? {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                    hour12: true,
+                  }
+                : {
+                    timeStyle: "short",
+                    hour12: true,
+                  }
+            )}
+        </span>
+        {currentUser && currentUser.isModerator && (
+          <button
+            onClick={() => {
+              timeout(5000, async () => {
+                const result = await banUser(username);
+                props.setAlerts([result.data.message]);
+              }).catch((error) => {
+                props.setErrors([translateError(error).message]);
+              });
+            }}
+            // NOTE: Must stop propagation so clicking a link won't @ the poster
+            onMouseUp={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            <BlockIcon />
+          </button>
+        )}
+        {currentUser && currentUser.isModerator && (
+          <button
+            onClick={deleteMessage}
+            // NOTE: Must stop propagation so clicking a link won't @ the poster
+            onMouseUp={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            X
+          </button>
+        )}
+      </span>
     </div>
   );
 }
