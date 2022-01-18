@@ -826,6 +826,9 @@ li {
 .chat-app .avatar {
   height: 40px;
   width: 40px;
+  /* NOTE: Required, for some reason */
+  min-height: 40px;
+  min-width: 40px;
   margin-top: 5px;
   margin-bottom: 5px;
   border: 1px solid gray;
