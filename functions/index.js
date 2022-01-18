@@ -18,6 +18,14 @@ async function getUser(uid) {
   return snapshot.data();
 }
 
+async function getUsersByIp(ip) {
+  const snapshot = await db
+    .collection("users")
+    .where("ipAddresses", "array-contains", ip)
+    .get();
+  return snapshot.docs;
+}
+
 async function markUserBanned(username) {
   const snapshot = await db
     .collection("users")
@@ -264,15 +272,21 @@ async function filterWords(text) {
 }
 
 exports.sendMessage = functions.https.onCall(async (data, context) => {
+  if (!context.auth.uid) {
+    throw new HttpsError("unauthenticated", "Must be logged in.");
+  }
+
+  if (context.rawRequest.ip) {
+    db.doc(`users/${context.auth.uid}`).update({
+      ipAddresses: admin.firestore.FieldValue.arrayUnion(context.rawRequest.ip),
+    });
+  }
+
   if (data.text.length > 2000) {
     throw new HttpsError(
       "invalid-argument",
       "Message too long (2000 character limit)."
     );
-  }
-
-  if (!context.auth.uid) {
-    throw new HttpsError("unauthenticated", "Must be logged in.");
   }
 
   if (
@@ -282,7 +296,23 @@ exports.sendMessage = functions.https.onCall(async (data, context) => {
     throw new HttpsError("permission-denied", "Verify your email to do that.");
   }
 
-  const user = await getUser(context.auth.uid);
+  const userDoc = await db.collection("users").doc(context.auth.uid).get();
+  const user = userDoc.data();
+
+  const usersDocs = await getUsersByIp(context.rawRequest.ip);
+  usersDocs.push(userDoc);
+
+  // If one is banned, ban them all
+  if (usersDocs.find((doc) => doc.data().isBanned)) {
+    user.isBanned = true;
+    const batch = db.batch();
+    usersDocs.forEach((doc) => {
+      if (!doc.data().isBanned) {
+        batch.set(doc.ref, { isBanned: true }, { merge: true });
+      }
+    });
+    await batch.commit();
+  }
 
   if (user.isBanned) {
     throw new HttpsError("permission-denied", "You are banned.");
@@ -662,7 +692,7 @@ exports.sendPasswordResetEmail = functions.https.onCall(
   }
 );
 
-// Create a new function which is triggered on changes to /status/{uid}
+// Create a new function which is triggered on changes to /userPresences/{uid}
 // Note: This is a Realtime Database trigger, *not* Firestore.
 exports.onUserStatusChanged = functions.database
   .ref("/userPresences/{uid}")

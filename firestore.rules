@@ -1,4 +1,4 @@
-rules_version = '2';
+rules_version = "2";
 service cloud.firestore {
   match /databases/{database}/documents {
     match /{document=**} {
@@ -31,7 +31,7 @@ service cloud.firestore {
     }
 
     function isAnonymous() {
-      return !('email' in request.auth.token);
+      return !("email" in request.auth.token);
     }
 
     match /messages/{docId} {
@@ -39,7 +39,7 @@ service cloud.firestore {
       allow update: if (currentUser().isModerator == true || currentUser().isAdmin == true) && 
                       // If the request only has the isDeleted field
                       // https://firebase.google.com/docs/firestore/security/rules-fields#allowing_only_certain_fields_to_be_changed
-                      affectedKeys().hasOnly(['isDeleted']);
+                      affectedKeys().hasOnly(["isDeleted"]);
     }
 
     match /modActionLog/{docId} {
@@ -78,12 +78,12 @@ service cloud.firestore {
       allow update: if isDocOwner(uid)
                     && !isAnonymous()
                     // NOTE: Don't allow updating these keys
-                    && (!affectedKeys().hasAny(['isAdmin', 'isModerator', 'isBanned']))
+                    && (!affectedKeys().hasAny(["isAdmin", "isModerator", "isBanned", "ipAddresses"]))
                     // NOTE: Don't allow updating these keys unless user is premium
                     && (isPremium() 
                         || (!affectedKeys()
-                            .hasAny(['msgBgImg', 'msgBgColor', 'msgBgTransparency', 'msgBgRepeat', 'msgBgPosition', 'msgBgImgTransparency'])
-                            && (!affectedKeys().hasAny(['fontSize']) || request.resource.data.fontSize < 15 )));
+                            .hasAny(["msgBgImg", "msgBgColor", "msgBgTransparency", "msgBgRepeat", "msgBgPosition", "msgBgImgTransparency"])
+                            && (!affectedKeys().hasAny(["fontSize"]) || request.resource.data.fontSize < 15 )));
       match /checkout_sessions/{id} {
         allow read, write: if request.auth.uid == uid;
       }
