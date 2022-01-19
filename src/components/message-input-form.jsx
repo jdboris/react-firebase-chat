@@ -9,7 +9,7 @@ import { MARKUP_SYMBOLS } from "../utils/markdown";
 import { uploadFile } from "../utils/storage";
 import { timeout } from "../utils/utils";
 
-export function MessageInputForm(props) {
+export const MessageInputForm = React.forwardRef((props, messageInput) => {
   const [loading, setLoading] = useState(false);
   // Cap the font size for non-premium users
   const fontSize = !props.premium && props.fontSize >= 15 ? 15 : props.fontSize;
@@ -91,9 +91,7 @@ export function MessageInputForm(props) {
         ></div>
         <textarea
           name="message"
-          ref={(input) => {
-            props.setMessageInput(input);
-          }}
+          ref={messageInput}
           autoFocus
           value={props.messageValue}
           onChange={(e) => props.setMessageValue(e.target.value)}
@@ -164,4 +162,4 @@ export function MessageInputForm(props) {
       />
     </form>
   );
-}
+});
