@@ -149,7 +149,7 @@ export function ChatRoom(props) {
         setSentMsgCount(sentMsgCount + 1);
       }
     } catch (error) {
-      setMessageValue(text + messageValue);
+      setMessageValue(text);
       setErrors([translateError(error).message]);
     }
   };
