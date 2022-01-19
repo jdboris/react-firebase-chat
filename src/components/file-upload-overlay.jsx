@@ -23,7 +23,7 @@ export function FileUploadOverlay(props) {
 
           if (loading) return;
           setLoading(true);
-          timeout(5000, async () => {
+          timeout(20000, async () => {
             const files = e.dataTransfer.files;
             if (!files.length) {
               return;
@@ -35,7 +35,7 @@ export function FileUploadOverlay(props) {
             if (!url) {
               throw new Error("Error uploading file.");
             }
-            console.log(props.messageInput);
+
             props.messageInput.focus();
             props.setMessageValue(props.messageValue + " " + url + " ");
           })
