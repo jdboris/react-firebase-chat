@@ -598,6 +598,10 @@ textarea:focus {
   border-color: #303030;
 }
 
+textarea.loading {
+  background: rgba(0, 0, 0, 0.3);
+}
+
 textarea.error-flash {
   animation-name: error-flash;
   animation-duration: 0.5s;

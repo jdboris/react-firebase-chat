@@ -14,6 +14,27 @@ export const MessageInputForm = React.forwardRef((props, messageInput) => {
   // Cap the font size for non-premium users
   const fontSize = !props.premium && props.fontSize >= 15 ? 15 : props.fontSize;
 
+  async function uploadFileWithHandlers(e, file) {
+    if (loading || !file) return;
+    setLoading(true);
+    try {
+      await timeout(20000, async () => {
+        const url = await uploadFile(file);
+
+        if (!url) {
+          throw new Error("Error uploading file.");
+        }
+
+        props.setMessageValue(props.messageValue + " " + url + " ");
+      });
+    } catch (error) {
+      props.setErrors([translateError(error).message]);
+    } finally {
+      setLoading(false);
+      e.target.form.message.focus();
+    }
+  }
+
   return (
     <form
       className={styles["message-form"]}
@@ -33,31 +54,9 @@ export const MessageInputForm = React.forwardRef((props, messageInput) => {
 
         <input
           type="file"
-          onChange={(e) => {
-            if (loading) return;
-            setLoading(true);
-            timeout(5000, async () => {
-              if (!e.target.files.length) {
-                return;
-              }
-
-              const file = e.target.files[0];
-              const url = await uploadFile(file);
-
-              if (!url) {
-                throw new Error("Error uploading file.");
-              }
-
-              e.target.form.message.focus();
-              props.setMessageValue(props.messageValue + " " + url + " ");
-            })
-              .catch((error) => {
-                props.setErrors([translateError(error).message]);
-              })
-              .finally(() => {
-                setLoading(false);
-                e.target.value = "";
-              });
+          onChange={async (e) => {
+            await uploadFileWithHandlers(e, e.target.files[0]);
+            e.target.value = "";
           }}
         />
       </label>
@@ -91,12 +90,20 @@ export const MessageInputForm = React.forwardRef((props, messageInput) => {
         ></div>
         <textarea
           name="message"
-          className={props.messageErrorFlash ? styles["error-flash"] : ""}
+          disabled={loading}
+          className={`${loading ? styles["loading"] : ""} ${
+            props.messageErrorFlash ? styles["error-flash"] : ""
+          }`}
           ref={messageInput}
           autoFocus
           value={props.messageValue}
           onChange={(e) => props.setMessageValue(e.target.value)}
           placeholder="Type here to send a message"
+          onPaste={async (e) => {
+            if (e.clipboardData.files.length) {
+              await uploadFileWithHandlers(e, e.clipboardData.files[0]);
+            }
+          }}
           onKeyDown={(e) => {
             if ((e.key === "b" || e.key === "B") && e.ctrlKey) {
               const result = props.toggleSelectionMarkup(MARKUP_SYMBOLS.BOLD);
