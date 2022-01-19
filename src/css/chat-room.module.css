@@ -109,13 +109,14 @@ label [type="file"] {
   width: 1em;
   height: 1em;
   margin-left: 0.5em;
-  border-radius: 50%;
-  /* border: 0.1em solid #f3f3f3; */
-  border-top: 0.1em solid;
+  /* border-top: 0.1em solid;
   border-right: 0.2em solid;
   border-bottom: 0.1em solid transparent;
 
-  animation: rotation 0.9s linear infinite;
+  animation: rotation 0.9s linear infinite; */
+  background-position: center;
+  background-image: url("../images/loading-spinner.svg");
+  background-size: 200%;
 }
 
 .loading-placeholder::before {
@@ -237,6 +238,7 @@ label [type="file"] {
 }
 
 .chat-app {
+  position: relative;
   margin: 0 auto;
   background-color: black;
   font-family: sans-serif;
@@ -833,4 +835,43 @@ li {
   margin-bottom: 5px;
   border: 1px solid gray;
   vertical-align: middle;
+}
+
+.is-dragged-on > * {
+  pointer-events: none;
+}
+
+.file-drag-overlay {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  top: 0px;
+  bottom: 0px;
+  right: 0px;
+  left: 0px;
+  pointer-events: initial;
+  font-size: 5em;
+}
+
+.file-drag-overlay * {
+  pointer-events: none;
+}
+
+.file-drag-overlay.loading::after {
+  position: initial;
+  margin: 0px;
+}
+
+.file-drag-overlay > div {
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  right: 0px;
+  left: 0px;
+  background: rgba(0, 0, 0, 0.356);
+  background: rgba(0, 0, 0, 0.356);
+  border-radius: 0.1em;
+  border: 2px dashed black;
+  margin: 0.2em;
 }
