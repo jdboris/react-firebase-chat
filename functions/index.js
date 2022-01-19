@@ -19,6 +19,7 @@ async function getUser(uid) {
 }
 
 async function getUsersByIp(ip) {
+  if (!ip) return [];
   const snapshot = await db
     .collection("users")
     .where("ipAddresses", "array-contains", ip)
