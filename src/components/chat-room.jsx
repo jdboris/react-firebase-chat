@@ -28,6 +28,7 @@ import { ProfileDialog } from "./profile-dialog";
 import { StyleEditorDialog } from "./style-editor-dialog";
 import { UserStyleControls } from "./user-style-controls";
 import { LogInForm } from "./log-in-form";
+import { FileUploadOverlay } from "./file-upload-overlay";
 
 export function ChatRoom(props) {
   const sendMessageCloud = firebase.functions().httpsCallable("sendMessage");
@@ -103,6 +104,8 @@ export function ChatRoom(props) {
 
   const [sentMsgCount, setSentMsgCount] = useState(0);
   const [timestamps, setTimestamps] = useState([]);
+
+  const [isDraggedOn, setIsDraggedOn] = useState(false);
 
   let messageInput = useRef();
 
@@ -241,8 +244,8 @@ export function ChatRoom(props) {
   useEffect(() => {
     if (!selection) return;
     const { start, end } = selection;
-    messageInput.focus();
-    messageInput.setSelectionRange(start, end);
+    messageInput.current.focus();
+    messageInput.current.setSelectionRange(start, end);
   }, [selection]);
 
   useEffect(() => {
@@ -268,7 +271,19 @@ export function ChatRoom(props) {
   }, [props.dms, conversationRef, userId]);
 
   return (
-    <section className={styles["chat-section"]} onClickCapture={closeMenus}>
+    <section
+      className={
+        styles["chat-section"] +
+        " " +
+        (isDraggedOn ? styles["is-dragged-on"] : "")
+      }
+      onClickCapture={closeMenus}
+      onDragEnter={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDraggedOn(true);
+      }}
+    >
       <header>
         {props.header}{" "}
         {props.dms && (
@@ -289,7 +304,7 @@ export function ChatRoom(props) {
         stylesEnabled={stylesEnabled}
         onMessageClick={(targetUsername) => {
           setMessageValue(messageValue + " @" + targetUsername + " ");
-          messageInput.focus();
+          messageInput.current.focus();
         }}
         sentMsgCount={sentMsgCount}
         currentUser={user}
@@ -310,14 +325,14 @@ export function ChatRoom(props) {
           setFont={setFont}
           fontSize={fontSize}
           setFontSize={setFontSize}
-          messageInput={messageInput}
+          messageInput={messageInput.current}
           setMessageValue={setMessageValue}
           setStyleEditorOpen={setStyleEditorOpen}
           isStyleEditorOpen={isStyleEditorOpen}
           fontColor={fontColor}
           setFontColor={setFontColor}
           toggleSelectionMarkup={(symbol) => {
-            return toggleSelectionMarkup(messageInput, symbol);
+            return toggleSelectionMarkup(messageInput.current, symbol);
           }}
           setSelection={setSelection}
           setPremiumPromptOpen={setPremiumPromptOpen}
@@ -327,15 +342,13 @@ export function ChatRoom(props) {
       <MessageInputForm
         premium={premium}
         sendMessage={sendMessage}
-        setMessageInput={(input) => {
-          messageInput = input;
-        }}
+        ref={messageInput}
         messageValue={messageValue}
         setErrors={setErrors}
         setMessageValue={setMessageValue}
         setSelection={setSelection}
         toggleSelectionMarkup={(symbol) => {
-          return toggleSelectionMarkup(messageInput, symbol);
+          return toggleSelectionMarkup(messageInput.current, symbol);
         }}
         stylesEnabled={stylesEnabled}
         font={font}
@@ -548,15 +561,15 @@ export function ChatRoom(props) {
             isAnonymous={!user || user.email == null}
             setErrors={setErrors}
             onSelect={(emojiChar) => {
-              messageInput.focus();
-              insertIntoInput(emojiChar + " ", messageInput);
-              setMessageValue(messageInput.value);
+              messageInput.current.focus();
+              insertIntoInput(emojiChar + " ", messageInput.current);
+              setMessageValue(messageInput.current.value);
             }}
             setPremiumPromptOpen={setPremiumPromptOpen}
             setPremiumOpen={setPremiumOpen}
             messageValue={messageValue}
             setMessageValue={setMessageValue}
-            messageInput={messageInput}
+            messageInput={messageInput.current}
             shouldComponentUpdate={false}
             premium={premium}
           />
@@ -639,6 +652,15 @@ export function ChatRoom(props) {
           </div>
         </div>
       )}
+
+      <FileUploadOverlay
+        isDraggedOn={isDraggedOn}
+        setIsDraggedOn={setIsDraggedOn}
+        messageInput={messageInput.current}
+        messageValue={messageValue}
+        setMessageValue={setMessageValue}
+        setErrors={setErrors}
+      />
     </section>
   );
 }
