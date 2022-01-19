@@ -585,13 +585,31 @@ textarea {
   font-size: 1rem;
   background: none;
   outline: none;
-  border: none;
+  border: 2px solid #131313;
   padding: 10px 15px;
   font-family: sans-serif;
   resize: none;
   background-size: 30% auto;
   position: relative;
   z-index: 1;
+}
+
+textarea:focus {
+  border-color: #303030;
+}
+
+textarea.error-flash {
+  animation-name: error-flash;
+  animation-duration: 0.5s;
+}
+
+@keyframes error-flash {
+  from {
+    background-color: red;
+    border-color: red;
+  }
+  to {
+  }
 }
 
 button {

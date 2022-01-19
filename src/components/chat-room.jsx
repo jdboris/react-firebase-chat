@@ -59,6 +59,7 @@ export function ChatRoom(props) {
     : 0;
 
   const [errors, setErrors] = useState([]);
+  const [messageErrorFlash, setMessageErrorFlash] = useState(0);
   const [premium, setPremium] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
   const [messageValue, setMessageValue] = useState("");
@@ -150,6 +151,13 @@ export function ChatRoom(props) {
       }
     } catch (error) {
       setMessageValue(text);
+      setMessageErrorFlash(messageErrorFlash + 1);
+
+      // NOTE: Reset the CSS animation by "triggering reflow"
+      messageInput.current.style.animation = "none";
+      messageInput.current.offsetHeight;
+      messageInput.current.style.animation = null;
+
       setErrors([translateError(error).message]);
     }
   };
@@ -345,6 +353,7 @@ export function ChatRoom(props) {
         ref={messageInput}
         messageValue={messageValue}
         setErrors={setErrors}
+        messageErrorFlash={messageErrorFlash}
         setMessageValue={setMessageValue}
         setSelection={setSelection}
         toggleSelectionMarkup={(symbol) => {

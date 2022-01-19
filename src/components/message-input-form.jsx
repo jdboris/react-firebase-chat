@@ -91,6 +91,7 @@ export const MessageInputForm = React.forwardRef((props, messageInput) => {
         ></div>
         <textarea
           name="message"
+          className={props.messageErrorFlash ? styles["error-flash"] : ""}
           ref={messageInput}
           autoFocus
           value={props.messageValue}
