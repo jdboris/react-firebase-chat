@@ -1,6 +1,6 @@
 import firebase from "firebase/compat/app";
 
-export async function uploadFile(file) {
+export function uploadFile(file) {
   return new Promise((resolve, reject) => {
     const uploadFileFunction = firebase.functions().httpsCallable("uploadFile");
 
