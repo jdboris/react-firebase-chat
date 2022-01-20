@@ -1,4 +1,3 @@
-- fix www. being changed to https://www.
 - On page load:
   - Uncaught Error: OnDisconnect.set failed: value argument contains undefined in property 'userPresences.iudDTKJoR31uKHFYrBgl6BvFINbW.username'
 - On page load:
