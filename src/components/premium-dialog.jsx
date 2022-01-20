@@ -84,13 +84,9 @@ export function PremiumDialog(props) {
                   if (loading) return;
                   setLoading(true);
 
-                  console.log("starting...");
                   await timeout(5 * 60000, async () => {
-                    console.log("sendToStripe...");
                     await sendToStripe(uid, e.target.period.value, setLoading);
-                    console.log("done sendToStripe...");
                   });
-                  console.log("end...");
 
                   setLoading(false);
                 }}

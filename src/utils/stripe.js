@@ -7,7 +7,7 @@ export function sendToStripe(uid, priceId, setLoading) {
     const returnUrl = new URL(window.location);
     // Force a logout to refresh the token for premium custom claims
     returnUrl.searchParams.set("chat-logout", "1");
-    console.log("priceId: ", priceId);
+
     firestore
       .collection("users")
       .doc(uid)
@@ -18,12 +18,9 @@ export function sendToStripe(uid, priceId, setLoading) {
         cancel_url: window.location.href, // return user to this screen on failed purchase
       })
       .then((docRef) => {
-        console.log("docRef: ", docRef);
         // Wait for the checkoutSession to get attached by the extension
         docRef.onSnapshot(async (snap) => {
           const { error, sessionId } = snap.data();
-
-          console.log("snap.data(): ", snap.data());
 
           if (error) {
             // Show an error to your customer and inspect
