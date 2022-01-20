@@ -1,3 +1,6 @@
+- reconnect button
+- make spam limit stricter
+- improve image loading speed
 - sometimes user record doesn't show up in mysql users table
   - INVESTIGATE: confirmation email failing to send while other user records are created asynchronously in tandem
 - fix premium subscription not redirecting (stripId of undefined)
@@ -62,5 +65,4 @@ Old/boring Features:
 - add DM search, mod search, and banned user search
 - cropping/scaling profile images
 - disable anon posting
-- reconnect button
 - add infinite scrolling option
