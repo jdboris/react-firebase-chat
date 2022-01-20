@@ -1,5 +1,4 @@
 - reconnect button
-- make spam limit stricter
 - improve image loading speed
 - sometimes user record doesn't show up in mysql users table
   - INVESTIGATE: confirmation email failing to send while other user records are created asynchronously in tandem
