@@ -115,7 +115,7 @@ label [type="file"] {
 
   animation: rotation 0.9s linear infinite; */
   background-position: center;
-  background-image: url("../images/loading-spinner.svg");
+  background-image: url("./loading-spinner.svg");
   background-size: 200%;
 }
 
