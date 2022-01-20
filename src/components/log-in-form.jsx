@@ -47,10 +47,21 @@ export function LogInForm(props) {
             if (password.length < 8) {
               throw new Error("Password must be 8+ characters.");
             }
-            let link = new URL(passwordResetLink);
-            link.searchParams.set("newPassword", password);
+            const url = new URL(window.location);
+            console.log(url.searchParams.get("oobCode"));
 
-            const response = await fetch(link);
+            let link = new URL(
+              process.env.REACT_APP_FIREBASE_PASSWORD_RESET_URL
+            );
+            link.searchParams.set("key", process.env.REACT_APP_API_KEY);
+
+            const response = await fetch(link, {
+              method: "POST",
+              body: JSON.stringify({
+                oobCode: url.searchParams.get("oobCode"),
+                newPassword: password,
+              }),
+            });
             if (!response.ok) {
               setQueryParam("chat-reset-password", null);
               setPasswordResetLink("");
@@ -58,7 +69,8 @@ export function LogInForm(props) {
                 "Password reset request expired. Please initiate a new reset request."
               );
             }
-            await response.json();
+            const data = await response.json();
+            setEmail(data.email);
 
             props.setAlerts(["Password reset successful!"]);
             setQueryParam("chat-reset-password", null);
