@@ -113,7 +113,8 @@ export function ChatRoom(props) {
   const sendMessage = async (e) => {
     e.preventDefault();
 
-    if (timestamps[4] && Date.now() - timestamps[4] < 4000) {
+    // Spam limit (3 posts in 4 seconds)
+    if (timestamps[3] && Date.now() - timestamps[3] < 4000) {
       return;
     }
     // NOTE: Escape the > character because ReactMarkdown sanitizes it for some reason
