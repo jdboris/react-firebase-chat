@@ -206,7 +206,6 @@ export function ChatMessage(props) {
                 components={{
                   // NOTE: Must overwrite the built-in renderer to ensure the text of the link is the URL
                   a: (props) => {
-                    console.log(props.href.trim());
                     if (!props.href.trim().includes(".")) {
                       return <span>{props.href}</span>;
                     }
