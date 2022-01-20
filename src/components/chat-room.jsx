@@ -45,18 +45,19 @@ export function ChatRoom(props) {
     idField: "id",
   });
 
-  const unreadCount = conversations
-    ? conversations.reduce((unreadCount, conversation) => {
-        const lastReadAt = conversation.users[user.uid].lastReadAt;
-        let isUnread = false;
+  const unreadCount =
+    conversations && user
+      ? conversations.reduce((unreadCount, conversation) => {
+          const lastReadAt = conversation.users[user.uid].lastReadAt;
+          let isUnread = false;
 
-        // NOTE: lastReadAt will be null from latency compensation
-        if (lastReadAt !== null) {
-          isUnread = conversation.lastMessageSentAt > lastReadAt;
-        }
-        return isUnread ? unreadCount + 1 : unreadCount;
-      }, 0)
-    : 0;
+          // NOTE: lastReadAt will be null from latency compensation
+          if (lastReadAt !== null) {
+            isUnread = conversation.lastMessageSentAt > lastReadAt;
+          }
+          return isUnread ? unreadCount + 1 : unreadCount;
+        }, 0)
+      : 0;
 
   const [errors, setErrors] = useState([]);
   const [messageErrorFlash, setMessageErrorFlash] = useState(0);

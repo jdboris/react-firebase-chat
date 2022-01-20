@@ -1,16 +1,15 @@
-- reconnect button
+- automatic reconnect
+  - NEEDS TESTING
 - improve image loading speed
 - sometimes user record doesn't show up in mysql users table
   - INVESTIGATE: confirmation email failing to send while other user records are created asynchronously in tandem
-- fix premium subscription not redirecting (stripId of undefined)
-  - NEEDS TESTING
-- fix stream not automatically changing
-  - NEEDS TESTING
+- fix premium subscription not redirecting (stripId of null)
 - fix the bug that prevents chat from scrolling down on receiving new messages sometimes
 - mobile design
 - add periodic role call to mark users offline if they aren't present
 - add latency compensation everywhere
 - optimization to reduce firestore reads
+  - cache oembed results
   - prevent dialogs from querying until they're opened
   - aggregate pages of messages for reading
 - optimization to reduce re-renders
@@ -48,7 +47,6 @@ New Features:
 
 Old/boring Features:
 
-- stream size controls
 - @everyone for moderators/admins
 - click on name in "people here now" to @
 - gifting Premium
