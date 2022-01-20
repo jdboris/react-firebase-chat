@@ -2,44 +2,49 @@ import { loadStripe } from "@stripe/stripe-js";
 import { firestore } from "../components/chat-room-app";
 import firebase from "firebase/compat/app";
 
-export async function sendToStripe(uid, priceId, setLoading) {
-  const returnUrl = new URL(window.location);
-  // Force a logout to refresh the token for premium custom claims
-  returnUrl.searchParams.set("chat-logout", "1");
+export function sendToStripe(uid, priceId, setLoading) {
+  return new Promise((resolve, reject) => {
+    const returnUrl = new URL(window.location);
+    // Force a logout to refresh the token for premium custom claims
+    returnUrl.searchParams.set("chat-logout", "1");
+    console.log("priceId: ", priceId);
+    firestore
+      .collection("users")
+      .doc(uid)
+      .collection("checkout_sessions")
+      .add({
+        price: priceId, // price Id from your products price in the Stripe Dashboard
+        success_url: returnUrl.href, // return user to this screen on successful purchase
+        cancel_url: window.location.href, // return user to this screen on failed purchase
+      })
+      .then((docRef) => {
+        console.log("docRef: ", docRef);
+        // Wait for the checkoutSession to get attached by the extension
+        docRef.onSnapshot(async (snap) => {
+          const { error, sessionId } = snap.data();
 
-  return firestore
-    .collection("users")
-    .doc(uid)
-    .collection("checkout_sessions")
-    .add({
-      price: priceId, // price Id from your products price in the Stripe Dashboard
-      success_url: returnUrl.href, // return user to this screen on successful purchase
-      cancel_url: window.location.href, // return user to this screen on failed purchase
-    })
-    .then((docRef) => {
-      // Wait for the checkoutSession to get attached by the extension
-      docRef.onSnapshot(async (snap) => {
-        const { error, sessionId } = snap.data();
+          console.log("snap.data(): ", snap.data());
 
-        if (error) {
-          // Show an error to your customer and inspect
-          // your Cloud Function logs in the Firebase console.
-          console.error(`An error occurred: ${error.message}`);
-          setLoading(false);
-        }
+          if (error) {
+            // Show an error to your customer and inspect
+            // your Cloud Function logs in the Firebase console.
+            console.error(`An error occurred: ${error.message}`);
+            reject();
+          }
 
-        if (sessionId) {
-          // We have a session, let's redirect to Checkout
-          console.log(`Redirecting...`);
-          const stripe = await loadStripe(
-            process.env.REACT_APP_STRIPE_PUBLIC_API_KEY
-          );
+          if (sessionId) {
+            // We have a session, let's redirect to Checkout
+            console.log(`Redirecting...`);
+            const stripe = await loadStripe(
+              process.env.REACT_APP_STRIPE_PUBLIC_API_KEY
+            );
 
-          await stripe.redirectToCheckout({ sessionId });
-          setLoading(false);
-        }
+            await stripe.redirectToCheckout({ sessionId });
+            resolve();
+          }
+        });
       });
-    });
+  });
 }
 
 export async function sendToCustomerPortal() {

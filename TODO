@@ -1,3 +1,9 @@
+- On page load:
+  - Uncaught Error: OnDisconnect.set failed: value argument contains undefined in property 'userPresences.iudDTKJoR31uKHFYrBgl6BvFINbW.username'
+- On page load:
+  - react-dom.development.js:67 Warning: Can't perform a React state update on an unmounted component. This is a no-op, but it indicates a memory leak in your application. To fix, cancel all subscriptions and asynchronous tasks in a useEffect cleanup function.
+    at Link (http://localhost:6006/main.iframe.bundle.js:851:81)
+    at a (http://localhost:6006/main.iframe.bundle.js:1029:28)
 - automatic reconnect
   - NEEDS TESTING
 - improve image loading speed
