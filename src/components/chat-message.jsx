@@ -206,7 +206,15 @@ export function ChatMessage(props) {
                 components={{
                   // NOTE: Must overwrite the built-in renderer to ensure the text of the link is the URL
                   a: (props) => {
-                    if (!props.href.trim().includes(".")) {
+                    if (
+                      props.href.trim() == "http://www" ||
+                      props.href.trim() == "https://www"
+                    ) {
+                      return <span>www</span>;
+                    }
+
+                    // NOTE: If the URL has no '.' (excluding the last character)
+                    if (!props.href.trim().slice(0, -1).includes(".")) {
                       return <span>{props.href}</span>;
                     }
                     return (
