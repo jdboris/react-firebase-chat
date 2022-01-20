@@ -71,7 +71,7 @@ export function ChatRoom(props) {
 
   // NOTE: Required for useEffect dependencies
   const userId = user ? user.uid : null;
-  const username = user ? user.username : null;
+  const username = user && user.username ? user.username : null;
 
   const [photoUrl, setPhotoUrl] = useState(user ? user.photoUrl : null);
   const [font, setFont] = useState(fonts[0]);
