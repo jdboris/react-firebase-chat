@@ -122,10 +122,15 @@ export function presence(uid, username, setIsOnline) {
             // DISCONNECTED?
           } else {
             if (offlineTimeout === null) {
-              // Wait for 3 seconds before telling the user the connection was lost
+              console.error("Connection lost. Attempting to reconnect...");
+              connectedRef.off("value", onConnectedValueChanged);
+              connectedRef.on("value", onConnectedValueChanged);
+
+              // Wait for 5 seconds before telling the user the connection was lost
               offlineTimeout = setTimeout(() => {
+                console.error("Reconnect timeout.");
                 setIsOnline(false);
-              }, 60000);
+              }, 5000);
             }
           }
         }
