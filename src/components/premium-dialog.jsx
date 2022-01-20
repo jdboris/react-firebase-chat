@@ -79,14 +79,20 @@ export function PremiumDialog(props) {
               Upgrade to a Premium account for perks like more emojis, more
               message style options, and more...
               <form
-                onSubmit={(e) => {
+                onSubmit={async (e) => {
                   e.preventDefault();
                   if (loading) return;
                   setLoading(true);
 
-                  timeout(5000, () => {
-                    sendToStripe(uid, e.target.period.value, setLoading);
+                  console.log("starting...");
+                  await timeout(5 * 60000, async () => {
+                    console.log("sendToStripe...");
+                    await sendToStripe(uid, e.target.period.value, setLoading);
+                    console.log("done sendToStripe...");
                   });
+                  console.log("end...");
+
+                  setLoading(false);
                 }}
               >
                 <label>
