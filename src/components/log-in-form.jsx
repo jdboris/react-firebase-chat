@@ -47,8 +47,7 @@ export function LogInForm(props) {
             if (password.length < 8) {
               throw new Error("Password must be 8+ characters.");
             }
-            const url = new URL(window.location);
-            console.log(url.searchParams.get("oobCode"));
+            const oldLink = new URL(passwordResetLink);
 
             let link = new URL(
               process.env.REACT_APP_FIREBASE_PASSWORD_RESET_URL
@@ -58,7 +57,7 @@ export function LogInForm(props) {
             const response = await fetch(link, {
               method: "POST",
               body: JSON.stringify({
-                oobCode: url.searchParams.get("oobCode"),
+                oobCode: oldLink.searchParams.get("oobCode"),
                 newPassword: password,
               }),
             });
