@@ -119,7 +119,7 @@ export function ChatRoom(props) {
       return;
     }
     // NOTE: Escape the > character because ReactMarkdown sanitizes it for some reason
-    const text = messageValue.replace(/[>]/g, "\\$&");
+    const text = messageValue.trim().replace(/[>]/g, "\\$&");
 
     try {
       if (conversationRef && !user.emailVerified) {
