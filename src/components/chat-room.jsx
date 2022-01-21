@@ -203,8 +203,8 @@ export function ChatRoom(props) {
     );
 
     if (!user || !username) {
-      return () => {
-        unsubPresence();
+      return async () => {
+        await unsubPresence();
         disconnectPresence();
       };
     }

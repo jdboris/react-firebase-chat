@@ -1,13 +1,12 @@
 2.0 Roadmap:
 
-- comic sans font renders as handwriting font
-- add cookie to remember fullscreen mode
 - fix stream auto changing again
 - allow multi-line messages (shift+enter)
 - billing limit
 - suggestion box
 - schedule
 - footer links
+- gifting Premium
 - On page load:
   - react-dom.development.js:67 Warning: Can't perform a React state update on an unmounted component. This is a no-op, but it indicates a memory leak in your application. To fix, cancel all subscriptions and asynchronous tasks in a useEffect cleanup function.
     at Link (http://localhost:6006/main.iframe.bundle.js:851:81)
@@ -15,6 +14,9 @@
 
 General Roadmap:
 
+- fix bug that sometimes puts the textarea in some kind of "insert" key mode which prevents moving the cursor, and replaces text while typing
+- comic sans font renders as handwriting font
+  - NEEDS TESTING (can't reproduce
 - On page load:
   - Uncaught Error: OnDisconnect.set failed: value argument contains undefined in property 'userPresences.iudDTKJoR31uKHFYrBgl6BvFINbW.username'
 - automatic reconnect
@@ -65,7 +67,6 @@ Old/boring Features:
 
 - @everyone for moderators/admins
 - click on name in "people here now" to @
-- gifting Premium
 - lights and fx options
 - ping sound when @'d
 - confirmation modal on banning and deleting
