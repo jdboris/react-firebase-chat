@@ -2,6 +2,8 @@ import firebase from "firebase/compat/app";
 import "firebase/compat/database";
 
 export function presence(uid, username, setIsOnline) {
+  console.log("presence uid: " + uid);
+  console.log("presence username: " + username);
   // NOTE: This flag is necessary to prevent additional db updates
   //       while the asyncronous unsubscribing is in progress.
   let isSubscribed = false;
@@ -55,38 +57,50 @@ export function presence(uid, username, setIsOnline) {
 
   function disconnect() {
     userPresenceRef.set(isOfflineForFirestore);
-    //userPresenceRef = null;
     userPresenceDatabaseRef.set(isOfflineForDatabase);
-    //userPresenceDatabaseRef = null;
   }
 
-  function onConnectedValueChanged(snapshot) {
+  async function onConnectedValueChanged(snapshot) {
     if (isSubscribed) {
-      // DISCONNECTED?
+      // DISCONNECT DETECTED
       if (snapshot.val() === false) {
-        // Instead of simply returning, we'll also set Firestore's state
-        // to 'offline'. This ensures that our Firestore cache is aware
-        // of the switch to 'offline.'
-        userPresenceRef.set(isOfflineForFirestore);
+        console.error("Connection lost. Attempting to reconnect...");
+        if (offlineTimeout === null) {
+          // Wait for 10 seconds before telling the user the connection was lost
+          offlineTimeout = setTimeout(() => {
+            console.error("Reconnect timed out.");
 
-        // CONNECTED?
+            // FIRESTORE: OFFLINE
+            userPresenceRef.set(isOfflineForFirestore);
+
+            setIsOnline(false);
+          }, 10000);
+        }
+
+        // CONNECT DETECTED
       } else {
-        disconnectRef = userPresenceDatabaseRef.onDisconnect();
-        disconnectRef.set(isOfflineForDatabase).then(function (temp) {
-          if (isSubscribed) {
-            // ONLINE
-            userPresenceDatabaseRef.set(isOnlineForDatabase);
-
-            // We'll also add Firestore set here for when we come online.
-            userPresenceRef.set(isOnlineForFirestore);
-          }
-        });
+        if (offlineTimeout !== null) {
+          console.log("Reconnected!");
+          clearTimeout(offlineTimeout);
+          offlineTimeout = null;
+        }
+        if (!disconnectRef) {
+          disconnectRef = userPresenceDatabaseRef.onDisconnect();
+          // REALTIME DB: OFFLINE
+          await disconnectRef.set(isOfflineForDatabase);
+        }
+        console.log("SETTING ONLINE...");
+        // REALTIME DB: ONLINE
+        userPresenceDatabaseRef.set(isOnlineForDatabase);
+        // FIRESTORE: ONLINE
+        userPresenceRef.set(isOnlineForFirestore);
       }
     }
   }
 
   // Add all the listeners
   function subscribe() {
+    console.log("SUBSCRIBING...");
     isSubscribed = true;
     window.addEventListener("beforeunload", disconnectAndUnsubscribe);
 
@@ -106,7 +120,6 @@ export function presence(uid, username, setIsOnline) {
       // CONNECTION CHANGED...
       .on("value", onConnectedValueChanged);
 
-    // CONNECTION CHANGED (pt. 2)...
     unsubPresence = userPresenceRef.onSnapshot(function (doc) {
       if (isSubscribed) {
         if (doc.data()) {
@@ -114,24 +127,12 @@ export function presence(uid, username, setIsOnline) {
 
           // CONNECTED?
           if (isOnline) {
-            if (offlineTimeout !== null) {
-              clearTimeout(offlineTimeout);
-              offlineTimeout = null;
-              setIsOnline(true);
-            }
+            console.log("Connection confirmed.");
+            setIsOnline(true);
             // DISCONNECTED?
           } else {
-            if (offlineTimeout === null) {
-              console.error("Connection lost. Attempting to reconnect...");
-              connectedRef.off("value", onConnectedValueChanged);
-              connectedRef.on("value", onConnectedValueChanged);
-
-              // Wait for 5 seconds before telling the user the connection was lost
-              offlineTimeout = setTimeout(() => {
-                console.error("Reconnect timeout.");
-                setIsOnline(false);
-              }, 5000);
-            }
+            console.error("Disconnection confirmed.");
+            setIsOnline(false);
           }
         }
       }
@@ -139,7 +140,8 @@ export function presence(uid, username, setIsOnline) {
   }
 
   // Remove all the listeners
-  function unsubscribe() {
+  async function unsubscribe() {
+    console.log("UNSUBSCRIBING...");
     isSubscribed = false;
     window.removeEventListener("beforeunload", disconnectAndUnsubscribe);
     if (offlineTimeout !== null) {
@@ -148,12 +150,12 @@ export function presence(uid, username, setIsOnline) {
     connectedRef.off("value", onConnectedValueChanged);
     if (unsubPresence) unsubPresence();
     // if (unsubToken) unsubToken();
-    if (disconnectRef) disconnectRef.cancel();
+    if (disconnectRef) await disconnectRef.cancel();
   }
 
-  function disconnectAndUnsubscribe() {
+  async function disconnectAndUnsubscribe() {
     if (isSubscribed) {
-      unsubscribe();
+      await unsubscribe();
       disconnect();
     }
   }
