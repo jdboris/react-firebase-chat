@@ -1,23 +1,29 @@
+2.0 Roadmap:
+
 - fix font color icon color (make part of it orange)
 - comic sans font renders as handwriting font
 - add cookie to remember fullscreen mode
 - fix stream auto changing again
 - allow multi-line messages (shift+enter)
+- billing limit
 - suggestion box
-- On page load:
-  - Uncaught Error: OnDisconnect.set failed: value argument contains undefined in property 'userPresences.iudDTKJoR31uKHFYrBgl6BvFINbW.username'
+- schedule
+- footer links
 - On page load:
   - react-dom.development.js:67 Warning: Can't perform a React state update on an unmounted component. This is a no-op, but it indicates a memory leak in your application. To fix, cancel all subscriptions and asynchronous tasks in a useEffect cleanup function.
     at Link (http://localhost:6006/main.iframe.bundle.js:851:81)
     at a (http://localhost:6006/main.iframe.bundle.js:1029:28)
+
+General Roadmap:
+
+- On page load:
+  - Uncaught Error: OnDisconnect.set failed: value argument contains undefined in property 'userPresences.iudDTKJoR31uKHFYrBgl6BvFINbW.username'
 - automatic reconnect
   - NEEDS TESTING
 - improve image loading speed
 - sometimes user record doesn't show up in mysql users table
   - INVESTIGATE: confirmation email failing to send while other user records are created asynchronously in tandem
-- fix premium subscription not redirecting (stripId of null)
 - fix the bug that prevents chat from scrolling down on receiving new messages sometimes
-- mobile design
 - add periodic role call to mark users offline if they aren't present
 - add latency compensation everywhere
 - optimization to reduce firestore reads
@@ -48,7 +54,6 @@ Feature Roadmap:
 
 New Features:
 
-- schedule
 - flagbanning
 - custom emojis
 - gif searching
