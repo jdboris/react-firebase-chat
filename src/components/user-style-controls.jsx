@@ -175,7 +175,9 @@ export function UserStyleControls(props) {
                 button={
                   <FormatColorTextIcon
                     className={styles["font-color"]}
-                    style={{ color: fontColor }}
+                    style={{
+                      border: `1px solid ${fontColor}`,
+                    }}
                   />
                 }
                 openKey={menuOpenKey}
