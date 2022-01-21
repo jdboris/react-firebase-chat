@@ -1,3 +1,7 @@
+- fix font color icon color (make part of it orange)
+- comic sans font renders as handwriting font
+- add cookie to remember fullscreen mode
+- fix stream auto changing again
 - allow multi-line messages (shift+enter)
 - suggestion box
 - On page load:

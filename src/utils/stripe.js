@@ -16,6 +16,7 @@ export function sendToStripe(uid, priceId, setLoading) {
         price: priceId, // price Id from your products price in the Stripe Dashboard
         success_url: returnUrl.href, // return user to this screen on successful purchase
         cancel_url: window.location.href, // return user to this screen on failed purchase
+        allow_promotion_codes: true,
       })
       .then((docRef) => {
         // Wait for the checkoutSession to get attached by the extension
