@@ -18,6 +18,16 @@ service cloud.firestore {
       return user != null && user.isAdmin;
     }
 
+    function isModerator() {
+      let user = currentUser();
+      return user != null && user.isModerator;
+    }
+
+    function isCallbacker() {
+      let user = currentUser();
+      return user != null && user.isCallbacker;
+    }
+
     function affectedKeys() {
       return request.resource.data.diff(resource.data).affectedKeys();
     }
@@ -116,7 +126,7 @@ service cloud.firestore {
     }
 
     match /callbacks/{docId} {
-      allow create: if isAdmin();
+      allow create: if isCallbacker();
       allow read: if true;
     }
   }
