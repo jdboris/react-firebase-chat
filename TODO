@@ -1,8 +1,7 @@
 2.0 Roadmap:
 
-- allow multi-line messages (shift+enter)
-- billing limit
 - suggestion box
+- billing limit
 - schedule
 - footer links
 - gifting Premium
@@ -11,9 +10,14 @@
     at Link (http://localhost:6006/main.iframe.bundle.js:851:81)
     at a (http://localhost:6006/main.iframe.bundle.js:1029:28)
 - fix opening DM window when viewing "Older" page in chat
+- fix presence (innacurate disonnected message)
+  - https://files.catbox.moe/ilh9x2.png
+  - https://files.catbox.moe/a65hye.png
+- BG time clock
 
 General Roadmap:
 
+- delete oldest image in storage upon uploading new image
 - fix bug that sometimes puts the textarea in some kind of "insert" key mode which prevents moving the cursor, and replaces text while typing
 - comic sans font renders as handwriting font
   - NEEDS TESTING (can't reproduce
@@ -61,8 +65,10 @@ New Features:
 - more fonts (adobe source code pro)
 - some kind of gambling polls
 
-Old/boring Features:
+Old/boring Feature Roadmap:
 
+- online/offline indicator on DM window
+- allow multi-line messages (shift+enter)
 - @everyone for moderators/admins
 - click on name in "people here now" to @
 - lights and fx options
