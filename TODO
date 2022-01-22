@@ -1,5 +1,6 @@
 2.0 Roadmap:
 
+- fix channel selector width
 - fix stream auto changing again
 - allow multi-line messages (shift+enter)
 - billing limit
@@ -11,14 +12,13 @@
   - react-dom.development.js:67 Warning: Can't perform a React state update on an unmounted component. This is a no-op, but it indicates a memory leak in your application. To fix, cancel all subscriptions and asynchronous tasks in a useEffect cleanup function.
     at Link (http://localhost:6006/main.iframe.bundle.js:851:81)
     at a (http://localhost:6006/main.iframe.bundle.js:1029:28)
+- fix opening DM window when viewing "Older" page in chat
 
 General Roadmap:
 
 - fix bug that sometimes puts the textarea in some kind of "insert" key mode which prevents moving the cursor, and replaces text while typing
 - comic sans font renders as handwriting font
   - NEEDS TESTING (can't reproduce
-- On page load:
-  - Uncaught Error: OnDisconnect.set failed: value argument contains undefined in property 'userPresences.iudDTKJoR31uKHFYrBgl6BvFINbW.username'
 - automatic reconnect
   - NEEDS TESTING
 - improve image loading speed
