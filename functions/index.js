@@ -467,6 +467,7 @@ exports.signUp = functions.https.onCall(async (data, context) => {
       isBanned: false,
       isModerator: false,
       isAdmin: false,
+      isCallbacker: false,
       ...(data.anonymous ? { anonSuffix: anonSuffix } : {}),
     });
 
