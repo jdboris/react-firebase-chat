@@ -56,17 +56,19 @@ export function presence(uid, username, setIsOnline) {
   // });
 
   function disconnect() {
+    console.log("disconnect()");
     userPresenceRef.set(isOfflineForFirestore);
     userPresenceDatabaseRef.set(isOfflineForDatabase);
   }
 
   async function onConnectedValueChanged(snapshot) {
+    console.log("onConnectedValueChanged()");
     if (isSubscribed) {
       // DISCONNECT DETECTED
       if (snapshot.val() === false) {
         console.error("Connection lost. Attempting to reconnect...");
         if (offlineTimeout === null) {
-          // Wait for 10 seconds before telling the user the connection was lost
+          // Wait for 60 seconds before telling the user the connection was lost
           offlineTimeout = setTimeout(() => {
             console.error("Reconnect timed out.");
 
@@ -74,7 +76,7 @@ export function presence(uid, username, setIsOnline) {
             userPresenceRef.set(isOfflineForFirestore);
 
             setIsOnline(false);
-          }, 10000);
+          }, 60000);
         }
 
         // CONNECT DETECTED
@@ -100,7 +102,7 @@ export function presence(uid, username, setIsOnline) {
 
   // Add all the listeners
   function subscribe() {
-    console.log("SUBSCRIBING...");
+    console.log("subscribe()");
     isSubscribed = true;
     window.addEventListener("beforeunload", disconnectAndUnsubscribe);
 
@@ -121,6 +123,7 @@ export function presence(uid, username, setIsOnline) {
       .on("value", onConnectedValueChanged);
 
     unsubPresence = userPresenceRef.onSnapshot(function (doc) {
+      console.log("userPresenceRef.onSnapshot()");
       if (isSubscribed) {
         if (doc.data()) {
           const isOnline = doc.data().isOnline;
@@ -141,7 +144,7 @@ export function presence(uid, username, setIsOnline) {
 
   // Remove all the listeners
   async function unsubscribe() {
-    console.log("UNSUBSCRIBING...");
+    console.log("unsubscribe()");
     isSubscribed = false;
     window.removeEventListener("beforeunload", disconnectAndUnsubscribe);
     if (offlineTimeout !== null) {
@@ -154,6 +157,7 @@ export function presence(uid, username, setIsOnline) {
   }
 
   function disconnectAndUnsubscribe() {
+    console.log("disconnectAndUnsubscribe()");
     if (isSubscribed) {
       unsubscribe();
       disconnect();
