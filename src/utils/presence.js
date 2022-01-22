@@ -153,9 +153,9 @@ export function presence(uid, username, setIsOnline) {
     if (disconnectRef) await disconnectRef.cancel();
   }
 
-  async function disconnectAndUnsubscribe() {
+  function disconnectAndUnsubscribe() {
     if (isSubscribed) {
-      await unsubscribe();
+      unsubscribe();
       disconnect();
     }
   }
