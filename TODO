@@ -1,7 +1,5 @@
 2.0 Roadmap:
 
-- fix channel selector width
-- fix stream auto changing again
 - allow multi-line messages (shift+enter)
 - billing limit
 - suggestion box
