@@ -1,6 +1,9 @@
 export const fonts = [
   { name: "Arial", style: `Arial, Helvetica, sans-serif` },
-  { name: "Comic", style: `"Comic Sans MS", "Comic Sans", cursive` },
+  {
+    name: "Comic",
+    style: `"Comic Sans MS Custom", "Comic Sans MS", "Comic Sans", cursive`,
+  },
   { name: "Georgia", style: `Georgia, Times, "Times New Roman", serif` },
   {
     name: "Handwriting",
