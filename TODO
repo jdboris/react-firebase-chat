@@ -17,6 +17,9 @@
 
 General Roadmap:
 
+- add more oembed providers
+- drag&drop image onto chat overlay doesn't go away when you drag out to the left
+- update the selected and live channels when someone else sets a new live channel
 - delete oldest image in storage upon uploading new image
 - fix bug that sometimes puts the textarea in some kind of "insert" key mode which prevents moving the cursor, and replaces text while typing
 - comic sans font renders as handwriting font
@@ -67,6 +70,7 @@ New Features:
 
 Old/boring Feature Roadmap:
 
+- quoting part of a message you're @ing
 - online/offline indicator on DM window
 - allow multi-line messages (shift+enter)
 - @everyone for moderators/admins

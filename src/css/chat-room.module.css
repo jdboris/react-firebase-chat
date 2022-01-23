@@ -749,34 +749,19 @@ li {
   vertical-align: middle;
 }
 
-.message .show-more {
-  display: flex;
-  justify-content: center;
-  cursor: pointer;
-  position: absolute;
-  bottom: 0px;
-  width: 100%;
-  padding-top: 1em;
-  padding-bottom: 0.1em;
-  background: rgb(255, 255, 255);
-  background: linear-gradient(
-    0deg,
-    rgba(255, 255, 255, 1) 0%,
-    rgba(255, 255, 255, 1) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
-}
-
+.message .show-more,
 .message .show-less {
+  background: #fff;
+  bottom: 0;
+  cursor: pointer;
   display: flex;
   justify-content: center;
-  cursor: pointer;
-  position: absolute;
-  bottom: 0px;
-  width: 100%;
-  padding-top: 0.1em;
   padding-bottom: 0.1em;
-  background: rgb(255, 255, 255);
+  /* padding-top: 1em; */
+  position: absolute;
+  width: 100%;
+  border-radius: 15px;
+  box-shadow: 0px 0px 5px;
 }
 
 .message img {
