@@ -1,6 +1,11 @@
 2.0 Roadmap:
 
 - suggestion box
+- autocomplete @, DM username, mod username, and ban user username
+- BG time clock
+- fix presence still
+  - add periodic role call to mark users offline if they aren't present
+- change to imgur for image uploads
 - billing limit
 - schedule
 - footer links
@@ -13,10 +18,12 @@
 - fix presence (innacurate disonnected message)
   - https://files.catbox.moe/ilh9x2.png
   - https://files.catbox.moe/a65hye.png
-- BG time clock
 
 General Roadmap:
 
+- investigate stream not changing sometimes (other streamers able to do it)
+- embed videos
+- make @'s their own font and highlight them
 - add more oembed providers
 - drag&drop image onto chat overlay doesn't go away when you drag out to the left
 - update the selected and live channels when someone else sets a new live channel
@@ -30,7 +37,6 @@ General Roadmap:
 - sometimes user record doesn't show up in mysql users table
   - INVESTIGATE: confirmation email failing to send while other user records are created asynchronously in tandem
 - fix the bug that prevents chat from scrolling down on receiving new messages sometimes
-- add periodic role call to mark users offline if they aren't present
 - add latency compensation everywhere
 - optimization to reduce firestore reads
   - cache oembed results
@@ -80,7 +86,6 @@ Old/boring Feature Roadmap:
 - confirmation modal on banning and deleting
 - easy stream channel adding
 - accept donations (https://support.stripe.com/questions/how-to-accept-donations-through-stripe)
-- autocomplete @, DM username, mod username, and ban user username
 - chat in separate window
 - allow blocking DMs
 - API for custom styling (badges for streamers, etc...)
