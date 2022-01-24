@@ -114,6 +114,15 @@ export function ChatRoom(props) {
   const sendMessage = async (e) => {
     e.preventDefault();
 
+    // Spam limit (1 posts in 5 seconds) for anons
+    if (
+      user.email == null &&
+      timestamps[0] &&
+      Date.now() - timestamps[0] < 5000
+    ) {
+      return;
+    }
+
     // Spam limit (3 posts in 3 seconds)
     if (timestamps[3] && Date.now() - timestamps[3] < 3000) {
       return;
