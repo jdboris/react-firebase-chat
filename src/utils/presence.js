@@ -8,6 +8,7 @@ export function presence(uid, username, setIsOnline) {
   //       while the asyncronous unsubscribing is in progress.
   let isSubscribed = false;
   let offlineTimeout = null;
+  let reconnectCountdown = null;
   let disconnectRef = null;
   let unsubPresence = null;
   let userPresenceDatabaseRef = null;
@@ -67,6 +68,15 @@ export function presence(uid, username, setIsOnline) {
       // DISCONNECT DETECTED
       if (snapshot.val() === false) {
         console.error("Connection lost. Attempting to reconnect...");
+
+        if (reconnectCountdown === null) {
+          // Wait for 10 seconds then query realtime database to refresh connection status
+          reconnectCountdown = setTimeout(() => {
+            userPresenceDatabaseRef.get();
+            reconnectCountdown = null;
+          }, 10000);
+        }
+
         if (offlineTimeout === null) {
           // Wait for 60 seconds before telling the user the connection was lost
           offlineTimeout = setTimeout(() => {
@@ -74,6 +84,7 @@ export function presence(uid, username, setIsOnline) {
 
             // FIRESTORE: OFFLINE
             userPresenceRef.set(isOfflineForFirestore);
+            offlineTimeout = null;
           }, 60000);
         }
 
@@ -145,6 +156,9 @@ export function presence(uid, username, setIsOnline) {
     console.log("unsubscribe()");
     isSubscribed = false;
     window.removeEventListener("beforeunload", disconnectAndUnsubscribe);
+    if (reconnectCountdown !== null) {
+      clearTimeout(reconnectCountdown);
+    }
     if (offlineTimeout !== null) {
       clearTimeout(offlineTimeout);
     }
