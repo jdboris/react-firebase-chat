@@ -72,7 +72,7 @@ export function presence(uid, username, setIsOnline) {
         if (reconnectCountdown === null) {
           // Wait for 10 seconds then query realtime database to refresh connection status
           reconnectCountdown = setTimeout(() => {
-            userPresenceDatabaseRef.get();
+            signalOnline();
             reconnectCountdown = null;
           }, 10000);
         }
@@ -114,6 +114,7 @@ export function presence(uid, username, setIsOnline) {
     console.log("subscribe()");
     isSubscribed = true;
     window.addEventListener("beforeunload", disconnectAndUnsubscribe);
+    window.addEventListener("focus", signalOnline);
 
     connectedRef = firebase.database().ref(".info/connected");
 
@@ -156,6 +157,7 @@ export function presence(uid, username, setIsOnline) {
     console.log("unsubscribe()");
     isSubscribed = false;
     window.removeEventListener("beforeunload", disconnectAndUnsubscribe);
+    window.removeEventListener("focus", signalOnline);
     if (reconnectCountdown !== null) {
       clearTimeout(reconnectCountdown);
     }
@@ -173,6 +175,12 @@ export function presence(uid, username, setIsOnline) {
     if (isSubscribed) {
       unsubscribe();
       disconnect();
+    }
+  }
+
+  async function signalOnline() {
+    if (isSubscribed && userPresenceDatabaseRef) {
+      await userPresenceDatabaseRef.set(isOnlineForDatabase);
     }
   }
 
