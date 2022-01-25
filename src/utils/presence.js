@@ -74,8 +74,6 @@ export function presence(uid, username, setIsOnline) {
 
             // FIRESTORE: OFFLINE
             userPresenceRef.set(isOfflineForFirestore);
-
-            setIsOnline(false);
           }, 60000);
         }
 
