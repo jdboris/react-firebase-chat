@@ -21,6 +21,8 @@ export function FileUploadOverlay(props) {
           e.preventDefault();
           e.stopPropagation();
 
+          props.setIsDraggedOn(false);
+
           if (loading) return;
           setLoading(true);
           timeout(20000, async () => {
@@ -46,8 +48,6 @@ export function FileUploadOverlay(props) {
               setLoading(false);
               e.target.value = "";
             });
-
-          props.setIsDraggedOn(false);
         }}
         onDragLeave={(e) => {
           e.preventDefault();
@@ -59,9 +59,26 @@ export function FileUploadOverlay(props) {
           e.stopPropagation();
           props.setIsDraggedOn(false);
         }}
+        onClickCapture={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          props.setIsDraggedOn(false);
+        }}
       >
         <div>
-          <input type="file" />
+          <input
+            type="file"
+            onBlur={(e) => {
+              if (!e.target.files.length) {
+                props.setIsDraggedOn(false);
+              }
+            }}
+            onFocus={(e) => {
+              if (!e.target.files.length) {
+                props.setIsDraggedOn(false);
+              }
+            }}
+          />
         </div>
       </label>
     )
