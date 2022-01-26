@@ -8,9 +8,14 @@ import { translateError } from "../utils/errors";
 import { MARKUP_SYMBOLS } from "../utils/markdown";
 import { uploadFile } from "../utils/storage";
 import { timeout } from "../utils/utils";
+import { position } from "caret-pos";
+import { UserSelect } from "./user-select/user-select";
 
 export const MessageInputForm = React.forwardRef((props, messageInput) => {
   const [loading, setLoading] = useState(false);
+  const [caretX, setCaretX] = useState(0);
+  const [caretY, setCaretY] = useState(0);
+  const [isMentioning, setIsMentioning] = useState(false);
   // Cap the font size for non-premium users
   const fontSize = !props.premium && props.fontSize >= 15 ? 15 : props.fontSize;
 
@@ -126,7 +131,14 @@ export const MessageInputForm = React.forwardRef((props, messageInput) => {
             }
           }}
           onKeyPress={(e) => {
+            // if (e.key === "@") {
+            //   const caretPosition = position(messageInput.current);
+            //   setCaretX(caretPosition.left);
+            //   setCaretY(caretPosition.top);
+            //   setIsMentioning(true);
+            // }
             if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
               e.target.form.dispatchEvent(
                 new Event("submit", {
                   cancelable: true,
@@ -134,7 +146,6 @@ export const MessageInputForm = React.forwardRef((props, messageInput) => {
                   bubbles: true,
                 })
               );
-              e.preventDefault();
             }
           }}
           style={
@@ -147,6 +158,9 @@ export const MessageInputForm = React.forwardRef((props, messageInput) => {
               : {}
           }
         ></textarea>
+        {isMentioning && props.onlineUsers && (
+          <UserSelect users={props.onlineUsers} />
+        )}
       </div>
       <SmileIcon
         className={
