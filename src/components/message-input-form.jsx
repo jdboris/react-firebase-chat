@@ -4,18 +4,59 @@ import { TextFormat as TextFormatIcon } from "@mui/icons-material";
 import React, { useState } from "react";
 import { hexToRgb } from "../utils/color";
 import styles from "../css/chat-room.module.css";
+import userSelectCss from "./user-select/user-select.module.css";
 import { translateError } from "../utils/errors";
 import { MARKUP_SYMBOLS } from "../utils/markdown";
 import { uploadFile } from "../utils/storage";
 import { timeout } from "../utils/utils";
-import { position } from "caret-pos";
+import { position, offset } from "caret-pos";
 import { UserSelect } from "./user-select/user-select";
 
 export const MessageInputForm = React.forwardRef((props, messageInput) => {
   const [loading, setLoading] = useState(false);
   const [caretX, setCaretX] = useState(0);
   const [caretY, setCaretY] = useState(0);
-  const [isMentioning, setIsMentioning] = useState(false);
+  const [mentionValue, setMentionValue] = useState(null);
+
+  function checkForMention(input) {
+    const mentionName = getMentionName(input);
+
+    if (mentionName !== null) {
+      const startPosition = position(messageInput.current, {
+        customPos: input.selectionStart - mentionName.length,
+      });
+      setCaretX(startPosition.left);
+      setCaretY(startPosition.top);
+    }
+
+    setMentionValue(mentionName);
+  }
+
+  function getMentionName(input) {
+    const [start, end] = [input.selectionStart, input.selectionEnd];
+
+    if (start != end) return null;
+
+    const value = input.value;
+    let mentionName = "";
+
+    for (let i = start; i >= 0; i--) {
+      const character = value.charAt(i);
+      // Whitespace
+      if (/\s/.test(character)) {
+        return null;
+      }
+
+      if (character === "@") {
+        return mentionName;
+      }
+
+      mentionName = character + mentionName;
+    }
+
+    return null;
+  }
+
   // Cap the font size for non-premium users
   const fontSize = !props.premium && props.fontSize >= 15 ? 15 : props.fontSize;
 
@@ -102,7 +143,14 @@ export const MessageInputForm = React.forwardRef((props, messageInput) => {
           ref={messageInput}
           autoFocus
           value={props.messageValue}
-          onChange={(e) => props.setMessageValue(e.target.value)}
+          onChange={(e) => {
+            props.setMessageValue(e.target.value);
+
+            checkForMention(e.target);
+          }}
+          onClickCapture={(e) => {
+            checkForMention(e.target);
+          }}
           placeholder="Type here to send a message"
           onPaste={async (e) => {
             if (e.clipboardData.files.length) {
@@ -110,6 +158,23 @@ export const MessageInputForm = React.forwardRef((props, messageInput) => {
             }
           }}
           onKeyDown={(e) => {
+            if (mentionValue !== null) {
+              if (
+                e.key === "ArrowDown" ||
+                e.key === "ArrowUp" ||
+                e.key === "Enter" ||
+                e.key === "Tab" ||
+                e.key === "Escape"
+              ) {
+                e.preventDefault();
+                // DISCLAIMER: Bad practice (querySelector)
+                // Forward the event to the select
+                messageInput.current.parentElement
+                  .querySelector(`.${userSelectCss.userSelect}`)
+                  .dispatchEvent(new KeyboardEvent(e.type, e.nativeEvent));
+              }
+            }
+
             if ((e.key === "b" || e.key === "B") && e.ctrlKey) {
               const result = props.toggleSelectionMarkup(MARKUP_SYMBOLS.BOLD);
 
@@ -130,13 +195,15 @@ export const MessageInputForm = React.forwardRef((props, messageInput) => {
               });
             }
           }}
+          onFocus={(e) => {
+            checkForMention(e.target);
+          }}
+          onBlur={(e) => {
+            // setMentionValue(null);
+          }}
           onKeyPress={(e) => {
-            // if (e.key === "@") {
-            //   const caretPosition = position(messageInput.current);
-            //   setCaretX(caretPosition.left);
-            //   setCaretY(caretPosition.top);
-            //   setIsMentioning(true);
-            // }
+            checkForMention(e.target);
+
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
               e.target.form.dispatchEvent(
@@ -158,8 +225,21 @@ export const MessageInputForm = React.forwardRef((props, messageInput) => {
               : {}
           }
         ></textarea>
-        {isMentioning && props.onlineUsers && (
-          <UserSelect users={props.onlineUsers} />
+        {mentionValue !== null && props.onlineUsers && (
+          <UserSelect
+            users={props.onlineUsers}
+            style={{ left: caretX, top: caretY, fontSize }}
+            value={mentionValue}
+            onChange={(item) => {
+              props.setMessageValue(props.messageValue + item.label + " ");
+              setMentionValue(null);
+              messageInput.current.focus();
+            }}
+            onCancel={(e) => {
+              setMentionValue(null);
+              messageInput.current.focus();
+            }}
+          />
         )}
       </div>
       <SmileIcon
