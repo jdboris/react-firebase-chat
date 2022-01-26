@@ -1,29 +1,36 @@
-import { default as React } from "react";
-import Select from "react-select";
-import { css } from "./user-select.module.css";
+import { default as React, useEffect } from "react";
+import Select, { components } from "react-select";
+import css from "./user-select.module.css";
 
-export function UserSelect({ users }) {
+export function UserSelect({ users, style, value, onChange, onCancel }) {
+  const options = users.map((user) => {
+    return { label: user.username, value: user.username };
+  });
+
   const selectStyles = {
-    container: (provided, state) => ({
+    container: (position, top, left, provided, state) => ({
       ...provided,
+      position: "absolute",
+      ...style,
+      zIndex: 1,
     }),
     control: (provided, state) => ({
       ...provided,
+      minHeight: "1.1em",
       border: 0,
       boxShadow: 0,
       background: 0,
       cursor: "pointer",
     }),
-    singleValue: (provided, { data }) => ({
+    input: ({ display, ...provided }) => ({
       ...provided,
-      // color: data.value === settings.liveChannelId ? "#ff7900" : "#9B4900",
-      background: 0,
-      textTransform: "uppercase",
-      display: "flex",
-      alignItems: "center",
-      transition: "color 0.15s",
+      display: "none",
     }),
     indicatorSeparator: (provided, state) => ({
+      ...provided,
+      display: "none",
+    }),
+    indicatorsContainer: (provided, state) => ({
       ...provided,
       display: "none",
     }),
@@ -37,8 +44,10 @@ export function UserSelect({ users }) {
       width: "max-content",
       minWidth: "100%",
       boxShadow: 0,
-      background: 0,
+      background: "white",
       marginTop: 0,
+      border: "1px solid #dedede",
+      borderRadius: "0px",
     }),
     option: (
       { background, ...provided },
@@ -46,31 +55,46 @@ export function UserSelect({ users }) {
     ) => {
       return {
         ...provided,
-        background: "black",
         // color: data.value === settings.liveChannelId ? "#ff7900" : "#9B4900",
+        color: "#0084eb",
         cursor: "pointer",
-        textTransform: "uppercase",
         paddingTop: "5px",
         paddingBottom: "5px",
         whiteSpace: "nowrap",
+        textDecoration: isFocused ? "underline" : "",
       };
     },
   };
 
   return (
     <Select
+      style={style}
       className={css.userSelect}
-      options={users.map((user) => {
-        return { label: user.username, value: user.username };
-      })}
-      // value={users.filter((user) => user.value === selectedChannelId)}
-      onChange={(e) => {
-        // setSelectedChannelId(e.value);
-        // showInModal(null);
+      options={options}
+      components={{
+        DropdownIndicator: () => null,
+        IndicatorSeparator: () => null,
       }}
+      onChange={onChange}
       styles={selectStyles}
-      hideSelectedOptions={true}
-      maxMenuHeight={50}
+      hideSelectedOptions={false}
+      maxMenuHeight={150}
+      inputValue={value}
+      placeholder=""
+      menuIsOpen={true}
+      controlShouldRenderValue={false}
+      // components={{
+      //   Option: ({ children, ...props }) => (
+      //     <components.Option
+      //       {...props}
+      //       onFocus={(e) => {
+      //         console.log(e);
+      //       }}
+      //     >
+      //       {children}
+      //     </components.Option>
+      //   ),
+      // }}
     />
   );
 }
