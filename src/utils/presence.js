@@ -74,7 +74,7 @@ export function presence(uid, username, setIsOnline) {
           reconnectCountdown = setTimeout(() => {
             signalOnline();
             reconnectCountdown = null;
-          }, 10000);
+          }, 5000);
         }
 
         if (offlineTimeout === null) {
@@ -180,7 +180,11 @@ export function presence(uid, username, setIsOnline) {
 
   async function signalOnline() {
     if (isSubscribed && userPresenceDatabaseRef) {
-      await userPresenceDatabaseRef.set(isOnlineForDatabase);
+      connectedRef.off("value", onConnectedValueChanged);
+
+      setTimeout(() => {
+        connectedRef.on("value", onConnectedValueChanged);
+      }, 1000);
     }
   }
 
@@ -197,5 +201,5 @@ export function presence(uid, username, setIsOnline) {
   //   }
   // });
 
-  return [unsubscribe, disconnect];
+  return [unsubscribe, disconnect, signalOnline];
 }

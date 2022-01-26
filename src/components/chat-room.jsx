@@ -61,6 +61,7 @@ export function ChatRoom(props) {
 
   const [errors, setErrors] = useState([]);
   const [messageErrorFlash, setMessageErrorFlash] = useState(0);
+  const [signalOnline, setSignalOnline] = useState(null);
   const [premium, setPremium] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
   const [messageValue, setMessageValue] = useState("");
@@ -205,15 +206,17 @@ export function ChatRoom(props) {
   }, []);
 
   useEffect(() => {
-    const [unsubPresence, disconnectPresence] = presence(
+    const [unsubPresence, disconnectPresence, signalOnline] = presence(
       userId,
       username,
       setIsOnline
     );
 
+    signalOnline(() => signalOnline);
+
     if (!user || !username) {
-      return async () => {
-        await unsubPresence();
+      return () => {
+        unsubPresence();
         disconnectPresence();
       };
     }
@@ -385,6 +388,7 @@ export function ChatRoom(props) {
         setFormatOpen={setFormatOpen}
         msgBgImgTransparency={msgBgImgTransparency}
         userId={userId}
+        onlineUsers={onlineUsers}
         setLoginOpen={setLoginOpen}
       />
 
@@ -667,8 +671,16 @@ export function ChatRoom(props) {
       {!isOnline && (
         <div className={styles["chat-room-overlay"]}>
           <div className={styles["overlay-message"]}>
-            <div>Connection failed.</div>
-            <div>Attempting reconnect...</div>
+            <div>Connection inerrrupted.</div>
+            <button
+              onClickCapture={() => {
+                if (signalOnline) {
+                  signalOnline();
+                }
+              }}
+            >
+              Reconnect
+            </button>
           </div>
         </div>
       )}
