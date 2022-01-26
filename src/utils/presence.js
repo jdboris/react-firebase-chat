@@ -7,13 +7,15 @@ export function presence(uid, username, setIsOnline) {
   // NOTE: This flag is necessary to prevent additional db updates
   //       while the asyncronous unsubscribing is in progress.
   let isSubscribed = false;
-  let offlineTimeout = null;
-  let reconnectCountdown = null;
+  // let offlineTimeout = null;
+  // let reconnectCountdown = null;
   let disconnectRef = null;
   let unsubPresence = null;
   let userPresenceDatabaseRef = null;
   let userPresenceRef = null;
-  let connectedRef = null;
+  let connectedRef = null; // A function for setting user connected status base on the window visibility
+  let isConnectedTimeout = null;
+  let messageTimeout = null;
 
   const isOfflineForDatabase = {
     isOnline: false,
@@ -56,6 +58,38 @@ export function presence(uid, username, setIsOnline) {
   //   }
   // });
 
+  // NOTE: Must manually disconnect before user's auth token expires,
+  //       or onDisconnect() handler will never trigger.
+  // Sources:
+  // https://github.com/firebase/firebase-js-sdk/issues/174
+  // https://stackoverflow.com/questions/17069672/firebase-ondisconnect-not-100-reliable-now
+  async function onWindowVisibilityChange() {
+    // FOCUS
+    if (document.hasFocus()) {
+      firebase.database().goOnline();
+      clearTimeout(isConnectedTimeout);
+      isConnectedTimeout = null;
+
+      // BLUR
+    } else {
+      // TODO: Mark user IDLE here
+
+      if (isConnectedTimeout === null) {
+        const token = await firebase.auth().currentUser.getIdTokenResult(true);
+        const expirationTime = Date.parse(token.expirationTime);
+        const now = Date.now();
+
+        isConnectedTimeout = setTimeout(() => {
+          firebase.database().goOffline();
+          isConnectedTimeout = null;
+
+          //             50 minutes
+          //       1 hour           10 minutes
+        }, expirationTime - now - 10 * 60 * 1000);
+      }
+    }
+  }
+
   function disconnect() {
     console.log("disconnect()");
     userPresenceRef.set(isOfflineForFirestore);
@@ -67,39 +101,45 @@ export function presence(uid, username, setIsOnline) {
     if (isSubscribed) {
       // DISCONNECT DETECTED
       if (snapshot.val() === false) {
-        console.error("Connection lost. Attempting to reconnect...");
+        console.error("Connection lost.");
 
-        if (reconnectCountdown === null) {
-          // Wait for 10 seconds then query realtime database to refresh connection status
-          reconnectCountdown = setTimeout(() => {
-            signalOnline();
-            reconnectCountdown = null;
-          }, 5000);
-        }
+        // FIRESTORE: OFFLINE
+        userPresenceRef.set(isOfflineForFirestore);
 
-        if (offlineTimeout === null) {
-          // Wait for 60 seconds before telling the user the connection was lost
-          offlineTimeout = setTimeout(() => {
-            console.error("Reconnect timed out.");
+        // if (reconnectCountdown === null) {
+        //   // Wait for 10 seconds then query realtime database to refresh connection status
+        //   reconnectCountdown = setTimeout(() => {
+        //     signalOnline();
+        //     reconnectCountdown = null;
+        //   }, 5000);
+        // }
 
-            // FIRESTORE: OFFLINE
-            userPresenceRef.set(isOfflineForFirestore);
-            offlineTimeout = null;
-          }, 60000);
-        }
+        // if (offlineTimeout === null) {
+        //   // Wait for 60 seconds before telling the user the connection was lost
+        //   offlineTimeout = setTimeout(() => {
+        //     console.error("Reconnect timed out.");
+
+        //     // FIRESTORE: OFFLINE
+        //     userPresenceRef.set(isOfflineForFirestore);
+        //     offlineTimeout = null;
+        //   }, 2000);
+        // }
 
         // CONNECT DETECTED
       } else {
-        if (offlineTimeout !== null) {
-          console.log("Reconnected!");
-          clearTimeout(offlineTimeout);
-          offlineTimeout = null;
+        // if (offlineTimeout !== null) {
+        //   console.log("Reconnected!");
+        //   clearTimeout(offlineTimeout);
+        //   offlineTimeout = null;
+        // }
+        if (disconnectRef) {
+          disconnectRef.cancel();
         }
-        if (!disconnectRef) {
-          disconnectRef = userPresenceDatabaseRef.onDisconnect();
-          // REALTIME DB: OFFLINE
-          await disconnectRef.set(isOfflineForDatabase);
-        }
+
+        disconnectRef = userPresenceDatabaseRef.onDisconnect();
+        // REALTIME DB: OFFLINE
+        await disconnectRef.set(isOfflineForDatabase);
+
         console.log("SETTING ONLINE...");
         // REALTIME DB: ONLINE
         userPresenceDatabaseRef.set(isOnlineForDatabase);
@@ -113,8 +153,17 @@ export function presence(uid, username, setIsOnline) {
   function subscribe() {
     console.log("subscribe()");
     isSubscribed = true;
-    window.addEventListener("beforeunload", disconnectAndUnsubscribe);
-    window.addEventListener("focus", signalOnline);
+
+    // setTimeout(async () => {
+    //   firebase.database().goOffline();
+    //   // disconnectAndUnsubscribe();
+    // }, 10000);
+
+    window.addEventListener("focus", onWindowVisibilityChange);
+    window.addEventListener("blur", onWindowVisibilityChange);
+
+    // window.addEventListener("beforeunload", disconnectAndUnsubscribe);
+    // window.addEventListener("focus", signalOnline);
 
     connectedRef = firebase.database().ref(".info/connected");
 
@@ -141,11 +190,21 @@ export function presence(uid, username, setIsOnline) {
           // CONNECTED?
           if (isOnline) {
             console.log("Connection confirmed.");
+            if (messageTimeout !== null) {
+              clearTimeout(messageTimeout);
+              messageTimeout = null;
+            }
             setIsOnline(true);
             // DISCONNECTED?
           } else {
             console.error("Disconnection confirmed.");
-            setIsOnline(false);
+            if (messageTimeout === null) {
+              // Wait 5 seconds before telling the user they're disconnected
+              messageTimeout = setTimeout(() => {
+                setIsOnline(false);
+                messageTimeout = null;
+              }, 5000);
+            }
           }
         }
       }
@@ -156,14 +215,26 @@ export function presence(uid, username, setIsOnline) {
   async function unsubscribe() {
     console.log("unsubscribe()");
     isSubscribed = false;
-    window.removeEventListener("beforeunload", disconnectAndUnsubscribe);
-    window.removeEventListener("focus", signalOnline);
-    if (reconnectCountdown !== null) {
-      clearTimeout(reconnectCountdown);
+    // window.removeEventListener("beforeunload", disconnectAndUnsubscribe);
+    window.removeEventListener("focus", onWindowVisibilityChange);
+    window.removeEventListener("blur", onWindowVisibilityChange);
+    // window.removeEventListener("focus", signalOnline);
+    if (isConnectedTimeout !== null) {
+      clearTimeout(isConnectedTimeout);
+      isConnectedTimeout = null;
     }
-    if (offlineTimeout !== null) {
-      clearTimeout(offlineTimeout);
+    if (messageTimeout !== null) {
+      clearTimeout(messageTimeout);
+      messageTimeout = null;
     }
+    // if (reconnectCountdown !== null) {
+    //   clearTimeout(reconnectCountdown);
+    //   reconnectCountdown = null;
+    // }
+    // if (offlineTimeout !== null) {
+    //   clearTimeout(offlineTimeout);
+    //   offlineTimeout = null;
+    // }
     connectedRef.off("value", onConnectedValueChanged);
     if (unsubPresence) unsubPresence();
     // if (unsubToken) unsubToken();
@@ -179,12 +250,15 @@ export function presence(uid, username, setIsOnline) {
   }
 
   async function signalOnline() {
+    console.log("SIGNALING ONLINE!");
     if (isSubscribed && userPresenceDatabaseRef) {
-      connectedRef.off("value", onConnectedValueChanged);
+      await firebase.database().goOffline();
+      await firebase.database().goOnline();
+      // connectedRef.off("value", onConnectedValueChanged);
 
-      setTimeout(() => {
-        connectedRef.on("value", onConnectedValueChanged);
-      }, 1000);
+      // setTimeout(() => {
+      //   connectedRef.on("value", onConnectedValueChanged);
+      // }, 1000);
     }
   }
 
