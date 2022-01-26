@@ -1,8 +1,4 @@
-// [data-provider] {
-//   display: flex;
-// }
-
-/* Put a line break before  */
+/* Put a line break before the first embed of a group and after the last one */
 [data-provider]:first-child::before {
   content: "";
   display: block;
@@ -14,9 +10,17 @@
 }
 
 /* Youtube */
-[data-provider="YouTube"] iframe {
-  min-width: 300px;
-  min-height: 168.75px;
+[data-provider="YouTube"] {
+  > span {
+    display: inline-block;
+    width: min(300px, 100%);
+    aspect-ratio: 16/9;
+  }
+
+  iframe {
+    width: 100%;
+    height: 100%;
+  }
 }
 
 /* Twitter */
