@@ -1,9 +1,7 @@
 import firebase from "firebase/compat/app";
 import "firebase/compat/database";
 
-export function presence(uid, username, setIsOnline) {
-  console.log("presence uid: " + uid);
-  console.log("presence username: " + username);
+export function startPresence(uid, username, setIsOnline) {
   // NOTE: This flag is necessary to prevent additional db updates
   //       while the asyncronous unsubscribing is in progress.
   let isSubscribed = false;
@@ -42,21 +40,7 @@ export function presence(uid, username, setIsOnline) {
   };
 
   subscribe();
-
-  // const unsubToken = firebase.auth().onIdTokenChanged(function (user) {
-  //   // If the user is now logged out
-  //   if (!user) {
-  //     userPresenceDatabaseRef.set(isOfflineForDatabase);
-
-  //     unsubscribe();
-  //     uid = null;
-
-  //     // Assume this is a login
-  //   } else if (uid == null) {
-  //     uid = user.uid;
-  //     subscribe(uid);
-  //   }
-  // });
+  signalOnline();
 
   // NOTE: Must manually disconnect before user's auth token expires,
   //       or onDisconnect() handler will never trigger.
@@ -65,10 +49,8 @@ export function presence(uid, username, setIsOnline) {
   // https://stackoverflow.com/questions/17069672/firebase-ondisconnect-not-100-reliable-now
   async function onWindowVisibilityChange() {
     // FOCUS
-    if (document.hasFocus()) {
-      firebase.database().goOnline();
-      clearTimeout(isConnectedTimeout);
-      isConnectedTimeout = null;
+    if (document.visibilityState === "visible") {
+      signalOnline();
 
       // BLUR
     } else {
@@ -76,6 +58,7 @@ export function presence(uid, username, setIsOnline) {
 
       if (isConnectedTimeout === null) {
         const token = await firebase.auth().currentUser.getIdTokenResult(true);
+
         const expirationTime = Date.parse(token.expirationTime);
         const now = Date.now();
 
@@ -84,16 +67,19 @@ export function presence(uid, username, setIsOnline) {
           isConnectedTimeout = null;
 
           //             50 minutes
-          //       1 hour           10 minutes
+          //         1 hour         10 minutes
         }, expirationTime - now - 10 * 60 * 1000);
       }
     }
   }
 
-  function disconnect() {
+  // Disconnect without waiting for listeners
+  async function disconnect() {
     console.log("disconnect()");
-    userPresenceRef.set(isOfflineForFirestore);
-    userPresenceDatabaseRef.set(isOfflineForDatabase);
+
+    await userPresenceRef.set(isOfflineForFirestore);
+    await userPresenceDatabaseRef.set(isOfflineForDatabase);
+    await firebase.database().goOffline();
   }
 
   async function onConnectedValueChanged(snapshot) {
@@ -132,6 +118,12 @@ export function presence(uid, username, setIsOnline) {
         //   clearTimeout(offlineTimeout);
         //   offlineTimeout = null;
         // }
+
+        if (isConnectedTimeout !== null) {
+          clearTimeout(isConnectedTimeout);
+          isConnectedTimeout = null;
+        }
+
         if (disconnectRef) {
           disconnectRef.cancel();
         }
@@ -151,18 +143,15 @@ export function presence(uid, username, setIsOnline) {
 
   // Add all the listeners
   function subscribe() {
-    console.log("subscribe()");
+    console.log("SUBSCRIBING WITH...");
+
+    console.log("presence uid: " + uid);
+    console.log("presence username: " + username);
+
     isSubscribed = true;
 
-    // setTimeout(async () => {
-    //   firebase.database().goOffline();
-    //   // disconnectAndUnsubscribe();
-    // }, 10000);
+    document.addEventListener("visibilitychange", onWindowVisibilityChange);
 
-    window.addEventListener("focus", onWindowVisibilityChange);
-    window.addEventListener("blur", onWindowVisibilityChange);
-
-    // window.addEventListener("beforeunload", disconnectAndUnsubscribe);
     // window.addEventListener("focus", signalOnline);
 
     connectedRef = firebase.database().ref(".info/connected");
@@ -215,9 +204,7 @@ export function presence(uid, username, setIsOnline) {
   async function unsubscribe() {
     console.log("unsubscribe()");
     isSubscribed = false;
-    // window.removeEventListener("beforeunload", disconnectAndUnsubscribe);
-    window.removeEventListener("focus", onWindowVisibilityChange);
-    window.removeEventListener("blur", onWindowVisibilityChange);
+    document.removeEventListener("visibilitychange", onWindowVisibilityChange);
     // window.removeEventListener("focus", signalOnline);
     if (isConnectedTimeout !== null) {
       clearTimeout(isConnectedTimeout);
@@ -237,43 +224,15 @@ export function presence(uid, username, setIsOnline) {
     // }
     connectedRef.off("value", onConnectedValueChanged);
     if (unsubPresence) unsubPresence();
-    // if (unsubToken) unsubToken();
     if (disconnectRef) await disconnectRef.cancel();
-  }
-
-  function disconnectAndUnsubscribe() {
-    console.log("disconnectAndUnsubscribe()");
-    if (isSubscribed) {
-      unsubscribe();
-      disconnect();
-    }
   }
 
   async function signalOnline() {
     console.log("SIGNALING ONLINE!");
     if (isSubscribed && userPresenceDatabaseRef) {
-      await firebase.database().goOffline();
       await firebase.database().goOnline();
-      // connectedRef.off("value", onConnectedValueChanged);
-
-      // setTimeout(() => {
-      //   connectedRef.on("value", onConnectedValueChanged);
-      // }, 1000);
     }
   }
 
-  // snapshot.docChanges().forEach(function (change) {
-  //   if (change.type === "added") {
-  //     var msg = "User " + change.doc.id + " is online.";
-  //     console.log(msg);
-  //     // ...
-  //   }
-  //   if (change.type === "removed") {
-  //     var msg = "User " + change.doc.id + " is offline.";
-  //     console.log(msg);
-  //     // ...
-  //   }
-  // });
-
-  return [unsubscribe, disconnect, signalOnline];
+  return { unsubscribe, disconnect, signalOnline };
 }
