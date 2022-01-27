@@ -5,8 +5,6 @@ export function startPresence(uid, username, setIsOnline) {
   // NOTE: This flag is necessary to prevent additional db updates
   //       while the asyncronous unsubscribing is in progress.
   let isSubscribed = false;
-  // let offlineTimeout = null;
-  // let reconnectCountdown = null;
   let disconnectRef = null;
   let unsubPresence = null;
   let userPresenceDatabaseRef = null;
@@ -40,7 +38,7 @@ export function startPresence(uid, username, setIsOnline) {
   };
 
   subscribe();
-  signalOnline();
+  firebase.database().goOnline();
 
   // NOTE: Must manually disconnect before user's auth token expires,
   //       or onDisconnect() handler will never trigger.
@@ -73,15 +71,6 @@ export function startPresence(uid, username, setIsOnline) {
     }
   }
 
-  // Disconnect without waiting for listeners
-  async function disconnect() {
-    console.log("disconnect()");
-
-    await userPresenceRef.set(isOfflineForFirestore);
-    await userPresenceDatabaseRef.set(isOfflineForDatabase);
-    await firebase.database().goOffline();
-  }
-
   async function onConnectedValueChanged(snapshot) {
     console.log("onConnectedValueChanged()");
     if (isSubscribed) {
@@ -92,33 +81,8 @@ export function startPresence(uid, username, setIsOnline) {
         // FIRESTORE: OFFLINE
         userPresenceRef.set(isOfflineForFirestore);
 
-        // if (reconnectCountdown === null) {
-        //   // Wait for 10 seconds then query realtime database to refresh connection status
-        //   reconnectCountdown = setTimeout(() => {
-        //     signalOnline();
-        //     reconnectCountdown = null;
-        //   }, 5000);
-        // }
-
-        // if (offlineTimeout === null) {
-        //   // Wait for 60 seconds before telling the user the connection was lost
-        //   offlineTimeout = setTimeout(() => {
-        //     console.error("Reconnect timed out.");
-
-        //     // FIRESTORE: OFFLINE
-        //     userPresenceRef.set(isOfflineForFirestore);
-        //     offlineTimeout = null;
-        //   }, 2000);
-        // }
-
         // CONNECT DETECTED
       } else {
-        // if (offlineTimeout !== null) {
-        //   console.log("Reconnected!");
-        //   clearTimeout(offlineTimeout);
-        //   offlineTimeout = null;
-        // }
-
         if (isConnectedTimeout !== null) {
           clearTimeout(isConnectedTimeout);
           isConnectedTimeout = null;
@@ -151,8 +115,6 @@ export function startPresence(uid, username, setIsOnline) {
     isSubscribed = true;
 
     document.addEventListener("visibilitychange", onWindowVisibilityChange);
-
-    // window.addEventListener("focus", signalOnline);
 
     connectedRef = firebase.database().ref(".info/connected");
 
@@ -205,7 +167,6 @@ export function startPresence(uid, username, setIsOnline) {
     console.log("unsubscribe()");
     isSubscribed = false;
     document.removeEventListener("visibilitychange", onWindowVisibilityChange);
-    // window.removeEventListener("focus", signalOnline);
     if (isConnectedTimeout !== null) {
       clearTimeout(isConnectedTimeout);
       isConnectedTimeout = null;
@@ -214,22 +175,23 @@ export function startPresence(uid, username, setIsOnline) {
       clearTimeout(messageTimeout);
       messageTimeout = null;
     }
-    // if (reconnectCountdown !== null) {
-    //   clearTimeout(reconnectCountdown);
-    //   reconnectCountdown = null;
-    // }
-    // if (offlineTimeout !== null) {
-    //   clearTimeout(offlineTimeout);
-    //   offlineTimeout = null;
-    // }
     connectedRef.off("value", onConnectedValueChanged);
     if (unsubPresence) unsubPresence();
     if (disconnectRef) await disconnectRef.cancel();
   }
 
+  // Disconnect without waiting for listeners
+  async function disconnect() {
+    console.log("disconnect()");
+
+    await userPresenceRef.set(isOfflineForFirestore);
+    await userPresenceDatabaseRef.set(isOfflineForDatabase);
+    await firebase.database().goOffline();
+  }
+
   async function signalOnline() {
-    console.log("SIGNALING ONLINE!");
     if (isSubscribed && userPresenceDatabaseRef) {
+      await firebase.database().goOffline();
       await firebase.database().goOnline();
     }
   }
