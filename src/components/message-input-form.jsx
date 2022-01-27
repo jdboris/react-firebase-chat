@@ -8,7 +8,7 @@ import userSelectCss from "./user-select/user-select.module.css";
 import { translateError } from "../utils/errors";
 import { MARKUP_SYMBOLS } from "../utils/markdown";
 import { uploadFile } from "../utils/storage";
-import { timeout } from "../utils/utils";
+import { timeout, insertIntoInput } from "../utils/utils";
 import { position, offset } from "caret-pos";
 import { UserSelect } from "./user-select/user-select";
 
@@ -32,15 +32,17 @@ export const MessageInputForm = React.forwardRef((props, messageInput) => {
     setMentionValue(mentionName);
   }
 
-  function getMentionName(input) {
-    const [start, end] = [input.selectionStart, input.selectionEnd];
-
+  function getMentionName(
+    input,
+    start = input.selectionStart,
+    end = input.selectionEnd
+  ) {
     if (start != end) return null;
 
     const value = input.value;
     let mentionName = "";
 
-    for (let i = start; i >= 0; i--) {
+    for (let i = start - 1; i >= 0; i--) {
       const character = value.charAt(i);
       // Whitespace
       if (/\s/.test(character)) {
@@ -55,6 +57,23 @@ export const MessageInputForm = React.forwardRef((props, messageInput) => {
     }
 
     return null;
+  }
+
+  function replaceMentionAtCaret(input, newMention) {
+    let [start, end] = [input.selectionStart, input.selectionEnd];
+    const value = input.value;
+
+    // While not a '@' before
+    while (value[start - 1] && value[start - 1] !== "@") {
+      start--;
+    }
+
+    // While not a whitespace next
+    while (value[end] && !/\s/.test(value[end])) {
+      end++;
+    }
+
+    return value.substr(0, start) + newMention + value.substr(end);
   }
 
   // Cap the font size for non-premium users
@@ -157,6 +176,9 @@ export const MessageInputForm = React.forwardRef((props, messageInput) => {
               await uploadFileWithHandlers(e, e.clipboardData.files[0]);
             }
           }}
+          onKeyUp={(e) => {
+            checkForMention(e.target);
+          }}
           onKeyDown={(e) => {
             if (mentionValue !== null) {
               if (
@@ -172,6 +194,7 @@ export const MessageInputForm = React.forwardRef((props, messageInput) => {
                 messageInput.current.parentElement
                   .querySelector(`.${userSelectCss.userSelect}`)
                   .dispatchEvent(new KeyboardEvent(e.type, e.nativeEvent));
+                return;
               }
             }
 
@@ -231,7 +254,9 @@ export const MessageInputForm = React.forwardRef((props, messageInput) => {
             style={{ left: caretX, top: caretY, fontSize }}
             value={mentionValue}
             onChange={(item) => {
-              props.setMessageValue(props.messageValue + item.label + " ");
+              props.setMessageValue(
+                replaceMentionAtCaret(messageInput.current, item.label) + " "
+              );
               setMentionValue(null);
               messageInput.current.focus();
             }}
