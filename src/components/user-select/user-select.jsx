@@ -3,9 +3,11 @@ import Select, { components } from "react-select";
 import css from "./user-select.module.css";
 
 export function UserSelect({ users, style, value, onChange, onCancel }) {
-  const options = users.map((user) => {
-    return { label: user.username, value: user.username };
-  });
+  const options = users
+    .filter((user) => user.username)
+    .map((user) => {
+      return { label: user.username, value: user.username };
+    });
 
   const selectStyles = {
     container: (position, top, left, provided, state) => ({
@@ -23,14 +25,6 @@ export function UserSelect({ users, style, value, onChange, onCancel }) {
       cursor: "pointer",
     }),
     input: ({ display, ...provided }) => ({
-      ...provided,
-      display: "none",
-    }),
-    indicatorSeparator: (provided, state) => ({
-      ...provided,
-      display: "none",
-    }),
-    indicatorsContainer: (provided, state) => ({
       ...provided,
       display: "none",
     }),
@@ -74,6 +68,7 @@ export function UserSelect({ users, style, value, onChange, onCancel }) {
       components={{
         DropdownIndicator: () => null,
         IndicatorSeparator: () => null,
+        IndicatorsContainer: () => null,
       }}
       onChange={onChange}
       styles={selectStyles}
@@ -83,18 +78,6 @@ export function UserSelect({ users, style, value, onChange, onCancel }) {
       placeholder=""
       menuIsOpen={true}
       controlShouldRenderValue={false}
-      // components={{
-      //   Option: ({ children, ...props }) => (
-      //     <components.Option
-      //       {...props}
-      //       onFocus={(e) => {
-      //         console.log(e);
-      //       }}
-      //     >
-      //       {children}
-      //     </components.Option>
-      //   ),
-      // }}
     />
   );
 }
