@@ -765,7 +765,8 @@ li {
 }
 
 .message p {
-  /* white-space: pre-wrap; */
+  /* Allow line breaks  */
+  white-space: pre-wrap;
   word-break: break-word;
   margin: 0px;
   display: inline;
