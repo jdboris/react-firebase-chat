@@ -9,7 +9,7 @@ import { conversationsRef, usersRef } from "./chat-room-app";
 import styles from "../css/chat-room.module.css";
 import { fonts } from "../utils/fonts";
 import { toggleSelectionMarkup } from "../utils/markdown";
-import { presence } from "../utils/presence";
+import { startPresence } from "../utils/presence";
 import { insertIntoInput } from "../utils/utils";
 import { translateError } from "../utils/errors";
 import { BanlistDialog } from "./banlist-dialog";
@@ -59,9 +59,9 @@ export function ChatRoom(props) {
         }, 0)
       : 0;
 
+  const [presence, setPresence] = useState(null);
   const [errors, setErrors] = useState([]);
   const [messageErrorFlash, setMessageErrorFlash] = useState(0);
-  const [signalOnline, setSignalOnline] = useState(null);
   const [premium, setPremium] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
   const [messageValue, setMessageValue] = useState("");
@@ -206,25 +206,12 @@ export function ChatRoom(props) {
   }, []);
 
   useEffect(() => {
-    const [unsubPresence, disconnectPresence, signalOnline] = presence(
-      userId,
-      username,
-      setIsOnline
-    );
+    console.log("USERNAME CHANGE DETECTED. STARTING LOADING...");
 
-    signalOnline(() => signalOnline);
+    (async () => {
+      if (user && username) {
+        const doc = await usersRef.doc(userId).get();
 
-    if (!user || !username) {
-      return () => {
-        unsubPresence();
-        disconnectPresence();
-      };
-    }
-
-    usersRef
-      .doc(userId)
-      .get()
-      .then((doc) => {
         if (doc.exists) {
           const preferences = doc.data();
           if ("fontSize" in preferences) setFontSize(preferences.fontSize);
@@ -245,22 +232,20 @@ export function ChatRoom(props) {
           if ("msgBgImgTransparency" in preferences)
             setMsgBgImgTransparency(preferences.msgBgImgTransparency);
         }
-      });
 
-    async function fetchPremium() {
-      const idTokenResult = await firebase
-        .auth()
-        .currentUser.getIdTokenResult();
-      setPremium(idTokenResult.claims.stripeRole === "premium");
-    }
-    fetchPremium();
+        const idTokenResult = await firebase
+          .auth()
+          .currentUser.getIdTokenResult();
+        setPremium(idTokenResult.claims.stripeRole === "premium");
+      }
 
-    return () => {
-      unsubPresence();
-      disconnectPresence();
-    };
+      if (presence) {
+        await presence.unsubscribe();
+        await presence.disconnect();
+      }
 
-    // NOTE: isLoadingUser for loading new user, userId for cleanup when logging out
+      setPresence(startPresence(userId, username, setIsOnline));
+    })();
   }, [userId]);
 
   useEffect(() => {
@@ -674,8 +659,8 @@ export function ChatRoom(props) {
             <div>Connection inerrrupted.</div>
             <button
               onClickCapture={() => {
-                if (signalOnline) {
-                  signalOnline();
+                if (presence.signalOnline) {
+                  presence.signalOnline();
                 }
               }}
             >

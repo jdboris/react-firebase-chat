@@ -725,7 +725,7 @@ exports.onUserStatusChanged = functions.database
     eventStatus.lastChanged = new Date(eventStatus.lastChanged);
 
     // ... and write it to Firestore.
-    return userStatusFirestoreRef.set(eventStatus);
+    return await userStatusFirestoreRef.set(eventStatus);
   });
 
 // exports.getOembedProviders = functions.https.onCall((data, context) => {
