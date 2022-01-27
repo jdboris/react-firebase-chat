@@ -70,6 +70,11 @@ export function UserSelect({ users, style, value, onChange, onCancel }) {
         IndicatorSeparator: () => null,
         IndicatorsContainer: () => null,
       }}
+      onKeyDown={(e) => {
+        if (e.key === "Tab" || e.key === "Enter") {
+          onCancel(" ");
+        }
+      }}
       onChange={onChange}
       styles={selectStyles}
       hideSelectedOptions={false}
