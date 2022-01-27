@@ -79,6 +79,7 @@ export function ChatMessage(props) {
     text,
     uid,
     key,
+    isModMessage,
     premium,
     photoUrl,
     createdAt,
@@ -111,7 +112,8 @@ export function ChatMessage(props) {
   let mouseDownSpot = null;
 
   const doesMentionCurrentUser = currentUser
-    ? new RegExp(`@${currentUser.username}\\b`, "g").test(text)
+    ? new RegExp(`@${currentUser.username}\\b`, "g").test(text) ||
+      (isModMessage && new RegExp(`@everyone\\b`, "g").test(text))
     : false;
 
   if (doesMentionCurrentUser) {

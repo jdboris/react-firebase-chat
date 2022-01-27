@@ -333,6 +333,7 @@ exports.sendMessage = functions.https.onCall(async (data, context) => {
     photoUrl: authUser.photoURL || "",
     createdAt: timestamp,
     premium: context.auth.token.stripeRole === "premium",
+    isModMessage: user.isModerator,
   };
 
   if (data.conversationId != "messages") {
