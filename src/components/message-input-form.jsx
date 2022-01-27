@@ -188,12 +188,14 @@ export const MessageInputForm = React.forwardRef((props, messageInput) => {
                 e.key === "Tab" ||
                 e.key === "Escape"
               ) {
-                e.preventDefault();
                 // DISCLAIMER: Bad practice (querySelector)
                 // Forward the event to the select
                 messageInput.current.parentElement
                   .querySelector(`.${userSelectCss.userSelect}`)
                   .dispatchEvent(new KeyboardEvent(e.type, e.nativeEvent));
+
+                e.preventDefault();
+
                 return;
               }
             }
@@ -260,7 +262,8 @@ export const MessageInputForm = React.forwardRef((props, messageInput) => {
               setMentionValue(null);
               messageInput.current.focus();
             }}
-            onCancel={(e) => {
+            onCancel={(suffix = "") => {
+              props.setMessageValue(props.messageValue + suffix);
               setMentionValue(null);
               messageInput.current.focus();
             }}
