@@ -4,6 +4,7 @@ import firebase from "firebase/compat/app";
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import gfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 import { banUser } from "./chat-room-app";
 import { hexToRgb } from "../utils/color";
 import styles from "../css/chat-room.module.css";
@@ -119,12 +120,15 @@ export function ChatMessage(props) {
   if (doesMentionCurrentUser) {
     text = text.replace(
       new RegExp(`@${currentUser.username}\\b`, "g"),
-      `**@${currentUser.username}**`
+      `<span class="${styles.mention}">@${currentUser.username}</span>`
     );
   }
 
   if (isModMessage) {
-    text = text.replace(new RegExp(`@everyone\\b`, "g"), `**@everyone**`);
+    text = text.replace(
+      new RegExp(`@everyone\\b`, "g"),
+      `<span class="${styles.mention}">@everyone</span>`
+    );
   }
 
   function deleteMessage() {
@@ -227,9 +231,31 @@ export function ChatMessage(props) {
                       <Link shouldComponentUpdate={false} href={props.href} />
                     );
                   },
+                  // NOTE: Must overwrite the built-in renderer to ensure the text of the link is the URL
+                  span: ({ className, children }) => {
+                    // Only allow whitelisted classes
+                    if (className != styles.mention) {
+                      return <span>{children}</span>;
+                    }
+                    return <span className={className}>{children}</span>;
+                  },
                 }}
                 plugins={[gfm]}
-                allowedElements={["p", "em", "strong", "u", "a"]}
+                rehypePlugins={[rehypeRaw]}
+                allowedElements={[
+                  "p",
+                  "em",
+                  "strong",
+                  "u",
+                  "a",
+                  "span",
+                  "code",
+                  "pre",
+                  "ol",
+                  "ul",
+                  "li",
+                  "del",
+                ]}
               >
                 {text}
               </ReactMarkdown>

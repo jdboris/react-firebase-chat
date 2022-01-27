@@ -128,8 +128,8 @@ export function ChatRoom(props) {
     if (timestamps[3] && Date.now() - timestamps[3] < 3000) {
       return;
     }
-    // NOTE: Escape the > character because ReactMarkdown sanitizes it for some reason
-    const text = messageValue.replace(/[>]/g, "\\$&");
+
+    const text = messageValue;
 
     try {
       if (conversationRef && !user.emailVerified) {

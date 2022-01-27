@@ -751,6 +751,32 @@ li {
   padding: 0px;
 }
 
+.message-contents .mention {
+  background: #817c4c;
+  padding: 0.15em;
+  padding-bottom: 0.25em;
+  border-radius: 0.3em;
+  color: #ffffff;
+}
+
+.message-contents ul,
+.message-contents ol {
+  padding-left: 0.5em;
+  margin: 0.3em 0px;
+}
+
+.message-contents ol li {
+  list-style: decimal inside;
+}
+
+.message-contents ul li {
+  list-style: disc inside;
+}
+
+.message-contents li::marker {
+  margin-right: 0px;
+}
+
 .message > div {
   position: relative;
   margin-left: 5px;
