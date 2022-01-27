@@ -83,6 +83,7 @@ export function UserSelect({ users, style, value, onChange, onCancel }) {
       placeholder=""
       menuIsOpen={true}
       controlShouldRenderValue={false}
+      menuPlacement={"top"}
     />
   );
 }
