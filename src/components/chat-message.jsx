@@ -123,6 +123,10 @@ export function ChatMessage(props) {
     );
   }
 
+  if (isModMessage) {
+    text = text.replace(new RegExp(`@everyone\\b`, "g"), `**@everyone**`);
+  }
+
   function deleteMessage() {
     messagesRef.doc(props.message.id).update({ isDeleted: true });
   }
