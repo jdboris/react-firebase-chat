@@ -59,3 +59,36 @@ export function isImageUrl(urlString) {
     url.pathname.split(".").pop().toLocaleLowerCase()
   );
 }
+
+export function stripHtml(string) {
+  let doc = new DOMParser().parseFromString(string, "text/html");
+  return doc.body.textContent || "";
+}
+
+let isFlashingInTitle = false;
+let flashingTitleIntervalId = null;
+
+export function flashInTitle(text, interval = 1000) {
+  const originalTitle = top.document.title;
+  if (!isFlashingInTitle && !document.hasFocus()) {
+    isFlashingInTitle = true;
+    let on = true;
+    top.document.title = text;
+
+    flashingTitleIntervalId = setInterval(() => {
+      if (on) {
+        top.document.title = originalTitle;
+      } else {
+        top.document.title = text;
+      }
+      on = !on;
+    }, interval);
+
+    window.addEventListener("focus", () => {
+      clearInterval(flashingTitleIntervalId);
+      flashingTitleIntervalId = null;
+      top.document.title = originalTitle;
+      isFlashingInTitle = false;
+    });
+  }
+}
