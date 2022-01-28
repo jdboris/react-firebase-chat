@@ -1,6 +1,6 @@
 {
   "name": "@jdboris/react-firebase-chat",
-  "version": "1.7.8",
+  "version": "1.7.10",
   "description": "A realtime chat app component built with React and Firebase.",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
@@ -27,6 +27,7 @@
     "@emotion/styled": "^11.6.0",
     "@mui/icons-material": "^5.2.5",
     "@rollup/plugin-node-resolve": "^13.0.5",
+    "@rollup/plugin-url": "^6.1.0",
     "@storybook/addon-actions": "^6.4.7",
     "@storybook/addon-essentials": "^6.4.7",
     "@storybook/addon-links": "^6.4.7",
