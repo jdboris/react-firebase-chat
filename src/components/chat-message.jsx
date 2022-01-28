@@ -11,6 +11,8 @@ import styles from "../css/chat-room.module.css";
 import "../css/oembed.css";
 import { translateError } from "../utils/errors";
 import { timeout, isImageUrl } from "../utils/utils";
+import useAudio from "../hooks/use-audio";
+import popSound from "../sound/pop.wav";
 
 function Link(props) {
   const [children, setChildren] = useState(props.href);
@@ -102,6 +104,7 @@ export function ChatMessage(props) {
   const date = new Date();
   const createdAtDate = createdAt ? createdAt.toDate() : null;
   const [expanded, setExpanded] = useState(false);
+  const [isPopPlaying, togglePop, restartPop] = useAudio(popSound);
 
   // Cap the font size for non-premium users
   fontSize = !premium && fontSize >= 15 ? 15 : fontSize;
@@ -123,6 +126,14 @@ export function ChatMessage(props) {
       `<span class="${styles.mention}">@${currentUser.username}</span>`
     );
   }
+
+  useEffect(() => {
+    if (doesMentionCurrentUser) {
+      if (!isPopPlaying) {
+        togglePop();
+      }
+    }
+  }, []);
 
   if (isModMessage) {
     text = text.replace(
