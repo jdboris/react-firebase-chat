@@ -73,6 +73,8 @@ export function flashInTitle(text, interval = 1000) {
   if (!isFlashingInTitle && !document.hasFocus()) {
     isFlashingInTitle = true;
     let on = true;
+    // Limit to 50 characters
+    text = text.substring(0, 50);
     top.document.title = text;
 
     flashingTitleIntervalId = setInterval(() => {
