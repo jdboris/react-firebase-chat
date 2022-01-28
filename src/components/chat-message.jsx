@@ -136,7 +136,7 @@ export function ChatMessage(props) {
 
   useEffect(() => {
     if (doesMentionCurrentUser) {
-      if (!isPopPlaying) {
+      if (!isPopPlaying && !props.isPopMuted) {
         togglePop();
         flashInTitle(`${username}: ${stripHtml(text)}`);
       }
