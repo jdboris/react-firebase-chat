@@ -109,7 +109,9 @@ export function ChatRoom(props) {
   const [isStyleEditorOpen, setStyleEditorOpen] = useState(false);
   const [isProfileOpen, setProfileOpen] = useState(false);
   const [selection, setSelection] = useState({ start: 0, end: 0 });
-  const [isPopMuted, setPopMuted] = useState(false);
+  const [isPopMuted, setPopMuted] = useState(
+    localStorage.getItem("isPopMuted") === "true"
+  );
 
   const [sentMsgCount, setSentMsgCount] = useState(0);
   const [timestamps, setTimestamps] = useState([]);
@@ -389,6 +391,7 @@ export function ChatRoom(props) {
           <VolumeOffIcon
             className={styles["pointer"]}
             onClick={() => {
+              localStorage.setItem("isPopMuted", false);
               setPopMuted(false);
             }}
           />
@@ -396,6 +399,7 @@ export function ChatRoom(props) {
           <VolumeUpIcon
             className={styles["pointer"]}
             onClick={() => {
+              localStorage.setItem("isPopMuted", true);
               setPopMuted(true);
             }}
           />
