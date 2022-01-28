@@ -1,7 +1,12 @@
-import { ChatBubble as ChatBubbleIcon } from "@mui/icons-material";
-import { Close as CloseIcon } from "@mui/icons-material";
-import { Gavel as GavelIcon } from "@mui/icons-material";
-import { Menu as MenuIcon } from "@mui/icons-material";
+import {
+  ChatBubble as ChatBubbleIcon,
+  Close as CloseIcon,
+  Gavel as GavelIcon,
+  Menu as MenuIcon,
+  VolumeOff as VolumeOffIcon,
+  VolumeUp as VolumeUpIcon,
+} from "@mui/icons-material";
+
 import firebase from "firebase/compat/app";
 import React, { useEffect, useRef, useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
@@ -104,6 +109,7 @@ export function ChatRoom(props) {
   const [isStyleEditorOpen, setStyleEditorOpen] = useState(false);
   const [isProfileOpen, setProfileOpen] = useState(false);
   const [selection, setSelection] = useState({ start: 0, end: 0 });
+  const [isPopMuted, setPopMuted] = useState(false);
 
   const [sentMsgCount, setSentMsgCount] = useState(0);
   const [timestamps, setTimestamps] = useState([]);
@@ -315,6 +321,7 @@ export function ChatRoom(props) {
         }}
         sentMsgCount={sentMsgCount}
         currentUser={user}
+        isPopMuted={isPopMuted}
       />
 
       {user && (
@@ -378,81 +385,99 @@ export function ChatRoom(props) {
       />
 
       <div className={styles["chat-controls"]}>
-        <span
-          className={styles["pointer"] + " " + styles["user-count"]}
-          onClick={() => {
-            setUsersOpen(!isUsersOpen);
-          }}
-        >
-          {onlineUsers ? onlineUsers.length : 1}
-        </span>
-
-        <span
-          className={styles["badge"] + " " + styles["pointer"]}
-          data-badge-text={unreadCount ? unreadCount : ""}
-          onClick={() => {
-            setDmsOpen(!isDmsOpen);
-          }}
-        >
-          <ChatBubbleIcon
-            className={
-              styles["pointer"] +
-              " " +
-              styles["chat-bubble-icon"] +
-              " " +
-              (unreadCount ? styles["yellow"] : "")
-            }
+        {isPopMuted ? (
+          <VolumeOffIcon
+            className={styles["pointer"]}
+            onClick={() => {
+              setPopMuted(false);
+            }}
           />
-        </span>
-
-        {user && user.isModerator && (
-          <MenuWithButton
-            button={<GavelIcon className={styles["gavel-icon"]} />}
-            openKey={menuOpenKey}
-            items={{
-              Banlist: () => {
-                setBanlistOpen(!isBanlistOpen);
-              },
-              ...(user.isAdmin
-                ? {
-                    "Manage Moderators": () => {
-                      setModsOpen(!isModsOpen);
-                    },
-                    "Mod Action Log": () => {
-                      setModActionLogOpen(!isModActionLogOpen);
-                    },
-                    "Filtered words": () => {
-                      setFilteredWordsOpen(!isFilteredWordsOpen);
-                    },
-                  }
-                : {}),
+        ) : (
+          <VolumeUpIcon
+            className={styles["pointer"]}
+            onClick={() => {
+              setPopMuted(true);
             }}
           />
         )}
 
-        <MenuWithButton
-          button={<MenuIcon />}
-          openKey={menuOpenKey}
-          items={{
-            ...(user
-              ? {
-                  "Edit profile": () => {
-                    setProfileOpen(!isProfileOpen);
-                  },
-                  Premium: () => {
-                    setPremiumOpen(!isPremiumOpen);
-                  },
-                  "Log out": async () => {
-                    props.logout();
-                  },
-                }
-              : {
-                  "Signup/Login": () => {
-                    setLoginOpen(!isLoginOpen);
-                  },
-                }),
-          }}
-        />
+        <div>
+          <span
+            className={styles["pointer"] + " " + styles["user-count"]}
+            onClick={() => {
+              setUsersOpen(!isUsersOpen);
+            }}
+          >
+            {onlineUsers ? onlineUsers.length : 1}
+          </span>
+
+          <span
+            className={styles["badge"] + " " + styles["pointer"]}
+            data-badge-text={unreadCount ? unreadCount : ""}
+            onClick={() => {
+              setDmsOpen(!isDmsOpen);
+            }}
+          >
+            <ChatBubbleIcon
+              className={
+                styles["pointer"] +
+                " " +
+                styles["chat-bubble-icon"] +
+                " " +
+                (unreadCount ? styles["yellow"] : "")
+              }
+            />
+          </span>
+
+          {user && user.isModerator && (
+            <MenuWithButton
+              button={<GavelIcon className={styles["gavel-icon"]} />}
+              openKey={menuOpenKey}
+              items={{
+                Banlist: () => {
+                  setBanlistOpen(!isBanlistOpen);
+                },
+                ...(user.isAdmin
+                  ? {
+                      "Manage Moderators": () => {
+                        setModsOpen(!isModsOpen);
+                      },
+                      "Mod Action Log": () => {
+                        setModActionLogOpen(!isModActionLogOpen);
+                      },
+                      "Filtered words": () => {
+                        setFilteredWordsOpen(!isFilteredWordsOpen);
+                      },
+                    }
+                  : {}),
+              }}
+            />
+          )}
+
+          <MenuWithButton
+            button={<MenuIcon />}
+            openKey={menuOpenKey}
+            items={{
+              ...(user
+                ? {
+                    "Edit profile": () => {
+                      setProfileOpen(!isProfileOpen);
+                    },
+                    Premium: () => {
+                      setPremiumOpen(!isPremiumOpen);
+                    },
+                    "Log out": async () => {
+                      props.logout();
+                    },
+                  }
+                : {
+                    "Signup/Login": () => {
+                      setLoginOpen(!isLoginOpen);
+                    },
+                  }),
+            }}
+          />
+        </div>
       </div>
 
       {user && (

@@ -378,7 +378,7 @@ label [type="file"] {
 .chat-controls {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
 }
 
 .chat-controls * {

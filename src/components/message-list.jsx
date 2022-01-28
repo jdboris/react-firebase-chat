@@ -12,6 +12,7 @@ export function MessageList(props) {
     onMessageClick,
     currentUser,
     sentMsgCount,
+    isPopMuted,
   } = props;
   const messageList = useRef();
 
@@ -56,6 +57,7 @@ export function MessageList(props) {
             onClick={onMessageClick}
             currentUser={currentUser}
             messagesRef={messagesRef}
+            isPopMuted={isPopMuted}
           />
         ))}
 
