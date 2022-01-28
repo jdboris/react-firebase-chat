@@ -324,7 +324,7 @@ exports.sendMessage = functions.https.onCall(async (data, context) => {
   data.text = await filterWords(data.text);
 
   // NOTE: Escape the > character because remark-gfm sanitizes it
-  data.text = data.text.replace(/[>#-]/g, "\\$&");
+  data.text = data.text.replace(/[>#]/g, "\\$&");
 
   const timestamp = admin.firestore.FieldValue.serverTimestamp();
 
