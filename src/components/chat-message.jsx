@@ -10,7 +10,7 @@ import { hexToRgb } from "../utils/color";
 import styles from "../css/chat-room.module.css";
 import "../css/oembed.css";
 import { translateError } from "../utils/errors";
-import { timeout, isImageUrl } from "../utils/utils";
+import { timeout, isImageUrl, stripHtml, flashInTitle } from "../utils/utils";
 import useAudio from "../hooks/use-audio";
 import popSound from "../sound/pop.wav";
 
@@ -127,20 +127,21 @@ export function ChatMessage(props) {
     );
   }
 
-  useEffect(() => {
-    if (doesMentionCurrentUser) {
-      if (!isPopPlaying) {
-        togglePop();
-      }
-    }
-  }, []);
-
   if (isModMessage) {
     text = text.replace(
       new RegExp(`@everyone\\b`, "g"),
       `<span class="${styles.mention}">@everyone</span>`
     );
   }
+
+  useEffect(() => {
+    if (doesMentionCurrentUser) {
+      if (!isPopPlaying) {
+        togglePop();
+        flashInTitle(`${username}: ${stripHtml(text)}`);
+      }
+    }
+  }, []);
 
   function deleteMessage() {
     messagesRef.doc(props.message.id).update({ isDeleted: true });
