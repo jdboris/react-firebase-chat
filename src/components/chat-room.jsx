@@ -214,8 +214,6 @@ export function ChatRoom(props) {
   }, []);
 
   useEffect(() => {
-    console.log("USERNAME CHANGE DETECTED. STARTING LOADING...");
-
     (async () => {
       if (user && username) {
         const doc = await usersRef.doc(userId).get();
@@ -248,6 +246,14 @@ export function ChatRoom(props) {
       }
 
       if (presence) {
+        firebase
+          .firestore()
+          .collection(`debugLog/${presence.username}:${presence.uid}/log`)
+          .add({
+            clientTime: new Date(),
+            serverTime: firebase.firestore.FieldValue.serverTimestamp(),
+            action: `User changed. Unsubscribing and disconnecting...`,
+          });
         await presence.unsubscribe();
         await presence.disconnect();
       }

@@ -129,5 +129,9 @@ service cloud.firestore {
       allow create: if isCallbacker();
       allow read: if true;
     }
+
+    match /debugLog/{userId}/log/{docId} {
+      allow create: if true;
+    }
   }
 }
