@@ -54,35 +54,80 @@ export function startPresence(uid, username, setIsOnline) {
     } else {
       // TODO: Mark user IDLE here
 
-      if (isConnectedTimeout === null) {
-        const token = await firebase.auth().currentUser.getIdTokenResult(true);
+      firebase
+        .firestore()
+        .collection(`debugLog/${username}:${uid}/log`)
+        .add({
+          clientTime: new Date(),
+          serverTime: firebase.firestore.FieldValue.serverTimestamp(),
+          action: `Window lost focus. ${
+            isConnectedTimeout === null
+              ? "Starting IDLE countdown."
+              : "IDLE countdown already started, doing nothing."
+          }`,
+        });
 
-        const expirationTime = Date.parse(token.expirationTime);
+      if (isConnectedTimeout === null) {
+        const user = firebase.auth().currentUser;
+        const token = user ? await user.getIdTokenResult(true) : null;
+
+        const expirationTime = token ? Date.parse(token.expirationTime) : null;
         const now = Date.now();
 
-        isConnectedTimeout = setTimeout(() => {
+        if (expirationTime) {
+          isConnectedTimeout = setTimeout(() => {
+            firebase
+              .firestore()
+              .collection(`debugLog/${username}:${uid}/log`)
+              .add({
+                clientTime: new Date(),
+                serverTime: firebase.firestore.FieldValue.serverTimestamp(),
+                action: `IDLE countdown finished.`,
+              });
+
+            //             50 minutes
+            //         1 hour         10 minutes
+          }, expirationTime - now - 10 * 60 * 1000);
+
           firebase.database().goOffline();
           isConnectedTimeout = null;
+        } else {
+          firebase
+            .firestore()
+            .collection(`debugLog/${username}:${uid}/log`)
+            .add({
+              clientTime: new Date(),
+              serverTime: firebase.firestore.FieldValue.serverTimestamp(),
+              action: `IDLE countdown finished.`,
+            });
 
-          //             50 minutes
-          //         1 hour         10 minutes
-        }, expirationTime - now - 10 * 60 * 1000);
+          firebase.database().goOffline();
+        }
       }
     }
   }
 
   async function onConnectedValueChanged(snapshot) {
-    console.log("onConnectedValueChanged()");
     if (isSubscribed) {
       // DISCONNECT DETECTED
       if (snapshot.val() === false) {
-        console.error("Connection lost.");
+        firebase.firestore().collection(`debugLog/${username}:${uid}/log`).add({
+          clientTime: new Date(),
+          serverTime: firebase.firestore.FieldValue.serverTimestamp(),
+          action: `Disconnect detected, updating database...`,
+        });
 
         // FIRESTORE: OFFLINE
         userPresenceRef.set(isOfflineForFirestore);
 
         // CONNECT DETECTED
       } else {
+        firebase.firestore().collection(`debugLog/${username}:${uid}/log`).add({
+          clientTime: new Date(),
+          serverTime: firebase.firestore.FieldValue.serverTimestamp(),
+          action: `Connection detected, updating database...`,
+        });
+
         if (isConnectedTimeout !== null) {
           clearTimeout(isConnectedTimeout);
           isConnectedTimeout = null;
@@ -96,7 +141,6 @@ export function startPresence(uid, username, setIsOnline) {
         // REALTIME DB: OFFLINE
         await disconnectRef.set(isOfflineForDatabase);
 
-        console.log("SETTING ONLINE...");
         // REALTIME DB: ONLINE
         userPresenceDatabaseRef.set(isOnlineForDatabase);
         // FIRESTORE: ONLINE
@@ -107,11 +151,6 @@ export function startPresence(uid, username, setIsOnline) {
 
   // Add all the listeners
   function subscribe() {
-    console.log("SUBSCRIBING WITH...");
-
-    console.log("presence uid: " + uid);
-    console.log("presence username: " + username);
-
     isSubscribed = true;
 
     document.addEventListener("visibilitychange", onWindowVisibilityChange);
@@ -133,14 +172,12 @@ export function startPresence(uid, username, setIsOnline) {
       .on("value", onConnectedValueChanged);
 
     unsubPresence = userPresenceRef.onSnapshot(function (doc) {
-      console.log("userPresenceRef.onSnapshot()");
       if (isSubscribed) {
         if (doc.data()) {
           const isOnline = doc.data().isOnline;
 
           // CONNECTED?
           if (isOnline) {
-            console.log("Connection confirmed.");
             if (messageTimeout !== null) {
               clearTimeout(messageTimeout);
               messageTimeout = null;
@@ -148,7 +185,6 @@ export function startPresence(uid, username, setIsOnline) {
             setIsOnline(true);
             // DISCONNECTED?
           } else {
-            console.error("Disconnection confirmed.");
             if (messageTimeout === null) {
               // Wait 5 seconds before telling the user they're disconnected
               messageTimeout = setTimeout(() => {
@@ -164,7 +200,6 @@ export function startPresence(uid, username, setIsOnline) {
 
   // Remove all the listeners
   async function unsubscribe() {
-    console.log("unsubscribe()");
     isSubscribed = false;
     document.removeEventListener("visibilitychange", onWindowVisibilityChange);
     if (isConnectedTimeout !== null) {
@@ -182,8 +217,6 @@ export function startPresence(uid, username, setIsOnline) {
 
   // Disconnect without waiting for listeners
   async function disconnect() {
-    console.log("disconnect()");
-
     await userPresenceRef.set(isOfflineForFirestore);
     await userPresenceDatabaseRef.set(isOfflineForDatabase);
     await firebase.database().goOffline();
@@ -196,5 +229,5 @@ export function startPresence(uid, username, setIsOnline) {
     }
   }
 
-  return { unsubscribe, disconnect, signalOnline };
+  return { uid, username, unsubscribe, disconnect, signalOnline };
 }
