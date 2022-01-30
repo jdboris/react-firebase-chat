@@ -214,7 +214,34 @@ export function ChatRoom(props) {
   }, []);
 
   useEffect(() => {
-    (async () => {
+    if (isLoadingUser) return true;
+
+    (async (presence, userId, user, username) => {
+      if (presence) {
+        // SAME USER
+        if (presence.uid == userId) return true;
+
+        firebase
+          .firestore()
+          .doc(
+            `debugLog/${presence.username}:${presence.uid}/log/${Date.now()}:${
+              Math.random() * 99999999
+            }`
+          )
+          .set(
+            {
+              clientTime: new Date(),
+              serverTime: firebase.firestore.FieldValue.serverTimestamp(),
+              action: `User changed. Unsubscribing and disconnecting...`,
+            },
+            { merge: true }
+          );
+
+        // NEW USER
+        await presence.unsubscribe();
+        await presence.disconnect();
+      }
+
       if (user && username) {
         const doc = await usersRef.doc(userId).get();
 
@@ -239,28 +266,13 @@ export function ChatRoom(props) {
             setMsgBgImgTransparency(preferences.msgBgImgTransparency);
         }
 
-        const idTokenResult = await firebase
-          .auth()
-          .currentUser.getIdTokenResult();
+        const idTokenResult = await user.auth.getIdTokenResult();
         setPremium(idTokenResult.claims.stripeRole === "premium");
       }
 
-      if (presence) {
-        firebase
-          .firestore()
-          .collection(`debugLog/${presence.username}:${presence.uid}/log`)
-          .add({
-            clientTime: new Date(),
-            serverTime: firebase.firestore.FieldValue.serverTimestamp(),
-            action: `User changed. Unsubscribing and disconnecting...`,
-          });
-        await presence.unsubscribe();
-        await presence.disconnect();
-      }
-
       setPresence(startPresence(userId, username, setIsOnline));
-    })();
-  }, [userId]);
+    })(presence, userId, user, username);
+  }, [userId, isLoadingUser]);
 
   useEffect(() => {
     if (!selection) return;

@@ -56,16 +56,23 @@ export function startPresence(uid, username, setIsOnline) {
 
       firebase
         .firestore()
-        .collection(`debugLog/${username}:${uid}/log`)
-        .add({
-          clientTime: new Date(),
-          serverTime: firebase.firestore.FieldValue.serverTimestamp(),
-          action: `Window lost focus. ${
-            isConnectedTimeout === null
-              ? "Starting IDLE countdown."
-              : "IDLE countdown already started, doing nothing."
-          }`,
-        });
+        .doc(
+          `debugLog/${username}:${uid}/log/${Date.now()}:${
+            Math.random() * 99999999
+          }`
+        )
+        .set(
+          {
+            clientTime: new Date(),
+            serverTime: firebase.firestore.FieldValue.serverTimestamp(),
+            action: `Window lost focus. ${
+              isConnectedTimeout === null
+                ? "Starting IDLE countdown."
+                : "IDLE countdown already started, doing nothing."
+            }`,
+          },
+          { merge: true }
+        );
 
       if (isConnectedTimeout === null) {
         const user = firebase.auth().currentUser;
@@ -78,28 +85,42 @@ export function startPresence(uid, username, setIsOnline) {
           isConnectedTimeout = setTimeout(() => {
             firebase
               .firestore()
-              .collection(`debugLog/${username}:${uid}/log`)
-              .add({
-                clientTime: new Date(),
-                serverTime: firebase.firestore.FieldValue.serverTimestamp(),
-                action: `IDLE countdown finished.`,
-              });
+              .doc(
+                `debugLog/${username}:${uid}/log/${Date.now()}:${
+                  Math.random() * 99999999
+                }`
+              )
+              .set(
+                {
+                  clientTime: new Date(),
+                  serverTime: firebase.firestore.FieldValue.serverTimestamp(),
+                  action: `IDLE countdown finished.`,
+                },
+                { merge: true }
+              );
+
+            firebase.database().goOffline();
+            isConnectedTimeout = null;
 
             //             50 minutes
             //         1 hour         10 minutes
           }, expirationTime - now - 10 * 60 * 1000);
-
-          firebase.database().goOffline();
-          isConnectedTimeout = null;
         } else {
           firebase
             .firestore()
-            .collection(`debugLog/${username}:${uid}/log`)
-            .add({
-              clientTime: new Date(),
-              serverTime: firebase.firestore.FieldValue.serverTimestamp(),
-              action: `IDLE countdown finished.`,
-            });
+            .doc(
+              `debugLog/${username}:${uid}/log/${Date.now()}:${
+                Math.random() * 99999999
+              }`
+            )
+            .set(
+              {
+                clientTime: new Date(),
+                serverTime: firebase.firestore.FieldValue.serverTimestamp(),
+                action: `IDLE countdown finished.`,
+              },
+              { merge: true }
+            );
 
           firebase.database().goOffline();
         }
@@ -111,22 +132,42 @@ export function startPresence(uid, username, setIsOnline) {
     if (isSubscribed) {
       // DISCONNECT DETECTED
       if (snapshot.val() === false) {
-        firebase.firestore().collection(`debugLog/${username}:${uid}/log`).add({
-          clientTime: new Date(),
-          serverTime: firebase.firestore.FieldValue.serverTimestamp(),
-          action: `Disconnect detected, updating database...`,
-        });
+        firebase
+          .firestore()
+          .doc(
+            `debugLog/${username}:${uid}/log/${Date.now()}:${
+              Math.random() * 99999999
+            }`
+          )
+          .set(
+            {
+              clientTime: new Date(),
+              serverTime: firebase.firestore.FieldValue.serverTimestamp(),
+              action: `Disconnect detected, updating database...`,
+            },
+            { merge: true }
+          );
 
         // FIRESTORE: OFFLINE
         userPresenceRef.set(isOfflineForFirestore);
 
         // CONNECT DETECTED
       } else {
-        firebase.firestore().collection(`debugLog/${username}:${uid}/log`).add({
-          clientTime: new Date(),
-          serverTime: firebase.firestore.FieldValue.serverTimestamp(),
-          action: `Connection detected, updating database...`,
-        });
+        firebase
+          .firestore()
+          .doc(
+            `debugLog/${username}:${uid}/log/${Date.now()}:${
+              Math.random() * 99999999
+            }`
+          )
+          .set(
+            {
+              clientTime: new Date(),
+              serverTime: firebase.firestore.FieldValue.serverTimestamp(),
+              action: `Connection detected, updating database...`,
+            },
+            { merge: true }
+          );
 
         if (isConnectedTimeout !== null) {
           clearTimeout(isConnectedTimeout);

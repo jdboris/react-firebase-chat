@@ -85,18 +85,33 @@ export function ChatRoomApp({
     isLoadingUserDoc ||
     (authUser != null && (!userSnapshot || authUser.uid != userSnapshot.id));
 
+  // console.log(
+  //   "-----------------------------------------------------------------"
+  // );
+  // console.log("isLoadingUser: ", isLoadingUser);
+  // console.log("isLoadingAuth: ", isLoadingAuth);
+  // console.log("isLoadingUserDoc: ", isLoadingUserDoc);
+  // console.log(
+  //   "dont match: ",
+  //   authUser != null && (!userSnapshot || authUser.uid != userSnapshot.id)
+  // );
+  // console.log("userSnapshot: ", userSnapshot);
+  // console.log("authUser.uid: ", authUser && authUser.uid);
+  // console.log("userSnapshot.id: ", userSnapshot && userSnapshot.id);
+
   const user =
-    authUser && userSnapshot
+    !isLoadingUser && authUser && userSnapshot
       ? {
           uid: authUser.uid,
           photoUrl: authUser.photoURL,
           email: authUser.email,
           emailVerified: authUser.emailVerified,
+          auth: authUser,
           ...userSnapshot.data(),
         }
       : null;
+  console.log("user: ", user);
 
-  const email = authUser && !authUser.isAnonymous ? authUser.email : "";
   const [conversationRef, setConversationRef] = useState(null);
   const [dmMessagesRef, setDmMessagesRef] = useState(null);
   const [alerts, setAlerts] = useState([]);

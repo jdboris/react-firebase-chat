@@ -28,6 +28,8 @@
   font-family: "Helvetica Neue", Roboto, "Segoe UI", Calibri, sans-serif;
   font-size: 12px;
   font-weight: bold;
+  background: white;
+  color: black;
   line-height: 16px;
   border-color: #eee #ddd #bbb;
   border-radius: 5px;

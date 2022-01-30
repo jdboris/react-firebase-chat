@@ -381,7 +381,7 @@ label [type="file"] {
   justify-content: space-between;
 }
 
-.chat-controls * {
+.chat-controls span {
   vertical-align: middle;
   display: inline-flex;
   align-items: center;

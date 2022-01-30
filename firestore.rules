@@ -132,6 +132,7 @@ service cloud.firestore {
 
     match /debugLog/{userId}/log/{docId} {
       allow create: if true;
+      allow update: if true;
     }
   }
 }
