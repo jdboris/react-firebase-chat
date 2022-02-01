@@ -221,21 +221,21 @@ export function ChatRoom(props) {
         // SAME USER
         if (presence.uid == userId) return true;
 
-        firebase
-          .firestore()
-          .doc(
-            `debugLog/${presence.username}:${presence.uid}/log/${Date.now()}:${
-              Math.random() * 99999999
-            }`
-          )
-          .set(
-            {
-              clientTime: new Date(),
-              serverTime: firebase.firestore.FieldValue.serverTimestamp(),
-              action: `User changed. Unsubscribing and disconnecting...`,
-            },
-            { merge: true }
-          );
+        // firebase
+        //   .firestore()
+        //   .doc(
+        //     `debugLog/${presence.username}:${presence.uid}/log/${Date.now()}:${
+        //       Math.random() * 99999999
+        //     }`
+        //   )
+        //   .set(
+        //     {
+        //       clientTime: new Date(),
+        //       serverTime: firebase.firestore.FieldValue.serverTimestamp(),
+        //       action: `User changed. Unsubscribing and disconnecting...`,
+        //     },
+        //     { merge: true }
+        //   );
 
         // NEW USER
         await presence.unsubscribe();
