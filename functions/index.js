@@ -732,17 +732,25 @@ exports.onUserStatusChanged = functions.database
     const oneHourAgo = new Date(Date.now() - oneHour);
     const oldUsersSnapshot = await db
       .collection(`userPresences`)
+      .where("isOnline", "==", true)
       .where("lastChanged", "<", oneHourAgo)
       .get();
 
+    if (oldUsersSnapshot.docs.length) {
+      console.log(
+        "MARKING USERS OFFLINE: ",
+        oldUsersSnapshot.docs.map((doc) => doc.data().username)
+      );
+    }
+
     for (const userDoc of oldUsersSnapshot.docs) {
       const isOfflineForDatabase = {
-        username: userDoc.data().username,
+        username: userDoc.data().username || null,
         isOnline: false,
         lastChanged: admin.database.ServerValue.TIMESTAMP,
       };
 
-      admin
+      await admin
         .database()
         .ref(`userPresences/${userDoc.id}`)
         .set(isOfflineForDatabase);

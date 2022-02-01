@@ -41,6 +41,25 @@ export function startPresence(uid, username, setIsOnline) {
   subscribe();
   firebase.database().goOnline();
 
+  function startPeriodicUpdate() {
+    // Clear the old one
+    stopPeriodicUpdate();
+
+    // Periodically refresh online status
+    refreshIntervalId = setInterval(() => {
+      userPresenceDatabaseRef.set(isOnlineForDatabase);
+
+      // 50 minutes
+    }, 1000 * 60 * 50);
+  }
+
+  function stopPeriodicUpdate() {
+    if (refreshIntervalId !== null) {
+      clearInterval(refreshIntervalId);
+      refreshIntervalId = null;
+    }
+  }
+
   // NOTE: Must manually disconnect before user's auth token expires,
   //       or onDisconnect() handler will never trigger.
   // Sources:
@@ -53,33 +72,31 @@ export function startPresence(uid, username, setIsOnline) {
 
       // BLUR
     } else {
-      if (refreshIntervalId !== null) {
-        clearInterval(refreshIntervalId);
-        refreshIntervalId = null;
-      }
+      stopPeriodicUpdate();
 
       // Set online with current timestamp in case connection is lost after token expires
-      userPresenceRef.set(isOnlineForFirestore);
+      userPresenceDatabaseRef.set(isOnlineForDatabase);
+      startPeriodicUpdate();
 
-      firebase
-        .firestore()
-        .doc(
-          `debugLog/${username}:${uid}/log/${Date.now()}:${
-            Math.random() * 99999999
-          }`
-        )
-        .set(
-          {
-            clientTime: new Date(),
-            serverTime: firebase.firestore.FieldValue.serverTimestamp(),
-            action: `Window lost focus. ${
-              isConnectedTimeout === null
-                ? "Starting IDLE countdown."
-                : "IDLE countdown already started, doing nothing."
-            }`,
-          },
-          { merge: true }
-        );
+      // firebase
+      //   .firestore()
+      //   .doc(
+      //     `debugLog/${username}:${uid}/log/${Date.now()}:${
+      //       Math.random() * 99999999
+      //     }`
+      //   )
+      //   .set(
+      //     {
+      //       clientTime: new Date(),
+      //       serverTime: firebase.firestore.FieldValue.serverTimestamp(),
+      //       action: `Window lost focus. ${
+      //         isConnectedTimeout === null
+      //           ? "Starting IDLE countdown."
+      //           : "IDLE countdown already started, doing nothing."
+      //       }`,
+      //     },
+      //     { merge: true }
+      //   );
 
       if (isConnectedTimeout === null) {
         const user = firebase.auth().currentUser;
@@ -90,21 +107,21 @@ export function startPresence(uid, username, setIsOnline) {
 
         if (expirationTime) {
           isConnectedTimeout = setTimeout(() => {
-            firebase
-              .firestore()
-              .doc(
-                `debugLog/${username}:${uid}/log/${Date.now()}:${
-                  Math.random() * 99999999
-                }`
-              )
-              .set(
-                {
-                  clientTime: new Date(),
-                  serverTime: firebase.firestore.FieldValue.serverTimestamp(),
-                  action: `IDLE countdown finished.`,
-                },
-                { merge: true }
-              );
+            // firebase
+            //   .firestore()
+            //   .doc(
+            //     `debugLog/${username}:${uid}/log/${Date.now()}:${
+            //       Math.random() * 99999999
+            //     }`
+            //   )
+            //   .set(
+            //     {
+            //       clientTime: new Date(),
+            //       serverTime: firebase.firestore.FieldValue.serverTimestamp(),
+            //       action: `IDLE countdown finished.`,
+            //     },
+            //     { merge: true }
+            //   );
 
             firebase.database().goOffline();
             isConnectedTimeout = null;
@@ -113,21 +130,21 @@ export function startPresence(uid, username, setIsOnline) {
             //         1 hour         10 minutes
           }, expirationTime - now - 10 * 60 * 1000);
         } else {
-          firebase
-            .firestore()
-            .doc(
-              `debugLog/${username}:${uid}/log/${Date.now()}:${
-                Math.random() * 99999999
-              }`
-            )
-            .set(
-              {
-                clientTime: new Date(),
-                serverTime: firebase.firestore.FieldValue.serverTimestamp(),
-                action: `IDLE countdown finished.`,
-              },
-              { merge: true }
-            );
+          // firebase
+          //   .firestore()
+          //   .doc(
+          //     `debugLog/${username}:${uid}/log/${Date.now()}:${
+          //       Math.random() * 99999999
+          //     }`
+          //   )
+          //   .set(
+          //     {
+          //       clientTime: new Date(),
+          //       serverTime: firebase.firestore.FieldValue.serverTimestamp(),
+          //       action: `IDLE countdown finished.`,
+          //     },
+          //     { merge: true }
+          //   );
 
           firebase.database().goOffline();
         }
@@ -139,53 +156,44 @@ export function startPresence(uid, username, setIsOnline) {
     if (isSubscribed) {
       // DISCONNECT DETECTED
       if (snapshot.val() === false) {
-        firebase
-          .firestore()
-          .doc(
-            `debugLog/${username}:${uid}/log/${Date.now()}:${
-              Math.random() * 99999999
-            }`
-          )
-          .set(
-            {
-              clientTime: new Date(),
-              serverTime: firebase.firestore.FieldValue.serverTimestamp(),
-              action: `Disconnect detected, updating database...`,
-            },
-            { merge: true }
-          );
+        // firebase
+        //   .firestore()
+        //   .doc(
+        //     `debugLog/${username}:${uid}/log/${Date.now()}:${
+        //       Math.random() * 99999999
+        //     }`
+        //   )
+        //   .set(
+        //     {
+        //       clientTime: new Date(),
+        //       serverTime: firebase.firestore.FieldValue.serverTimestamp(),
+        //       action: `Disconnect detected, updating database...`,
+        //     },
+        //     { merge: true }
+        //   );
 
         // FIRESTORE: OFFLINE
         userPresenceRef.set(isOfflineForFirestore);
 
         // CONNECT DETECTED
       } else {
-        firebase
-          .firestore()
-          .doc(
-            `debugLog/${username}:${uid}/log/${Date.now()}:${
-              Math.random() * 99999999
-            }`
-          )
-          .set(
-            {
-              clientTime: new Date(),
-              serverTime: firebase.firestore.FieldValue.serverTimestamp(),
-              action: `Connection detected, updating database...`,
-            },
-            { merge: true }
-          );
+        // firebase
+        //   .firestore()
+        //   .doc(
+        //     `debugLog/${username}:${uid}/log/${Date.now()}:${
+        //       Math.random() * 99999999
+        //     }`
+        //   )
+        //   .set(
+        //     {
+        //       clientTime: new Date(),
+        //       serverTime: firebase.firestore.FieldValue.serverTimestamp(),
+        //       action: `Connection detected, updating database...`,
+        //     },
+        //     { merge: true }
+        //   );
 
-        // Clear the old one
-        if (refreshIntervalId !== null) {
-          clearInterval(refreshIntervalId);
-        }
-        // Periodically refresh online status
-        refreshIntervalId = setInterval(() => {
-          userPresenceDatabaseRef.set(isOnlineForDatabase);
-
-          // 50 minutes
-        }, 1000 * 60 * 50);
+        startPeriodicUpdate();
 
         if (isConnectedTimeout !== null) {
           clearTimeout(isConnectedTimeout);
@@ -212,8 +220,8 @@ export function startPresence(uid, username, setIsOnline) {
   function subscribe() {
     isSubscribed = true;
 
-    document.addEventListener("blur", onWindowFocusChange);
-    document.addEventListener("focus", onWindowFocusChange);
+    window.addEventListener("blur", onWindowFocusChange);
+    window.addEventListener("focus", onWindowFocusChange);
 
     connectedRef = firebase.database().ref(".info/connected");
 
@@ -261,13 +269,11 @@ export function startPresence(uid, username, setIsOnline) {
   // Remove all the listeners
   async function unsubscribe() {
     isSubscribed = false;
-    document.removeEventListener("blur", onWindowFocusChange);
-    document.removeEventListener("focus", onWindowFocusChange);
+    window.removeEventListener("blur", onWindowFocusChange);
+    window.removeEventListener("focus", onWindowFocusChange);
 
-    if (refreshIntervalId !== null) {
-      clearInterval(refreshIntervalId);
-      refreshIntervalId = null;
-    }
+    stopPeriodicUpdate();
+
     if (isConnectedTimeout !== null) {
       clearTimeout(isConnectedTimeout);
       isConnectedTimeout = null;
@@ -290,8 +296,9 @@ export function startPresence(uid, username, setIsOnline) {
 
   async function signalOnline() {
     if (isSubscribed && userPresenceDatabaseRef) {
-      await firebase.database().goOffline();
       await firebase.database().goOnline();
+      // Set online with current timestamp in case connection is lost after token expires
+      userPresenceDatabaseRef.set(isOnlineForDatabase);
     }
   }
 
