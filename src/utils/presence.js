@@ -12,6 +12,7 @@ export function startPresence(uid, username, setIsOnline) {
   let connectedRef = null; // A function for setting user connected status base on the window visibility
   let isConnectedTimeout = null;
   let messageTimeout = null;
+  let refreshIntervalId = null;
 
   const isOfflineForDatabase = {
     isOnline: false,
@@ -45,14 +46,20 @@ export function startPresence(uid, username, setIsOnline) {
   // Sources:
   // https://github.com/firebase/firebase-js-sdk/issues/174
   // https://stackoverflow.com/questions/17069672/firebase-ondisconnect-not-100-reliable-now
-  async function onWindowVisibilityChange() {
+  async function onWindowFocusChange() {
     // FOCUS
-    if (document.visibilityState === "visible") {
+    if (document.hasFocus()) {
       signalOnline();
 
       // BLUR
     } else {
-      // TODO: Mark user IDLE here
+      if (refreshIntervalId !== null) {
+        clearInterval(refreshIntervalId);
+        refreshIntervalId = null;
+      }
+
+      // Set online with current timestamp in case connection is lost after token expires
+      userPresenceRef.set(isOnlineForFirestore);
 
       firebase
         .firestore()
@@ -169,6 +176,17 @@ export function startPresence(uid, username, setIsOnline) {
             { merge: true }
           );
 
+        // Clear the old one
+        if (refreshIntervalId !== null) {
+          clearInterval(refreshIntervalId);
+        }
+        // Periodically refresh online status
+        refreshIntervalId = setInterval(() => {
+          userPresenceDatabaseRef.set(isOnlineForDatabase);
+
+          // 50 minutes
+        }, 1000 * 60 * 50);
+
         if (isConnectedTimeout !== null) {
           clearTimeout(isConnectedTimeout);
           isConnectedTimeout = null;
@@ -194,7 +212,8 @@ export function startPresence(uid, username, setIsOnline) {
   function subscribe() {
     isSubscribed = true;
 
-    document.addEventListener("visibilitychange", onWindowVisibilityChange);
+    document.addEventListener("blur", onWindowFocusChange);
+    document.addEventListener("focus", onWindowFocusChange);
 
     connectedRef = firebase.database().ref(".info/connected");
 
@@ -242,7 +261,13 @@ export function startPresence(uid, username, setIsOnline) {
   // Remove all the listeners
   async function unsubscribe() {
     isSubscribed = false;
-    document.removeEventListener("visibilitychange", onWindowVisibilityChange);
+    document.removeEventListener("blur", onWindowFocusChange);
+    document.removeEventListener("focus", onWindowFocusChange);
+
+    if (refreshIntervalId !== null) {
+      clearInterval(refreshIntervalId);
+      refreshIntervalId = null;
+    }
     if (isConnectedTimeout !== null) {
       clearTimeout(isConnectedTimeout);
       isConnectedTimeout = null;
