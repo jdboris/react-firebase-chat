@@ -110,7 +110,6 @@ export function ChatRoomApp({
           ...userSnapshot.data(),
         }
       : null;
-  console.log("user: ", user);
 
   const [conversationRef, setConversationRef] = useState(null);
   const [dmMessagesRef, setDmMessagesRef] = useState(null);

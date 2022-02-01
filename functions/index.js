@@ -728,6 +728,26 @@ exports.onUserStatusChanged = functions.database
     // Otherwise, we convert the lastChanged field to a Date
     eventStatus.lastChanged = new Date(eventStatus.lastChanged);
 
+    const oneHour = 1000 * 60 * 60;
+    const oneHourAgo = new Date(Date.now() - oneHour);
+    const oldUsersSnapshot = await db
+      .collection(`userPresences`)
+      .where("lastChanged", "<", oneHourAgo)
+      .get();
+
+    for (const userDoc of oldUsersSnapshot.docs) {
+      const isOfflineForDatabase = {
+        username: userDoc.data().username,
+        isOnline: false,
+        lastChanged: admin.database.ServerValue.TIMESTAMP,
+      };
+
+      admin
+        .database()
+        .ref(`userPresences/${userDoc.id}`)
+        .set(isOfflineForDatabase);
+    }
+
     // ... and write it to Firestore.
     return await userStatusFirestoreRef.set(eventStatus);
   });
