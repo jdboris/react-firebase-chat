@@ -782,6 +782,10 @@ li {
   margin-right: 0px;
 }
 
+.message-contents code {
+  white-space: pre-wrap;
+}
+
 .message > div {
   position: relative;
   margin-left: 5px;
