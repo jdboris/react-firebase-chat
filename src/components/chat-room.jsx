@@ -65,6 +65,7 @@ export function ChatRoom(props) {
       : 0;
 
   const [presence, setPresence] = useState(null);
+  const [isLoadingPresence, setLoadingPresence] = useState(false);
   const [errors, setErrors] = useState([]);
   const [messageErrorFlash, setMessageErrorFlash] = useState(0);
   const [premium, setPremium] = useState(false);
@@ -214,13 +215,20 @@ export function ChatRoom(props) {
   }, []);
 
   useEffect(() => {
-    if (isLoadingUser) return true;
+    if (isLoadingUser || isLoadingPresence) return true;
+
+    // SAME USER
+    if (
+      presence &&
+      (presence.uid == userId || (!userId && !presence.username))
+    ) {
+      return true;
+    }
+
+    setLoadingPresence(true);
 
     (async (presence, userId, user, username) => {
       if (presence) {
-        // SAME USER
-        if (presence.uid == userId) return true;
-
         // firebase
         //   .firestore()
         //   .doc(
@@ -236,7 +244,6 @@ export function ChatRoom(props) {
         //     },
         //     { merge: true }
         //   );
-
         // NEW USER
         await presence.unsubscribe();
         await presence.disconnect();
@@ -271,8 +278,10 @@ export function ChatRoom(props) {
       }
 
       setPresence(startPresence(userId, username, setIsOnline));
+
+      setLoadingPresence(false);
     })(presence, userId, user, username);
-  }, [userId, isLoadingUser]);
+  }, [userId, isLoadingUser, isLoadingPresence]);
 
   useEffect(() => {
     if (!selection) return;
@@ -703,7 +712,7 @@ export function ChatRoom(props) {
       {!isOnline && (
         <div className={styles["chat-room-overlay"]}>
           <div className={styles["overlay-message"]}>
-            <div>Connection inerrrupted.</div>
+            <div>Connection interrupted.</div>
             <button
               onClickCapture={() => {
                 if (presence.signalOnline) {
