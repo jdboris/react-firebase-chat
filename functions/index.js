@@ -698,35 +698,55 @@ exports.sendPasswordResetEmail = functions.https.onCall(
   }
 );
 
-// Create a new function which is triggered on changes to /userPresences/{uid}
-// Note: This is a Realtime Database trigger, *not* Firestore.
+exports.onUserPresenceDeleted = functions.database
+  .ref("/userPresences/{uid}")
+  .onDelete(async (snapshot, context) => {
+    const currentSnapshot = await snapshot.ref.once("value");
+
+    // If a document exists right now despite this onDelete handler being called...
+    if (currentSnapshot.exists()) {
+      const currentPresence = currentSnapshot.val();
+
+      // ...if that document was updated more recently than this deletion
+      if (
+        new Date(currentPresence.lastChanged) > Date.parse(context.timestamp)
+      ) {
+        return null;
+      }
+    }
+
+    // Data to be DELETED from Firestore
+    const presenceFirestoreRef = db.doc(`userPresences/${context.params.uid}`);
+    // Delete it from Firestore.
+    return await presenceFirestoreRef.delete();
+
+    return null;
+  });
+
 exports.onUserStatusChanged = functions.database
   .ref("/userPresences/{uid}")
   .onUpdate(async (change, context) => {
     // Get the data written to Realtime Database
-    const eventStatus = change.after.val();
-    // Then use other event data to create a reference to the
-    // corresponding Firestore document.
-    const userStatusFirestoreRef = db.doc(
-      `userPresences/${context.params.uid}`
-    );
+    const newPresence = change.after.val();
 
     // It is likely that the Realtime Database change that triggered
     // this event has already been overwritten by a fast change in
     // online / offline status, so we'll re-read the current data
     // and compare the timestamps.
-    const statusSnapshot = await change.after.ref.once("value");
-    const status = statusSnapshot.val();
+    const currentSnapshot = await change.after.ref.once("value");
+    const currentPresence = currentSnapshot.val();
 
-    // functions.logger.log(status, eventStatus);
     // If the current timestamp for this data is newer than
     // the data that triggered this event, we exit this function.
-    if (status.lastChanged > eventStatus.lastChanged) {
+    if (
+      currentPresence &&
+      currentPresence.lastChanged > newPresence.lastChanged
+    ) {
       return null;
     }
 
     // Otherwise, we convert the lastChanged field to a Date
-    eventStatus.lastChanged = new Date(eventStatus.lastChanged);
+    newPresence.lastChanged = new Date(newPresence.lastChanged);
 
     const oneHour = 1000 * 60 * 60;
     const oneHourAgo = new Date(Date.now() - oneHour);
@@ -744,20 +764,13 @@ exports.onUserStatusChanged = functions.database
     }
 
     for (const userDoc of oldUsersSnapshot.docs) {
-      const isOfflineForDatabase = {
-        username: userDoc.data().username || null,
-        isOnline: false,
-        lastChanged: admin.database.ServerValue.TIMESTAMP,
-      };
-
-      await admin
-        .database()
-        .ref(`userPresences/${userDoc.id}`)
-        .set(isOfflineForDatabase);
+      await admin.database().ref(`userPresences/${userDoc.id}`).remove();
     }
 
+    const presenceDocFirestore = db.doc(`userPresences/${context.params.uid}`);
+
     // ... and write it to Firestore.
-    return await userStatusFirestoreRef.set(eventStatus);
+    return await presenceDocFirestore.set(newPresence);
   });
 
 // exports.getOembedProviders = functions.https.onCall((data, context) => {
