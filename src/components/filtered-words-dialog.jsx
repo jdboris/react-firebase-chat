@@ -114,7 +114,7 @@ export function FilteredWordsDialog(props) {
           {filteredWords && (
             <ReactPaginate
               pageCount={Math.ceil(filteredWords.length / itemsPerPage)}
-              pageRangeDisplayed={10}
+              pageRangeDisplayed={5}
               marginPagesDisplayed={2}
               onPageChange={(item) => {
                 setPage(item.selected + 1);

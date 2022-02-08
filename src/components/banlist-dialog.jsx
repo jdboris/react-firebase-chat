@@ -86,7 +86,7 @@ export function BanlistDialog(props) {
           {bannedUsers && (
             <ReactPaginate
               pageCount={Math.ceil(bannedUsers.length / itemsPerPage)}
-              pageRangeDisplayed={10}
+              pageRangeDisplayed={5}
               marginPagesDisplayed={2}
               onPageChange={(item) => {
                 setPage(item.selected + 1);

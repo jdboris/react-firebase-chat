@@ -388,12 +388,13 @@ label [type="file"] {
 }
 
 svg.chat-bubble-icon {
-  width: 0.8em;
   height: 0.8em;
 }
 
 svg.gavel-icon {
   font-size: 1.1em;
+  width: 1.5em;
+  padding: 0 0.25em;
 }
 
 .user-count {

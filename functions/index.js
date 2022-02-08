@@ -759,7 +759,7 @@ exports.onUserStatusChanged = functions.database
     if (oldUsersSnapshot.docs.length) {
       console.log(
         "MARKING USERS OFFLINE: ",
-        oldUsersSnapshot.docs.map((doc) => doc.data().username)
+        oldUsersSnapshot.docs.map((doc) => doc.id)
       );
     }
 
