@@ -88,7 +88,7 @@ export function ModeratorsDialog(props) {
             {mods && (
               <ReactPaginate
                 pageCount={Math.ceil(mods.length / itemsPerPage)}
-                pageRangeDisplayed={10}
+                pageRangeDisplayed={5}
                 marginPagesDisplayed={2}
                 onPageChange={(item) => {
                   setPage(item.selected + 1);

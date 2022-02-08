@@ -180,7 +180,7 @@ export function DmsDialog(props) {
           {conversations && (
             <ReactPaginate
               pageCount={Math.ceil(conversations.length / itemsPerPage)}
-              pageRangeDisplayed={10}
+              pageRangeDisplayed={5}
               marginPagesDisplayed={2}
               onPageChange={(item) => {
                 setPage(item.selected + 1);
