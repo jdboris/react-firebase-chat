@@ -324,7 +324,7 @@ exports.sendMessage = functions.https.onCall(async (data, context) => {
   data.text = await filterWords(data.text);
 
   // NOTE: Escape the > character because remark-gfm sanitizes it
-  data.text = data.text.replace(/[>#]/g, "\\$&");
+  data.text = data.text.replace(/[>]/g, "\\$&");
 
   const timestamp = admin.firestore.FieldValue.serverTimestamp();
 
@@ -719,8 +719,6 @@ exports.onUserPresenceDeleted = functions.database
     const presenceFirestoreRef = db.doc(`userPresences/${context.params.uid}`);
     // Delete it from Firestore.
     return await presenceFirestoreRef.delete();
-
-    return null;
   });
 
 exports.onUserStatusChanged = functions.database
@@ -764,6 +762,7 @@ exports.onUserStatusChanged = functions.database
     }
 
     for (const userDoc of oldUsersSnapshot.docs) {
+      await db.doc(`userPresences/${userDoc.id}`).delete();
       await admin.database().ref(`userPresences/${userDoc.id}`).remove();
     }
 
