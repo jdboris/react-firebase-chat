@@ -31,85 +31,88 @@ export function MessageList(props) {
 
   return (
     <section ref={messageList} className={styles["messages-section"]}>
-      <div className={styles["pagination-controls"]}>
-        {messages.length &&
-          defaultMessages &&
-          messages[0].id !== defaultMessages[0].id && (
-            <button
-              onClick={() => {
-                setPaused(false);
-              }}
-            >
-              Jump to present
-            </button>
-          )}
-      </div>
-
-      {messages &&
-        // Must make a copy because props are immutable
-        messages.map((msg) => (
-          <ChatMessage
-            key={msg.id}
-            setErrors={setErrors}
-            setAlerts={setAlerts}
-            message={msg}
-            stylesEnabled={stylesEnabled}
-            onClick={onMessageClick}
-            currentUser={currentUser}
-            messagesRef={messagesRef}
-            isPopMuted={isPopMuted}
-          />
-        ))}
-
-      <div className={styles["pagination-controls"]}>
-        {messages.length >= 25 && (
-          <button
-            onClick={async () => {
-              setPaused(true);
-              const query = messagesRef
-                .where("isDeleted", "==", false)
-                .orderBy("createdAt", "desc")
-                .startAfter(messages[messages.length - 1].createdAt)
-                .limit(25);
-
-              const snapshot = await query.get();
-              const newMessages = snapshot.docs.map((doc) => {
-                return { id: doc.id, ...doc.data() };
-              });
-              setMessages(newMessages);
-            }}
-          >
-            Older
-          </button>
-        )}
-
-        {messages.length &&
-          defaultMessages &&
-          messages[0].id !== defaultMessages[0].id && (
+      <div>
+        <div className={styles["pagination-controls"]}>
+          {messages.length >= 25 && (
             <button
               onClick={async () => {
                 setPaused(true);
                 const query = messagesRef
                   .where("isDeleted", "==", false)
                   .orderBy("createdAt", "desc")
-                  .endBefore(messages[0].createdAt)
-                  .limitToLast(25);
+                  .startAfter(messages[messages.length - 1].createdAt)
+                  .limit(25);
 
                 const snapshot = await query.get();
                 const newMessages = snapshot.docs.map((doc) => {
                   return { id: doc.id, ...doc.data() };
                 });
-
-                if (newMessages[0].id === defaultMessages[0].id) {
-                  setPaused(false);
-                } else if (newMessages.length) {
-                  setMessages(newMessages);
-                }
+                setMessages(newMessages);
               }}
             >
-              Newer
+              Older
             </button>
           )}
+
+          {messages.length &&
+            defaultMessages &&
+            messages[0].id !== defaultMessages[0].id && (
+              <button
+                onClick={async () => {
+                  setPaused(true);
+                  const query = messagesRef
+                    .where("isDeleted", "==", false)
+                    .orderBy("createdAt", "desc")
+                    .endBefore(messages[0].createdAt)
+                    .limitToLast(25);
+
+                  const snapshot = await query.get();
+                  const newMessages = snapshot.docs.map((doc) => {
+                    return { id: doc.id, ...doc.data() };
+                  });
+
+                  if (newMessages[0].id === defaultMessages[0].id) {
+                    setPaused(false);
+                  } else if (newMessages.length) {
+                    setMessages(newMessages);
+                  }
+                }}
+              >
+                Newer
+              </button>
+            )}
+        </div>
+        {messages &&
+          // Must make a copy because props are immutable
+          [...messages]
+            .reverse()
+            .map((msg) => (
+              <ChatMessage
+                key={msg.id}
+                setErrors={setErrors}
+                setAlerts={setAlerts}
+                message={msg}
+                stylesEnabled={stylesEnabled}
+                onClick={onMessageClick}
+                currentUser={currentUser}
+                messagesRef={messagesRef}
+                isPopMuted={isPopMuted}
+              />
+            ))}
+
+        <div className={styles["pagination-controls"]}>
+          {messages.length &&
+            defaultMessages &&
+            messages[0].id !== defaultMessages[0].id && (
+              <button
+                onClick={() => {
+                  setPaused(false);
+                }}
+              >
+                Jump to present
+              </button>
+            )}
+        </div>
       </div>
     </section>
   );
