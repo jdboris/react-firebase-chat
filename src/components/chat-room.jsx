@@ -342,7 +342,6 @@ export function ChatRoom(props) {
         setAlerts={props.setAlerts}
         messagesRef={messagesRef}
         defaultMessages={messages}
-        scrollToBottom={true}
         stylesEnabled={stylesEnabled}
         onMessageClick={(targetUsername) => {
           setMessageValue(messageValue + " @" + targetUsername + " ");

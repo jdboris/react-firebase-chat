@@ -282,6 +282,7 @@ label [type="file"] {
   display: flex;
   justify-content: center;
   align-items: center;
+  height: 400px;
 }
 
 .chat-section {
@@ -311,15 +312,15 @@ label [type="file"] {
   width: 100%;
 }
 
-.messages-section > :last-child {
+.messages-section > div > :last-child {
   margin-top: auto;
 }
 
-.messages-section > .pagination-controls {
+.messages-section > div > .pagination-controls {
   display: flex;
 }
 
-.messages-section > .pagination-controls > button {
+.messages-section > div > .pagination-controls > button {
   border-radius: 0px;
   border: 1px solid grey;
   flex-basis: 50%;
