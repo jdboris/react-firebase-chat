@@ -614,6 +614,7 @@ textarea {
   outline: none;
   border: 2px solid #131313;
   padding: 10px 15px;
+  margin: 0;
   font-family: sans-serif;
   resize: none;
   background-size: 30% auto;
