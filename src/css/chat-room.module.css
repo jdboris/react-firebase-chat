@@ -282,7 +282,6 @@ label [type="file"] {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 400px;
 }
 
 .chat-section {
@@ -709,6 +708,8 @@ li {
   padding: 0 5px;
   background-size: 30% auto;
   z-index: 0;
+  /* NOTE: Required to fix the bug where chat sometimes stops snapping to bottom */
+  overflow-anchor: none;
 }
 
 /* NOTE: Specifity required */
