@@ -201,6 +201,8 @@ export const MessageInputForm = React.forwardRef((props, messageInput) => {
             }
 
             if ((e.key === "b" || e.key === "B") && e.ctrlKey) {
+              e.preventDefault();
+              e.stopPropagation();
               const result = props.toggleSelectionMarkup(MARKUP_SYMBOLS.BOLD);
 
               props.setMessageValue(result.value);
@@ -209,6 +211,8 @@ export const MessageInputForm = React.forwardRef((props, messageInput) => {
                 end: result.end,
               });
             } else if ((e.key === "i" || e.key === "I") && e.ctrlKey) {
+              e.preventDefault();
+              e.stopPropagation();
               const result = props.toggleSelectionMarkup(
                 MARKUP_SYMBOLS.ITALICS
               );
