@@ -79,6 +79,10 @@ label [type="file"] {
   display: none;
 }
 
+svg {
+  vertical-align: middle;
+}
+
 .chat-app svg.outlined {
   border: 1px solid;
 }
@@ -526,13 +530,14 @@ svg.gavel-icon {
 .message-form {
   display: flex;
   font-size: 1.5rem;
-  align-items: center;
+  align-items: stretch;
   width: 100%;
   z-index: 0;
 }
 
 .message-form > * {
-  height: 100% !important;
+  display: flex;
+  align-items: stretch;
 }
 
 .message-form > * {
@@ -551,6 +556,7 @@ svg.gavel-icon {
   /* NOTE: Placeholder */
   border: 1px solid black;
   background: black;
+  height: auto;
 }
 
 .camera-icon {
@@ -663,6 +669,10 @@ button {
   border-radius: 0.25em;
   cursor: pointer;
   border: 0;
+}
+
+button:not(:last-child) {
+  margin-right: 0.3em;
 }
 
 button:disabled {
