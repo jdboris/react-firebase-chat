@@ -9,8 +9,14 @@ service cloud.firestore {
       return isLoggedIn() ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data : null;
     }
 
+    function isGiftedPremium(user) {
+      return user.giftedPremiumStart != null && user.giftedPremiumEnd != null 
+          && request.time >= user.giftedPremiumStart 
+          && request.time <= user.giftedPremiumEnd;
+    }
+
     function isPremium() {
-      return request.auth.token.stripeRole == "premium";
+      return request.auth.token.stripeRole == "premium" || isGiftedPremium(request.resource.data);
     }
 
     function isAdmin() {
@@ -88,14 +94,14 @@ service cloud.firestore {
       allow update: if isDocOwner(uid)
                     && !isAnonymous()
                     // NOTE: Don't allow updating these keys
-                    && (!affectedKeys().hasAny(["isAdmin", "isModerator", "isBanned", "ipAddresses"]))
+                    && (!affectedKeys().hasAny(["isAdmin", "isModerator", "isBanned", "ipAddresses", "giftedPremiumStart", "giftedPremiumEnd"]))
                     // NOTE: Don't allow updating these keys unless user is premium
                     && (isPremium() 
                         || (!affectedKeys()
                             .hasAny(["msgBgImg", "msgBgColor", "msgBgTransparency", "msgBgRepeat", "msgBgPosition", "msgBgImgTransparency"])
                             && (!affectedKeys().hasAny(["fontSize"]) || request.resource.data.fontSize < 15 )));
       match /checkout_sessions/{id} {
-        allow read, write: if request.auth.uid == uid;
+        allow read, create: if request.auth.uid == uid;
       }
       match /subscriptions/{id} {
         allow read: if request.auth.uid == uid;

@@ -2,11 +2,18 @@ import { loadStripe } from "@stripe/stripe-js";
 import { firestore } from "../components/chat-room-app";
 import firebase from "firebase/compat/app";
 
-export function sendToStripe(uid, priceId, setLoading) {
+export function sendToStripe(
+  uid,
+  priceId,
+  shouldLogout = true,
+  metadata = null
+) {
   return new Promise((resolve, reject) => {
     const returnUrl = new URL(window.location);
-    // Force a logout to refresh the token for premium custom claims
-    returnUrl.searchParams.set("chat-logout", "1");
+    if (shouldLogout) {
+      // Force a logout to refresh the token for premium custom claims
+      returnUrl.searchParams.set("chat-logout", "1");
+    }
 
     firestore
       .collection("users")
@@ -17,6 +24,24 @@ export function sendToStripe(uid, priceId, setLoading) {
         success_url: returnUrl.href, // return user to this screen on successful purchase
         cancel_url: window.location.href, // return user to this screen on failed purchase
         allow_promotion_codes: true,
+        mode:
+          metadata && metadata.recipients && metadata.recipients.length
+            ? "payment"
+            : "subscription",
+        ...(metadata
+          ? {
+              metadata: {
+                userId: uid,
+                ...Object.fromEntries(
+                  Object.entries(metadata).map(([key, value]) => [
+                    key,
+                    JSON.stringify(value),
+                  ])
+                ),
+              },
+              quantity: metadata.recipients ? metadata.recipients.length : 1,
+            }
+          : {}),
       })
       .then((docRef) => {
         // Wait for the checkoutSession to get attached by the extension
