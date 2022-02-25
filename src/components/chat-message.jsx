@@ -239,9 +239,7 @@ export function ChatMessage(props) {
                     if (!props.href.trim().slice(0, -1).includes(".")) {
                       return <span>{props.href}</span>;
                     }
-                    return (
-                      <Link shouldComponentUpdate={false} href={props.href} />
-                    );
+                    return <Link shouldComponentUpdate={false} {...props} />;
                   },
                   // NOTE: Must overwrite the built-in renderer to ensure the text of the link is the URL
                   span: ({ className, children }) => {
