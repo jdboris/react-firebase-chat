@@ -18,6 +18,15 @@ async function getUser(uid) {
   return snapshot.data();
 }
 
+function isGiftedPremium(user) {
+  return Boolean(
+    user.giftedPremiumStart &&
+      user.giftedPremiumEnd &&
+      new Date() >= user.giftedPremiumStart.toDate() &&
+      new Date() <= user.giftedPremiumEnd.toDate()
+  );
+}
+
 async function getUsersByIp(ip) {
   if (!ip) return [];
   const snapshot = await db
@@ -335,7 +344,8 @@ exports.sendMessage = functions.https.onCall(async (data, context) => {
     lowercaseUsername: user.username.toLowerCase(),
     photoUrl: authUser.photoURL || "",
     createdAt: timestamp,
-    premium: context.auth.token.stripeRole === "premium",
+    premium:
+      context.auth.token.stripeRole === "premium" || isGiftedPremium(user),
     isModMessage: user.isModerator,
   };
 
@@ -901,8 +911,9 @@ exports.uploadFile = functions.https.onCall(async (data, context) => {
   }
 
   const { fromBuffer: fileTypeFromBuffer } = require("file-type");
-  const crypto = require("crypto");
-  const premium = context.auth.token.stripeRole === "premium";
+
+  const premium =
+    context.auth.token.stripeRole === "premium" || isGiftedPremium(user);
 
   const megabyteSize = 1024 * 1024;
   // 10 Megabytes
@@ -911,16 +922,13 @@ exports.uploadFile = functions.https.onCall(async (data, context) => {
   const sizeLimit = 4 * megabyteSize;
   const allowedTypes = ["image/jpeg", "image/jpeg", "image/png", "image/gif"];
 
-  const { base64FileString, extension } = data;
-  const bucket = admin.storage().bucket();
+  const { extension } = data;
+  const base64FileString = data.base64FileString.split(";base64,")[1];
   // NOTE: Must cut off the metadata that browsers put at the beginning
   //       https://stackoverflow.com/questions/67671971/error-loading-preview-on-firebase-storage-with-images-uploaded-from-firebase-ad
-  const imageBuffer = Buffer.from(
-    base64FileString.split(";base64,")[1],
-    "base64"
-  );
+  const fileBuffer = Buffer.from(base64FileString, "base64");
 
-  if (!premium && imageBuffer.byteLength > sizeLimit) {
+  if (!premium && fileBuffer.byteLength > sizeLimit) {
     throw new HttpsError(
       "invalid-argument",
       `File too large (${
@@ -929,26 +937,193 @@ exports.uploadFile = functions.https.onCall(async (data, context) => {
     );
   }
 
-  if (imageBuffer.byteLength > premiumSizeLimit) {
+  if (fileBuffer.byteLength > premiumSizeLimit) {
     throw new HttpsError(
       "invalid-argument",
       `File too large (${premiumSizeLimit / megabyteSize}MB limit).`
     );
   }
 
-  const type = await fileTypeFromBuffer(imageBuffer);
+  const type = await fileTypeFromBuffer(fileBuffer);
   if (!type || !allowedTypes.includes(type.mime)) {
     throw new HttpsError("invalid-argument", "Filetype not supported.");
   }
 
-  const imageByteArray = new Uint8Array(imageBuffer);
-  const uuid = crypto.randomBytes(16).toString("hex");
-  const file = bucket.file(`${context.auth.uid}/${uuid}.${extension}`);
+  // NOTE: https://github.com/firebase/firebase-functions/issues/264#issuecomment-565200194
+  const clientId = functions.config().imgur.client_id;
+  const fetch = require("node-fetch");
 
-  // const options = { resumable: false, metadata: { contentType: "image/jpg" } };
-  const options = { resumable: false, public: true };
-  //options may not be necessary
+  const response = await fetch("https://api.imgur.com/3/image", {
+    method: "POST",
+    headers: {
+      Authorization: `Client-ID ${clientId}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ type: "base64", image: base64FileString }),
+    redirect: "follow",
+  });
 
-  await file.save(imageByteArray, options);
-  return { url: await file.publicUrl() };
+  if (!response.ok) {
+    throw new HttpsError("unknown", "File upload failed.");
+  }
+
+  const imgurData = await response.json();
+
+  return { url: imgurData.data.link };
+
+  // // const options = { resumable: false, metadata: { contentType: "image/jpg" } };
+  // const options = { resumable: false, public: true };
+  // //options may not be necessary
+
+  // const crypto = require("crypto");
+  // const uuid = crypto.randomBytes(16).toString("hex");
+  // const bucket = admin.storage().bucket();
+  // const file = bucket.file(`${context.auth.uid}/${uuid}.${extension}`);
+  // const imageByteArray = new Uint8Array(fileBuffer);
+  // await file.save(imageByteArray, options);
+  // return { url: await file.publicUrl() };
+});
+
+exports.giftPremium = functions.https.onRequest(async (request, response) => {
+  const stripe = require("stripe")(functions.config().keys.webhooks);
+  const endpointSecret = functions.config().keys.signing;
+  const sig = request.headers["stripe-signature"];
+
+  try {
+    // Validate the request
+    const event = stripe.webhooks.constructEvent(
+      request.rawBody,
+      sig,
+      endpointSecret
+    );
+
+    if (event.type !== "checkout.session.completed") {
+      return response.status(200).end();
+    }
+
+    const sessionid = event.data.object.id;
+    const stripeId = event.data.object.customer;
+
+    const userSnapshot = await db
+      .collection("users")
+      .where("stripeId", "==", stripeId)
+      .get();
+
+    if (!userSnapshot.docs.length) {
+      console.error("Customer not found: " + stripeId);
+      return response.status(400).end();
+    }
+
+    const sessionSnapshot = await userSnapshot.docs[0].ref
+      .collection("checkout_sessions")
+      .where("sessionId", "==", sessionid)
+      .get();
+
+    if (!sessionSnapshot.docs.length) {
+      console.error("Checkout session not found: " + sessionid);
+      return response.status(400).end();
+    }
+
+    const checkoutSession = sessionSnapshot.docs[0].data();
+    if (checkoutSession.metadata.complete) {
+      console.log("Gifting already complete, but webhook triggered again.");
+      return response.status(200).end();
+    }
+    const recipientUids = JSON.parse(checkoutSession.metadata.recipients);
+
+    const PRICES = {
+      STRIPE_GIFT_3_MONTHS_PRICE_ID: "price_1KW1Z0AknxYOkdXt6Wfjfnf4",
+      STRIPE_GIFT_6_MONTHS_PRICE_ID: "price_1KW1Z0AknxYOkdXtVp1iIgAm",
+      STRIPE_GIFT_12_MONTHS_PRICE_ID: "price_1KW1Z0AknxYOkdXtSEzlWA38",
+    };
+
+    if (!Object.values(PRICES).includes(checkoutSession.price)) {
+      console.error("Price ID not found: " + checkoutSession.price);
+      return response
+        .status(400)
+        .send("Price ID not found: " + checkoutSession.price);
+    }
+
+    const durationInDays =
+      30 *
+      (checkoutSession.price === PRICES.STRIPE_GIFT_3_MONTHS_PRICE_ID
+        ? 3
+        : checkoutSession.price === PRICES.STRIPE_GIFT_6_MONTHS_PRICE_ID
+        ? 6
+        : checkoutSession.price === PRICES.STRIPE_GIFT_12_MONTHS_PRICE_ID
+        ? 12
+        : 1);
+
+    const userSnapshots = [];
+
+    for (const uid of recipientUids) {
+      const snapshot = await db.collection("users").doc(uid).get();
+
+      if (!snapshot.data()) {
+        console.error("Recipient not found: " + uid);
+        return response.status(400).end();
+      }
+
+      userSnapshots.push(snapshot);
+    }
+
+    for (const snapshot of userSnapshots) {
+      const user = snapshot.data();
+      const subSnapshot = await snapshot.ref
+        .collection("subscriptions")
+        .where("status", "==", "active")
+        .where("role", "==", "premium")
+        .get();
+
+      // Combine the subscription periods with the gifted periods
+      const subscriptions = [
+        ...subSnapshot.docs.map((subscription) => subscription.data()),
+        ...(user.giftedPremiumEnd &&
+        user.giftedPremiumEnd.toDate() >= new Date()
+          ? [
+              {
+                current_period_start: user.giftedPremiumStart,
+                current_period_end: user.giftedPremiumEnd,
+                isGifted: true,
+              },
+            ]
+          : []),
+      ];
+
+      // Descending
+      subscriptions.sort(
+        (a, b) => b.current_period_end.seconds - a.current_period_end.seconds
+      );
+
+      const oldStart = subscriptions.length
+        ? subscriptions[0].current_period_start.toDate()
+        : new Date();
+      const oldEnd = subscriptions.length
+        ? subscriptions[0].current_period_end.toDate()
+        : new Date();
+      const newEnd = new Date(oldEnd.getTime());
+      newEnd.setDate(newEnd.getDate() + durationInDays);
+
+      await snapshot.ref.set(
+        {
+          giftedPremiumStart:
+            subscriptions.length && subscriptions[0].isGifted
+              ? oldStart
+              : oldEnd,
+          giftedPremiumEnd: newEnd,
+        },
+        { merge: true }
+      );
+    }
+
+    await sessionSnapshot.docs[0].ref.set(
+      { metadata: { complete: true } },
+      { merge: true }
+    );
+
+    return response.status(200).end();
+  } catch (e) {
+    console.error(e);
+    return response.status(500).end();
+  }
 });

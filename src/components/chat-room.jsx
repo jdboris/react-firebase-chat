@@ -15,7 +15,7 @@ import styles from "../css/chat-room.module.css";
 import { fonts } from "../utils/fonts";
 import { toggleSelectionMarkup } from "../utils/markdown";
 import { startPresence } from "../utils/presence";
-import { insertIntoInput } from "../utils/utils";
+import { insertIntoInput, isGiftedPremium } from "../utils/utils";
 import { translateError } from "../utils/errors";
 import { BanlistDialog } from "./banlist-dialog";
 // import { getProviders } from "../oembed";
@@ -274,7 +274,9 @@ export function ChatRoom(props) {
         }
 
         const idTokenResult = await user.auth.getIdTokenResult();
-        setPremium(idTokenResult.claims.stripeRole === "premium");
+        setPremium(
+          idTokenResult.claims.stripeRole === "premium" || isGiftedPremium(user)
+        );
       }
 
       setPresence(startPresence(userId, username, setIsOnline));
@@ -683,7 +685,7 @@ export function ChatRoom(props) {
         <PremiumDialog
           open={isPremiumOpen}
           isAnonymous={user.email == null}
-          uid={user.uid}
+          user={user}
           premium={premium}
           requestClose={() => {
             setPremiumOpen(false);

@@ -94,3 +94,12 @@ export function flashInTitle(text, interval = 1000) {
     });
   }
 }
+
+export function isGiftedPremium(user) {
+  return Boolean(
+    user.giftedPremiumStart &&
+      user.giftedPremiumEnd &&
+      new Date() >= user.giftedPremiumStart.toDate() &&
+      new Date() <= user.giftedPremiumEnd.toDate()
+  );
+}

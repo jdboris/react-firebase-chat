@@ -1,4 +1,8 @@
-import { Close as CloseIcon } from "@mui/icons-material";
+import {
+  Close as CloseIcon,
+  Add as AddIcon,
+  DoDisturb as DoDisturbIcon,
+} from "@mui/icons-material";
 import { default as React, useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import { firestore } from "./chat-room-app";
@@ -7,17 +11,32 @@ import { sendToCustomerPortal, sendToStripe } from "../utils/stripe";
 import { timeout } from "../utils/utils";
 
 export function PremiumDialog(props) {
-  const { isAnonymous, uid } = props;
+  const { isAnonymous, user } = props;
   const [period, setPeriod] = useState(3);
+  const [isGifting, setIsGifting] = useState(false);
+  const [recipients, setRecipients] = useState([""]);
+  const [errors, setErrors] = useState([]);
   const [loading, setLoading] = useState(false);
+
   const query = firestore
     .collection("users")
-    .doc(uid)
+    .doc(user.uid)
     .collection("subscriptions")
     .where("status", "==", "active")
     .where("role", "==", "premium");
 
-  const [subscriptions] = useCollectionData(query);
+  const [normalSubscriptions] = useCollectionData(query);
+  const subscriptions = [
+    ...(normalSubscriptions ? normalSubscriptions : []),
+    ...(user.giftedPremiumEnd && user.giftedPremiumEnd.toDate() > new Date()
+      ? [
+          {
+            current_period_start: user.giftedPremiumStart,
+            current_period_end: user.giftedPremiumEnd,
+          },
+        ]
+      : []),
+  ];
 
   return (
     props.open && (
@@ -26,22 +45,20 @@ export function PremiumDialog(props) {
           Premium
           <CloseIcon
             onClick={() => {
+              setIsGifting(false);
               props.requestClose();
             }}
           />
         </header>
         <main>
-          {subscriptions && subscriptions.length ? (
+          {subscriptions && subscriptions.length && !isGifting ? (
             <>
               {subscriptions.map((subscription, i) => {
-                const expiration = new Date(Date.UTC(1970, 0, 1));
-                expiration.setUTCSeconds(
-                  subscription.current_period_end.seconds
-                );
+                const expiration = subscription.current_period_end.toDate();
 
                 const formatter = new Intl.DateTimeFormat(undefined, {
                   timeStyle: "short",
-                  dateStyle: "short",
+                  dateStyle: "medium",
                 });
 
                 return (
@@ -52,23 +69,35 @@ export function PremiumDialog(props) {
               })}
 
               <div>
+                {normalSubscriptions.length > 0 && (
+                  <button
+                    className={loading ? styles["loading"] : ""}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (loading) return;
+                      setLoading(true);
+                      timeout(5000, () => {
+                        return sendToCustomerPortal().then(() => {
+                          // Add another delay for the navigation to commence/complete
+                          setTimeout(() => {
+                            setLoading(false);
+                          }, 2000);
+                        });
+                      });
+                    }}
+                  >
+                    Manage Subscription
+                  </button>
+                )}
+
                 <button
                   className={loading ? styles["loading"] : ""}
                   onClick={(e) => {
                     e.preventDefault();
-                    if (loading) return;
-                    setLoading(true);
-                    timeout(5000, () => {
-                      return sendToCustomerPortal().then(() => {
-                        // Add another delay for the navigation to commence/complete
-                        setTimeout(() => {
-                          setLoading(false);
-                        }, 2000);
-                      });
-                    });
+                    setIsGifting(true);
                   }}
                 >
-                  Manage Subscription
+                  Gift to Friends
                 </button>
               </div>
             </>
@@ -76,55 +105,231 @@ export function PremiumDialog(props) {
             <>Must create an account to upgrade to Premium.</>
           ) : (
             <>
-              Upgrade to a Premium account for perks like more emojis, more
-              message style options, and more...
+              {isGifting ? (
+                <p>
+                  Gift a period of Premium to your friend(s). <br />
+                  <small>
+                    This will extend their current subscription (if applicable).
+                  </small>
+                </p>
+              ) : (
+                <p>
+                  Upgrade to a Premium account for perks like more emojis, more
+                  message style options, and more...
+                </p>
+              )}
+
               <form
                 onSubmit={async (e) => {
                   e.preventDefault();
                   if (loading) return;
-                  setLoading(true);
 
-                  await timeout(5 * 60000, async () => {
-                    await sendToStripe(uid, e.target.period.value, setLoading);
-                  });
+                  try {
+                    const recipientUids = [];
+                    const errors = [];
 
-                  setLoading(false);
+                    for (let i = 0; i < recipients.length; i++) {
+                      // If there are duplicates
+                      if (
+                        recipients.filter((name) => name == recipients[i])
+                          .length > 1
+                      ) {
+                        const error = new Error("Duplicate user.");
+                        error.field = i;
+                        errors.push(error);
+                        break;
+                      }
+
+                      const snapshot = await firestore
+                        .collection("users")
+                        .where(
+                          "lowercaseUsername",
+                          "==",
+                          recipients[i].toLowerCase()
+                        )
+                        .get();
+                      if (!snapshot.docs.length) {
+                        const error = new Error("User not found.");
+                        error.field = i;
+                        errors.push(error);
+                      } else if (snapshot.docs[0].id === user.uid) {
+                        const error = new Error("May not gift to yourself.");
+                        error.field = i;
+                        errors.push(error);
+                      } else if ("anonSuffix" in snapshot.docs[0].data()) {
+                        const error = new Error("May not gift to anons.");
+                        error.field = i;
+                        errors.push(error);
+                      } else {
+                        recipientUids.push(snapshot.docs[0].id);
+                      }
+                    }
+
+                    if (errors.length) throw errors;
+
+                    setLoading(true);
+                    await timeout(5 * 60000, async () => {
+                      await sendToStripe(
+                        user.uid,
+                        e.target.period.value,
+                        !isGifting,
+                        isGifting ? { recipients: recipientUids } : null
+                      );
+                    });
+                  } catch (e) {
+                    setErrors(Array.isArray(e) ? e : [e]);
+                  } finally {
+                    setLoading(false);
+                  }
                 }}
               >
-                <label>
-                  <input
-                    type="radio"
-                    name="period"
-                    value={process.env.REACT_APP_STRIPE_3_MONTH_PRICE_ID}
-                    onChange={() => setPeriod(3)}
-                    defaultChecked
-                  />{" "}
-                  3 Months - $2/month
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    name="period"
-                    value={process.env.REACT_APP_STRIPE_6_MONTH_PRICE_ID}
-                    onChange={() => setPeriod(6)}
-                  />{" "}
-                  6 Months - $1.5/month
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    name="period"
-                    value={process.env.REACT_APP_STRIPE_12_MONTH_PRICE_ID}
-                    onChange={() => setPeriod(12)}
-                  />{" "}
-                  12 Months - $1/month
-                </label>
-                Billed every {period} months. Cancel any time.
-                <label>
-                  <button className={loading ? styles["loading"] : ""}>
-                    Subscribe
-                  </button>
-                </label>
+                <fieldset disabled={loading}>
+                  <label>
+                    <input
+                      type="radio"
+                      name="period"
+                      value={
+                        isGifting
+                          ? process.env.REACT_APP_STRIPE_GIFT_3_MONTHS_PRICE_ID
+                          : process.env.REACT_APP_STRIPE_3_MONTH_PRICE_ID
+                      }
+                      onChange={() => setPeriod(3)}
+                      defaultChecked
+                    />{" "}
+                    3 Months - $2/month
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name="period"
+                      value={
+                        isGifting
+                          ? process.env.REACT_APP_STRIPE_GIFT_6_MONTHS_PRICE_ID
+                          : process.env.REACT_APP_STRIPE_6_MONTH_PRICE_ID
+                      }
+                      onChange={() => setPeriod(6)}
+                    />{" "}
+                    6 Months - $1.5/month
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name="period"
+                      value={
+                        isGifting
+                          ? process.env.REACT_APP_STRIPE_GIFT_12_MONTHS_PRICE_ID
+                          : process.env.REACT_APP_STRIPE_12_MONTH_PRICE_ID
+                      }
+                      onChange={() => setPeriod(12)}
+                    />{" "}
+                    12 Months - $1/month
+                  </label>
+                  {!isGifting ? (
+                    <p>Billed every {period} months. Cancel any time.</p>
+                  ) : (
+                    <section>
+                      Recipient(s)
+                      <span className={styles.errors}>
+                        {errors
+                          .filter((error) => !("field" in error))
+                          .map((error) => (
+                            <span>{error.message}</span>
+                          ))}
+                      </span>
+                      <ul>
+                        {recipients.map((recipient, i) => (
+                          <li key={i}>
+                            {errors
+                              .filter((error) => error.field === i)
+                              .map((error) => (
+                                <span className={styles["error"]}>
+                                  {error.message}
+                                </span>
+                              ))}
+                            <label>
+                              {i > 0 && (
+                                <DoDisturbIcon
+                                  className={styles["pointer"]}
+                                  onClick={() => {
+                                    setErrors([]);
+
+                                    setRecipients((oldRecipients) => {
+                                      oldRecipients.splice(i, 1);
+                                      return [...oldRecipients];
+                                    });
+                                  }}
+                                />
+                              )}
+                              <input
+                                autoFocus={i === recipients.length - 1}
+                                className={
+                                  errors.find((error) => error.field === i)
+                                    ? styles["error-highlight"]
+                                    : ""
+                                }
+                                type="text"
+                                placeholder="username"
+                                value={recipient}
+                                onChange={(e) => {
+                                  setErrors([]);
+
+                                  setRecipients((oldRecipients) => {
+                                    oldRecipients[i] = e.target.value;
+                                    if (!oldRecipients[i]) {
+                                      oldRecipients.splice(i, 1);
+                                    }
+
+                                    return [...oldRecipients];
+                                  });
+                                }}
+                                onKeyPress={(e) => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    if (loading) return;
+                                    setRecipients((oldRecipients) => {
+                                      oldRecipients.push("");
+
+                                      return [...oldRecipients];
+                                    });
+                                  }
+                                }}
+                              />
+                            </label>
+                          </li>
+                        ))}
+                        <li>
+                          <span
+                            className={loading ? "" : styles["pointer"]}
+                            onClick={() => {
+                              if (loading) return;
+                              setRecipients((oldRecipients) => {
+                                oldRecipients.push("");
+
+                                return [...oldRecipients];
+                              });
+                            }}
+                          >
+                            <AddIcon /> add recipient...
+                          </span>
+                        </li>
+                      </ul>
+                    </section>
+                  )}
+                  <span>
+                    <button>
+                      {isGifting ? <>Purchase</> : <>Subscribe</>}
+                    </button>
+                    <button
+                      className={loading ? styles["loading"] : ""}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setIsGifting(!isGifting);
+                      }}
+                    >
+                      {isGifting ? <>My Subscription</> : <>Gift to Friends</>}
+                    </button>
+                  </span>
+                </fieldset>
               </form>
             </>
           )}
