@@ -8,8 +8,8 @@ import userSelectCss from "./user-select/user-select.module.css";
 import { translateError } from "../utils/errors";
 import { MARKUP_SYMBOLS } from "../utils/markdown";
 import { uploadFile } from "../utils/storage";
-import { timeout, insertIntoInput } from "../utils/utils";
-import { position, offset } from "caret-pos";
+import { timeout } from "../utils/utils";
+import { position } from "caret-pos";
 import { UserSelect } from "./user-select/user-select";
 
 export const MessageInputForm = React.forwardRef((props, messageInput) => {
