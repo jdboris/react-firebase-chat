@@ -292,6 +292,8 @@ svg {
   position: relative;
 
   color: rgb(255, 121, 0);
+
+  height: 400px;
 }
 
 .chat-app header {
@@ -762,7 +764,10 @@ li {
   padding: 0 5px;
   background-size: 30% auto;
   z-index: 0;
-  /* NOTE: Required to fix the bug where chat sometimes stops snapping to bottom */
+}
+
+.messages-section.snap-to-bottom .message {
+  /* NOTE: Required to fix the bug where chat sometimes stops snapping/scrolling to bottom */
   overflow-anchor: none;
 }
 
