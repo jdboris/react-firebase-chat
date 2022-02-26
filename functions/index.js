@@ -110,10 +110,20 @@ async function markUserUnbanned(username) {
     throw new HttpsError("already-exists", "User is not banned.");
   }
 
-  await db
-    .collection("users")
-    .doc(snapshot.docs[0].id)
-    .update({ isBanned: false });
+  if (user.ipAddresses) {
+    // Get other users that have used any of this user's IPs
+    const otherUsers = await db
+      .collection("users")
+      .where("ipAddresses", "array-contains-any", user.ipAddresses)
+      .get();
+
+    // Unban them all
+    for (const user of otherUsers.docs) {
+      user.ref.update({ isBanned: false });
+    }
+  }
+
+  snapshot.docs[0].ref.update({ isBanned: false });
 }
 
 exports.unbanUser = functions.https.onCall(async (username, context) => {

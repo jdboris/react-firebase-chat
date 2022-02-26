@@ -7,6 +7,7 @@ import styles from "../css/chat-room.module.css";
 import paginationStyles from "../css/pagination-controls.module.css";
 
 export function BanlistDialog(props) {
+  const { setConfirmModal } = props;
   const [username, setUsername] = useState("");
   const [errors, setErrors] = useState([]);
   const query = props.open
@@ -42,12 +43,30 @@ export function BanlistDialog(props) {
                   <button
                     className={styles["link"]}
                     onClick={async () => {
-                      const result = await unbanUser(user.username);
-                      if (result.data.error) {
-                        setErrors([result.data.error]);
-                      } else {
-                        setErrors([]);
-                      }
+                      setConfirmModal({
+                        message: (
+                          <>
+                            Unban user {user.username}? <br />
+                            <small>
+                              This will also unban all accounts that have been
+                              accessed by any IP addresses associated with{" "}
+                              {user.username}.
+                            </small>
+                          </>
+                        ),
+                        Unban: async () => {
+                          setConfirmModal(null);
+                          const result = await unbanUser(user.username);
+                          if (result.data.error) {
+                            setErrors([result.data.error]);
+                          } else {
+                            setErrors([]);
+                          }
+                        },
+                        Cancel: () => {
+                          setConfirmModal(null);
+                        },
+                      });
                     }}
                   >
                     remove

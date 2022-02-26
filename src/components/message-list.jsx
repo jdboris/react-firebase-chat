@@ -13,6 +13,7 @@ export function MessageList(props) {
     currentUser,
     sentMsgCount,
     isPopMuted,
+    setConfirmModal,
   } = props;
   const messageList = useRef();
 
@@ -118,6 +119,7 @@ export function MessageList(props) {
                 currentUser={currentUser}
                 messagesRef={messagesRef}
                 isPopMuted={isPopMuted}
+                setConfirmModal={setConfirmModal}
               />
             ))}
 

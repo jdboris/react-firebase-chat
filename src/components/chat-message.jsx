@@ -109,7 +109,7 @@ export function ChatMessage(props) {
   // Cap the font size for non-premium users
   fontSize = !premium && fontSize >= 15 ? 15 : fontSize;
 
-  const { currentUser, stylesEnabled, messagesRef } = props;
+  const { currentUser, stylesEnabled, messagesRef, setConfirmModal } = props;
   const messageClass =
     currentUser && uid === currentUser.uid ? "sent" : "received";
 
@@ -321,11 +321,28 @@ export function ChatMessage(props) {
         {currentUser && currentUser.isModerator && (
           <button
             onClick={() => {
-              timeout(5000, async () => {
-                const result = await banUser(username);
-                props.setAlerts([result.data.message]);
-              }).catch((error) => {
-                props.setErrors([translateError(error).message]);
+              setConfirmModal({
+                message: (
+                  <>
+                    Ban user {username}? <br />
+                    <small>
+                      This will also ban all accounts that have been accessed by
+                      any IP addresses associated with {username}.
+                    </small>
+                  </>
+                ),
+                Ban: () => {
+                  timeout(5000, async () => {
+                    const result = await banUser(username);
+                    props.setAlerts([result.data.message]);
+                  }).catch((error) => {
+                    props.setErrors([translateError(error).message]);
+                  });
+                  setConfirmModal(null);
+                },
+                Cancel: () => {
+                  setConfirmModal(null);
+                },
               });
             }}
             // NOTE: Must stop propagation so clicking a link won't @ the poster

@@ -103,6 +103,7 @@ export function ChatRoom(props) {
   const [isModActionLogOpen, setModActionLogOpen] = useState(false);
   const [isFilteredWordsOpen, setFilteredWordsOpen] = useState(false);
   const [isLoginOpen, setLoginOpen] = useState(false);
+  const [confirmModal, setConfirmModal] = useState(null);
 
   const [menuOpenKey, setMenuOpenKey] = useState(0);
   const [isEmojisOpen, setEmojisOpen] = useState(false);
@@ -352,6 +353,7 @@ export function ChatRoom(props) {
         sentMsgCount={sentMsgCount}
         currentUser={user}
         isPopMuted={isPopMuted}
+        setConfirmModal={setConfirmModal}
       />
 
       {user && (
@@ -592,6 +594,7 @@ export function ChatRoom(props) {
         requestClose={() => {
           setBanlistOpen(false);
         }}
+        setConfirmModal={setConfirmModal}
       />
 
       <ModActionLogDialog
@@ -702,6 +705,21 @@ export function ChatRoom(props) {
         setAlerts={props.setAlerts}
         logout={props.logout}
       />
+
+      {confirmModal && (
+        <div className={styles["dialog"] + " " + styles["confirm-modal"]}>
+          <main>{confirmModal.message}</main>
+          <footer>
+            {Object.entries(confirmModal)
+              .filter(([key]) => key !== "message")
+              .map(([key, value]) => (
+                <button key={key} onClick={value}>
+                  {key}
+                </button>
+              ))}
+          </footer>
+        </div>
+      )}
 
       <ErrorDialog
         errors={errors}
