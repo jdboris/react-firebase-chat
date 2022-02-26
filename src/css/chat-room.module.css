@@ -293,7 +293,8 @@ svg {
 
   color: rgb(255, 121, 0);
 
-  height: 400px;
+  /* NOTE: For testing  */
+  /* height: 400px; */
 }
 
 .chat-app header {
@@ -464,6 +465,11 @@ svg.gavel-icon {
 
 .dialog main ul li {
   padding: 3px 0px;
+}
+
+.confirm-modal footer {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .premium-dialog label {
