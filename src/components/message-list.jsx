@@ -18,19 +18,40 @@ export function MessageList(props) {
 
   const [messages, setMessages] = useState([]);
   const [paused, setPaused] = useState(false);
+  const [snapToBottom, setSnapToBottom] = useState(true);
 
   useEffect(() => {
     if (!paused) {
       setMessages(defaultMessages || []);
+
+      // If near the bottom of the list
+      if (Math.abs(messageList.current.scrollTop) < 100) {
+        // NOTE: scrollTop is relative to bottom because of flex-direction: column-reverse.
+        //       And positive numbers go DOWN (10 means 10 below the bottom).
+        messageList.current.scrollTop = 10;
+        setSnapToBottom(true);
+      } else {
+        setSnapToBottom(false);
+      }
     }
   }, [defaultMessages, paused]);
 
   useEffect(() => {
-    messageList.current.scrollTop = 0;
+    // NOTE: scrollTop is relative to bottom because of flex-direction: column-reverse
+    //       And positive numbers go DOWN (10 means 10 below the bottom).
+    messageList.current.scrollTop = 10;
+    setSnapToBottom(true);
   }, [sentMsgCount]);
 
   return (
-    <section ref={messageList} className={styles["messages-section"]}>
+    <section
+      ref={messageList}
+      className={
+        styles["messages-section"] +
+        " " +
+        (snapToBottom ? styles["snap-to-bottom"] : "")
+      }
+    >
       <div>
         <div className={styles["pagination-controls"]}>
           {messages.length >= 25 && (
