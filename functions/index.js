@@ -46,7 +46,7 @@ async function markUserBanned(username) {
     throw new HttpsError("not-found", "User not found.");
   }
 
-  const user = await getUser(snapshot.docs[0].id);
+  const user = snapshot.docs[0].data();
 
   // If the user is banned already
   if (user.isBanned) {
@@ -103,7 +103,7 @@ async function markUserUnbanned(username) {
     throw new HttpsError("not-found", "User not found.");
   }
 
-  const user = await getUser(snapshot.docs[0].id);
+  const user = snapshot.docs[0].data();
 
   // If the user is not banned already
   if (!user.isBanned) {
@@ -322,20 +322,17 @@ exports.sendMessage = functions.https.onCall(async (data, context) => {
   const usersDocs = await getUsersByIp(context.rawRequest.ip);
   usersDocs.push(userDoc);
 
-  // If one is banned, ban them all
-  if (usersDocs.find((doc) => doc.data().isBanned)) {
-    user.isBanned = true;
-    const batch = db.batch();
-    usersDocs.forEach((doc) => {
-      if (!doc.data().isBanned) {
-        batch.set(doc.ref, { isBanned: true }, { merge: true });
-      }
-    });
-    await batch.commit();
-  }
-
-  if (user.isBanned) {
-    throw new HttpsError("permission-denied", "You are banned.");
+  // If this user is banned, or any user that has used this user's current IP...
+  if (user.isBanned || usersDocs.find((doc) => doc.data().isBanned)) {
+    // user.isBanned = true;
+    // const batch = db.batch();
+    // usersDocs.forEach((doc) => {
+    //   if (!doc.data().isBanned) {
+    //     batch.set(doc.ref, { isBanned: true }, { merge: true });
+    //   }
+    // });
+    // await batch.commit();
+    throw new HttpsError("permission-denied", "Your account or IP is banned.");
   }
 
   const authUser = await admin.auth().getUser(context.auth.uid);
