@@ -595,6 +595,7 @@ export function ChatRoom(props) {
           setBanlistOpen(false);
         }}
         setConfirmModal={setConfirmModal}
+        setAlerts={props.setAlerts}
       />
 
       <ModActionLogDialog

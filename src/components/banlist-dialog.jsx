@@ -5,9 +5,11 @@ import ReactPaginate from "react-paginate";
 import { banUser, unbanUser, usersRef } from "./chat-room-app";
 import styles from "../css/chat-room.module.css";
 import paginationStyles from "../css/pagination-controls.module.css";
+import { timeout } from "../utils/utils";
+import { translateError } from "../utils/errors";
 
 export function BanlistDialog(props) {
-  const { setConfirmModal } = props;
+  const { setConfirmModal, setAlerts } = props;
   const [username, setUsername] = useState("");
   const [errors, setErrors] = useState([]);
   const query = props.open
@@ -56,11 +58,16 @@ export function BanlistDialog(props) {
                         ),
                         Unban: async () => {
                           setConfirmModal(null);
-                          const result = await unbanUser(user.username);
-                          if (result.data.error) {
-                            setErrors([result.data.error]);
-                          } else {
-                            setErrors([]);
+                          try {
+                            await timeout(5000, async () => {
+                              const result = await unbanUser(user.username);
+                              setErrors([]);
+                              if (result.data.message) {
+                                setAlerts([result.data.message]);
+                              }
+                            });
+                          } catch (error) {
+                            setErrors([translateError(error).message]);
                           }
                         },
                         Cancel: () => {
@@ -77,11 +84,16 @@ export function BanlistDialog(props) {
           <form
             onSubmit={async (e) => {
               e.preventDefault();
-              const result = await banUser(username);
-              if (result.data.error) {
-                setErrors([result.data.error]);
-              } else {
-                setErrors([]);
+              try {
+                await timeout(5000, async () => {
+                  const result = await banUser(username);
+                  setErrors([]);
+                  if (result.data.message) {
+                    setAlerts([result.data.message]);
+                  }
+                });
+              } catch (error) {
+                setErrors([translateError(error).message]);
               }
             }}
           >
@@ -104,6 +116,7 @@ export function BanlistDialog(props) {
         <footer className={paginationStyles["pagination-controls"]}>
           {bannedUsers && (
             <ReactPaginate
+              initialPage={page - 1}
               pageCount={Math.ceil(bannedUsers.length / itemsPerPage)}
               pageRangeDisplayed={5}
               marginPagesDisplayed={2}
