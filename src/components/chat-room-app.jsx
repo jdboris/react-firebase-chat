@@ -8,6 +8,7 @@ import React, { useEffect, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useCollectionData, useDocument } from "react-firebase-hooks/firestore";
 import styles from "../css/chat-room.module.css";
+import { idConverter } from "../utils/firestore";
 import { setQueryParam } from "../utils/utils";
 import { AlertDialog } from "./alert-dialog";
 import { ChatRoom } from "./chat-room";
@@ -69,10 +70,10 @@ export function ChatRoomApp({
   const [authUser, isLoadingAuth] = useAuthState(auth);
 
   const [callbacksTriggered] = useCollectionData(
-    callbacksRef.orderBy("triggeredAt", "desc").limit(1),
-    {
-      idField: "id",
-    }
+    callbacksRef
+      .orderBy("triggeredAt", "desc")
+      .limit(1)
+      .withConverter(idConverter)
   );
 
   const [userSnapshot, isLoadingUserDoc] = useDocument(

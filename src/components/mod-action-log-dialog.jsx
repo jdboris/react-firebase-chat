@@ -2,13 +2,16 @@ import { Close as CloseIcon } from "@mui/icons-material";
 import React, { useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import ReactPaginate from "react-paginate";
-import { modActionLogRef } from "./chat-room-app";
 import styles from "../css/chat-room.module.css";
 import paginationStyles from "../css/pagination-controls.module.css";
+import { idConverter } from "../utils/firestore";
+import { modActionLogRef } from "./chat-room-app";
 
 export function ModActionLogDialog(props) {
-  const query = props.open ? modActionLogRef.orderBy("date", "desc") : null;
-  const [modActions] = useCollectionData(query, { idField: "id" });
+  const query = props.open
+    ? modActionLogRef.orderBy("date", "desc").withConverter(idConverter)
+    : null;
+  const [modActions] = useCollectionData(query);
   const [page, setPage] = useState(1);
   const itemsPerPage = 5;
   const start = (page - 1) * itemsPerPage;

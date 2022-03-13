@@ -15,6 +15,7 @@ import styles from "../css/chat-room.module.css";
 import { fonts } from "../utils/fonts";
 import { toggleSelectionMarkup } from "../utils/markdown";
 import { startPresence } from "../utils/presence";
+import { idConverter } from "../utils/firestore";
 import { insertIntoInput, isGiftedPremium } from "../utils/utils";
 import { translateError } from "../utils/errors";
 import { BanlistDialog } from "./banlist-dialog";
@@ -45,10 +46,9 @@ export function ChatRoom(props) {
         .where("userIds", "array-contains", user.uid)
         .orderBy("lastMessageSentAt", "desc")
         .limit(dmsPerPage)
+        .withConverter(idConverter)
     : null;
-  const [conversations] = useCollectionData(query, {
-    idField: "id",
-  });
+  const [conversations] = useCollectionData(query);
 
   const unreadCount =
     conversations && user
@@ -191,11 +191,10 @@ export function ChatRoom(props) {
   query = messagesRef
     .limit(25)
     .orderBy("createdAt", "desc")
-    .where("isDeleted", "==", false);
+    .where("isDeleted", "==", false)
+    .withConverter(idConverter);
 
-  const [messages] = useCollectionData(query, {
-    idField: "id",
-  });
+  const [messages] = useCollectionData(query);
 
   useEffect(() => {
     const unsubOnlineUsers = firebase

@@ -3,9 +3,10 @@ import firebase from "firebase/compat/app";
 import { default as React, useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import ReactPaginate from "react-paginate";
-import { usersRef } from "./chat-room-app";
 import styles from "../css/chat-room.module.css";
 import paginationStyles from "../css/pagination-controls.module.css";
+import { idConverter } from "../utils/firestore";
+import { usersRef } from "./chat-room-app";
 
 export function ModeratorsDialog(props) {
   const [username, setUsername] = useState("");
@@ -14,10 +15,13 @@ export function ModeratorsDialog(props) {
   const removeModerator = firebase.functions().httpsCallable("removeModerator");
 
   let query = props.open
-    ? usersRef.orderBy("lowercaseUsername").where("isModerator", "==", true)
+    ? usersRef
+        .orderBy("lowercaseUsername")
+        .where("isModerator", "==", true)
+        .withConverter(idConverter)
     : null;
 
-  const [mods] = useCollectionData(query, { idField: "id" });
+  const [mods] = useCollectionData(query);
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;
   const start = (page - 1) * itemsPerPage;

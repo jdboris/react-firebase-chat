@@ -1,11 +1,11 @@
 import { Close as CloseIcon } from "@mui/icons-material";
 import firebase from "firebase/compat/app";
 import { default as React, useState } from "react";
-import { usersRef } from "./chat-room-app";
 import styles from "../css/chat-room.module.css";
 import { uploadFile } from "../utils/storage";
 import { timeout } from "../utils/utils";
 import { ChatMessage } from "./chat-message";
+import { usersRef } from "./chat-room-app";
 import { ColorInput } from "./color-input";
 import { SliderInput } from "./slider-input";
 
@@ -37,9 +37,9 @@ export function StyleEditorDialog(props) {
   } = props;
   //   const [username, setUsername] = useState("");
   //   const query = props.open
-  //     ? usersRef.orderBy("lowercaseUsername").where("isBanned", "==", true)
+  //     ? usersRef.orderBy("lowercaseUsername").where("isBanned", "==", true).withConverter(idConverter)
   //     : null;
-  //   const [bannedUsers] = useCollectionData(query, { idField: "id" });
+  //   const [bannedUsers] = useCollectionData(query);
   const [loading, setLoading] = useState(false);
 
   return (
