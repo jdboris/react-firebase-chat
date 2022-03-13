@@ -2,22 +2,24 @@ import { Close as CloseIcon } from "@mui/icons-material";
 import { default as React, useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import ReactPaginate from "react-paginate";
-import { banUser, unbanUser, usersRef } from "./chat-room-app";
 import styles from "../css/chat-room.module.css";
 import paginationStyles from "../css/pagination-controls.module.css";
-import { timeout } from "../utils/utils";
 import { translateError } from "../utils/errors";
+import { timeout } from "../utils/utils";
+import { idConverter } from "../utils/firestore";
+import { banUser, unbanUser, usersRef } from "./chat-room-app";
 
 export function BanlistDialog(props) {
   const { setConfirmModal, setAlerts } = props;
   const [username, setUsername] = useState("");
   const [errors, setErrors] = useState([]);
   const query = props.open
-    ? usersRef.orderBy("lowercaseUsername").where("isBanned", "==", true)
+    ? usersRef
+        .orderBy("lowercaseUsername")
+        .where("isBanned", "==", true)
+        .withConverter(idConverter)
     : null;
-  const [bannedUsers] = useCollectionData(query, {
-    idField: "id",
-  });
+  const [bannedUsers] = useCollectionData(query);
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;
   const start = (page - 1) * itemsPerPage;

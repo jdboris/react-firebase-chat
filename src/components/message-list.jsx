@@ -77,6 +77,7 @@ export function MessageList(props) {
           )}
 
           {messages.length &&
+            defaultMessages &&
             defaultMessages.length &&
             messages[0].id !== defaultMessages[0].id && (
               <button
@@ -129,6 +130,7 @@ export function MessageList(props) {
 
         <div className={styles["pagination-controls"]}>
           {messages.length &&
+            defaultMessages &&
             defaultMessages.length &&
             messages[0].id !== defaultMessages[0].id && (
               <button
