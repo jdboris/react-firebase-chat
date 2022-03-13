@@ -77,7 +77,7 @@ export function MessageList(props) {
           )}
 
           {messages.length &&
-            defaultMessages &&
+            defaultMessages.length &&
             messages[0].id !== defaultMessages[0].id && (
               <button
                 onClick={async () => {
@@ -93,7 +93,11 @@ export function MessageList(props) {
                     return { id: doc.id, ...doc.data() };
                   });
 
-                  if (newMessages[0].id === defaultMessages[0].id) {
+                  if (
+                    newMessages.length &&
+                    defaultMessages &&
+                    newMessages[0].id === defaultMessages[0].id
+                  ) {
                     setPaused(false);
                   } else if (newMessages.length) {
                     setMessages(newMessages);
@@ -125,7 +129,7 @@ export function MessageList(props) {
 
         <div className={styles["pagination-controls"]}>
           {messages.length &&
-            defaultMessages &&
+            defaultMessages.length &&
             messages[0].id !== defaultMessages[0].id && (
               <button
                 onClick={() => {
