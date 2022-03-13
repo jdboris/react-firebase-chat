@@ -81,7 +81,6 @@ export function ChatMessage(props) {
   let {
     text,
     uid,
-    key,
     isModMessage,
     premium,
     photoUrl,
@@ -110,6 +109,7 @@ export function ChatMessage(props) {
   fontSize = !premium && fontSize >= 15 ? 15 : fontSize;
 
   const { currentUser, stylesEnabled, messagesRef, setConfirmModal } = props;
+
   const messageClass =
     currentUser && uid === currentUser.uid ? "sent" : "received";
 
@@ -149,7 +149,6 @@ export function ChatMessage(props) {
 
   return (
     <div
-      key={key}
       className={
         styles["message"] +
         " " +

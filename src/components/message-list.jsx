@@ -108,9 +108,9 @@ export function MessageList(props) {
           // Must make a copy because props are immutable
           [...messages]
             .reverse()
-            .map((msg) => (
+            .map((msg, i) => (
               <ChatMessage
-                key={msg.id}
+                key={i}
                 setErrors={setErrors}
                 setAlerts={setAlerts}
                 message={msg}
