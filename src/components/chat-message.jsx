@@ -2,7 +2,7 @@ import { Person as PersonIcon } from "@mui/icons-material";
 import { Block as BlockIcon } from "@mui/icons-material";
 import firebase from "firebase/compat/app";
 import React, { useEffect, useMemo, useState, useRef } from "react";
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { uriTransformer } from "react-markdown";
 import gfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import { banUser } from "./chat-room-app";
@@ -265,6 +265,18 @@ export function ChatMessage(props) {
                   "li",
                   "del",
                 ]}
+                transformLinkUri={(href, children, title) => {
+                  const url = new URL(href);
+                  url.protocol =
+                    url.protocol === "http:" ? "https:" : url.protocol;
+                  return uriTransformer(url.href);
+                }}
+                transformImageUri={(href, children, title) => {
+                  const url = new URL(href);
+                  url.protocol =
+                    url.protocol === "http:" ? "https:" : url.protocol;
+                  return uriTransformer(url.href);
+                }}
               >
                 {text}
               </ReactMarkdown>
