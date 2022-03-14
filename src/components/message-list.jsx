@@ -111,22 +111,21 @@ export function MessageList(props) {
         </div>
         {messages &&
           // Must make a copy because props are immutable
-          [...messages]
-            .reverse()
-            .map((msg, i) => (
-              <ChatMessage
-                key={i}
-                setErrors={setErrors}
-                setAlerts={setAlerts}
-                message={msg}
-                stylesEnabled={stylesEnabled}
-                onClick={onMessageClick}
-                currentUser={currentUser}
-                messagesRef={messagesRef}
-                isPopMuted={isPopMuted}
-                setConfirmModal={setConfirmModal}
-              />
-            ))}
+          [...messages].reverse().map((msg) => (
+            <ChatMessage
+              // NOTE: MUST use msg.id rather than array index because index will change and force re-render
+              key={msg.id}
+              setErrors={setErrors}
+              setAlerts={setAlerts}
+              message={msg}
+              stylesEnabled={stylesEnabled}
+              onClick={onMessageClick}
+              currentUser={currentUser}
+              messagesRef={messagesRef}
+              isPopMuted={isPopMuted}
+              setConfirmModal={setConfirmModal}
+            />
+          ))}
 
         <div className={styles["pagination-controls"]}>
           {messages.length &&
