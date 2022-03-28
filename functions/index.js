@@ -299,7 +299,7 @@ exports.sendMessage = functions.https.onCall(async (data, context) => {
   if (context.rawRequest.ip) {
     const doc = await db.doc(`users/${context.auth.uid}`).get();
     const user = doc.data();
-    const ipSet = new Set(user.ipAddresses.reverse());
+    const ipSet = new Set((user.ipAddresses || []).reverse());
     ipSet.add(context.rawRequest.ip);
 
     db.doc(`users/${context.auth.uid}`).update({
