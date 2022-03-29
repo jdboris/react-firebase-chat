@@ -19,7 +19,6 @@ import { idConverter } from "../utils/firestore";
 import { insertIntoInput, isGiftedPremium } from "../utils/utils";
 import { translateError } from "../utils/errors";
 import { BanlistDialog } from "./banlist-dialog";
-// import { getProviders } from "../oembed";
 import { DmsDialog } from "./dms-dialog";
 import { EmojiSelector } from "./emoji-selector";
 import { ErrorDialog } from "./error-dialog";
