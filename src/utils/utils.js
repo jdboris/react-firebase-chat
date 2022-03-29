@@ -54,10 +54,15 @@ export function setQueryParam(key, value) {
 }
 
 export function isImageUrl(urlString) {
-  let url = new URL(urlString);
+  const url = new URL(urlString);
   return SUPPORTED_IMAGE_EXTENSIONS.includes(
     url.pathname.split(".").pop().toLocaleLowerCase()
   );
+}
+
+export async function getImageSize(url) {
+  const response = await fetch(url, { method: "HEAD" });
+  return response.headers.get("content-length");
 }
 
 export function stripHtml(string) {

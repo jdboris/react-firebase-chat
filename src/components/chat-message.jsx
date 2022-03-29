@@ -10,7 +10,13 @@ import { hexToRgb } from "../utils/color";
 import styles from "../css/chat-room.module.css";
 import "../css/oembed.css";
 import { translateError } from "../utils/errors";
-import { timeout, isImageUrl, stripHtml, flashInTitle } from "../utils/utils";
+import {
+  timeout,
+  isImageUrl,
+  getImageSize,
+  stripHtml,
+  flashInTitle,
+} from "../utils/utils";
 import useAudio from "../hooks/use-audio";
 import popSound from "../sound/pop.wav";
 
@@ -20,7 +26,10 @@ function Link(props) {
 
   useEffect(() => {
     (async (url) => {
-      if (isImageUrl(url)) {
+      // 10 megabytes
+      const sizeLimit = 10 * 1000 * 1000;
+
+      if (isImageUrl(url) && (await getImageSize(url)) <= sizeLimit) {
         setProviderName("image");
         setChildren(
           <a
