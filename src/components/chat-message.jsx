@@ -19,19 +19,12 @@ function Link(props) {
   const [providerName, setProviderName] = useState("");
 
   useEffect(() => {
-    const getOembed = firebase.functions().httpsCallable("getOembed");
-
-    getOembed({ url: props.href }).then((result) => {
-      if (result.data.html) {
-        setProviderName(result.data.providerName);
-        setChildren(
-          <span dangerouslySetInnerHTML={{ __html: result.data.html }}></span>
-        );
-      } else if (isImageUrl(props.href)) {
+    (async (url) => {
+      if (isImageUrl(url)) {
         setProviderName("image");
         setChildren(
           <a
-            href={props.href}
+            href={url}
             target="_blank"
             rel="nofollow noreferrer noopener"
             // NOTE: Must stop propagation so clicking a link won't @ the poster
@@ -44,13 +37,13 @@ function Link(props) {
               verticalAlign: "bottom",
             }}
           >
-            <img src={props.href} alt="embedded" />
+            <img src={url} alt="embedded" />
           </a>
         );
       } else {
         setChildren(
           <a
-            href={props.href}
+            href={url}
             target="_blank"
             rel="nofollow noreferrer noopener"
             // NOTE: Must stop propagation so clicking a link won't @ the poster
@@ -58,11 +51,21 @@ function Link(props) {
               e.stopPropagation();
             }}
           >
-            {props.href}
+            {url}
           </a>
         );
+
+        const getOembed = firebase.functions().httpsCallable("getOembed");
+        const result = await getOembed({ url });
+
+        if (result.data.html) {
+          setProviderName(result.data.providerName);
+          setChildren(
+            <span dangerouslySetInnerHTML={{ __html: result.data.html }}></span>
+          );
+        }
       }
-    });
+    })(props.href);
   }, [props.href]);
 
   return (
