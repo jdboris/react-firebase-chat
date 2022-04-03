@@ -128,46 +128,49 @@ export function PremiumDialog(props) {
                     const recipientUids = [];
                     const errors = [];
 
-                    for (let i = 0; i < recipients.length; i++) {
-                      // If there are duplicates
-                      if (
-                        recipients.filter((name) => name == recipients[i])
-                          .length > 1
-                      ) {
-                        const error = new Error("Duplicate user.");
-                        error.field = i;
-                        errors.push(error);
-                        break;
-                      }
+                    if (isGifting) {
+                      for (let i = 0; i < recipients.length; i++) {
+                        // If there are duplicates
+                        if (
+                          recipients.filter((name) => name == recipients[i])
+                            .length > 1
+                        ) {
+                          const error = new Error("Duplicate user.");
+                          error.field = i;
+                          errors.push(error);
+                          break;
+                        }
 
-                      const snapshot = await firestore
-                        .collection("users")
-                        .where(
-                          "lowercaseUsername",
-                          "==",
-                          recipients[i].toLowerCase()
-                        )
-                        .get();
-                      if (!snapshot.docs.length) {
-                        const error = new Error("User not found.");
-                        error.field = i;
-                        errors.push(error);
-                      } else if (snapshot.docs[0].id === user.uid) {
-                        const error = new Error("May not gift to yourself.");
-                        error.field = i;
-                        errors.push(error);
-                      } else if ("anonSuffix" in snapshot.docs[0].data()) {
-                        const error = new Error("May not gift to anons.");
-                        error.field = i;
-                        errors.push(error);
-                      } else {
-                        recipientUids.push(snapshot.docs[0].id);
+                        const snapshot = await firestore
+                          .collection("users")
+                          .where(
+                            "lowercaseUsername",
+                            "==",
+                            recipients[i].toLowerCase()
+                          )
+                          .get();
+                        if (!snapshot.docs.length) {
+                          const error = new Error("User not found.");
+                          error.field = i;
+                          errors.push(error);
+                        } else if (snapshot.docs[0].id === user.uid) {
+                          const error = new Error("May not gift to yourself.");
+                          error.field = i;
+                          errors.push(error);
+                        } else if ("anonSuffix" in snapshot.docs[0].data()) {
+                          const error = new Error("May not gift to anons.");
+                          error.field = i;
+                          errors.push(error);
+                        } else {
+                          recipientUids.push(snapshot.docs[0].id);
+                        }
                       }
                     }
 
                     if (errors.length) throw errors;
 
                     setLoading(true);
+
                     await timeout(5 * 60000, async () => {
                       await sendToStripe(
                         user.uid,
