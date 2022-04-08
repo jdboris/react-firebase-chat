@@ -348,6 +348,7 @@ svg {
   border: 1px solid grey;
   flex-basis: 50%;
   flex-grow: 1;
+  margin: 0;
 }
 
 [data-format="*"] {
@@ -772,7 +773,7 @@ li {
   z-index: 0;
 }
 
-.messages-section.snap-to-bottom .message {
+.messages-section.stick-to-bottom .message {
   /* NOTE: Required to fix the bug where chat sometimes stops snapping/scrolling to bottom */
   overflow-anchor: none;
 }
