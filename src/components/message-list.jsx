@@ -20,7 +20,13 @@ export function MessageList(props) {
 
   const [messages, setMessages] = useState([]);
   const [paused, setPaused] = useState(false);
-  const [snapToBottom, setSnapToBottom] = useState(true);
+  const [stickToBottom, setStickToBottom] = useState(true);
+
+  function snapToBottom() {
+    // NOTE: scrollTop is relative to bottom because of flex-direction: column-reverse.
+    //       And positive numbers go DOWN (10 means 10 below the bottom).
+    messageList.current.scrollTop = 10;
+  }
 
   useEffect(() => {
     if (!paused) {
@@ -28,12 +34,10 @@ export function MessageList(props) {
 
       // If near the bottom of the list
       if (Math.abs(messageList.current.scrollTop) < 100) {
-        // NOTE: scrollTop is relative to bottom because of flex-direction: column-reverse.
-        //       And positive numbers go DOWN (10 means 10 below the bottom).
-        messageList.current.scrollTop = 10;
-        setSnapToBottom(true);
+        snapToBottom();
+        setStickToBottom(true);
       } else {
-        setSnapToBottom(false);
+        setStickToBottom(false);
       }
     }
   }, [defaultMessages, paused]);
@@ -42,7 +46,7 @@ export function MessageList(props) {
     // NOTE: scrollTop is relative to bottom because of flex-direction: column-reverse
     //       And positive numbers go DOWN (10 means 10 below the bottom).
     messageList.current.scrollTop = 10;
-    setSnapToBottom(true);
+    setStickToBottom(true);
   }, [sentMsgCount]);
 
   return (
@@ -51,7 +55,7 @@ export function MessageList(props) {
       className={
         styles["messages-section"] +
         " " +
-        (snapToBottom ? styles["snap-to-bottom"] : "")
+        (stickToBottom ? styles["stick-to-bottom"] : "")
       }
     >
       <div>
@@ -71,6 +75,9 @@ export function MessageList(props) {
                 const newMessages = snapshot.docs.map((doc) => {
                   return { id: doc.id, ...doc.data() };
                 });
+
+                snapToBottom();
+
                 setMessages(newMessages);
               }}
             >
@@ -87,18 +94,29 @@ export function MessageList(props) {
                   try {
                     setPaused(true);
 
+                    console.log("messages[0].createdAt: ");
+                    console.log(new Date(messages[0].createdAt.seconds * 1000));
+                    console.log("messages[messages.length - 1].createdAt: ");
+                    console.log(
+                      new Date(
+                        messages[messages.length - 1].createdAt.seconds * 1000
+                      )
+                    );
+
                     // NOTE: limitToLast is broken because of another Firestore bug.
                     const query = firestore
                       .collection("messages")
                       .where("isDeleted", "==", false)
-                      .orderBy("createdAt", "desc")
-                      .endBefore(messages[0].createdAt)
+                      .orderBy("createdAt", "asc")
+                      .startAfter(messages[0].createdAt)
                       .limit(25);
 
                     const snapshot = await query.get();
-                    const newMessages = snapshot.docs.map((doc) => {
-                      return { id: doc.id, ...doc.data() };
-                    });
+                    const newMessages = snapshot.docs
+                      .map((doc) => {
+                        return { id: doc.id, ...doc.data() };
+                      })
+                      .reverse();
 
                     if (
                       newMessages.length &&
