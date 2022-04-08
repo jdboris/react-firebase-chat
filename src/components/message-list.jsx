@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { firestore } from "./chat-room-app";
 import styles from "../css/chat-room.module.css";
 import { ChatMessage } from "./chat-message";
 
@@ -59,7 +60,8 @@ export function MessageList(props) {
             <button
               onClick={async () => {
                 setPaused(true);
-                const query = messagesRef
+                const query = firestore
+                  .collection("messages")
                   .where("isDeleted", "==", false)
                   .orderBy("createdAt", "desc")
                   .startAfter(messages[messages.length - 1].createdAt)
@@ -82,26 +84,33 @@ export function MessageList(props) {
             messages[0].id !== defaultMessages[0].id && (
               <button
                 onClick={async () => {
-                  setPaused(true);
-                  const query = messagesRef
-                    .where("isDeleted", "==", false)
-                    .orderBy("createdAt", "desc")
-                    .endBefore(messages[0].createdAt)
-                    .limitToLast(25);
+                  try {
+                    setPaused(true);
 
-                  const snapshot = await query.get();
-                  const newMessages = snapshot.docs.map((doc) => {
-                    return { id: doc.id, ...doc.data() };
-                  });
+                    // NOTE: limitToLast is broken because of another Firestore bug.
+                    const query = firestore
+                      .collection("messages")
+                      .where("isDeleted", "==", false)
+                      .orderBy("createdAt", "desc")
+                      .endBefore(messages[0].createdAt)
+                      .limit(25);
 
-                  if (
-                    newMessages.length &&
-                    defaultMessages &&
-                    newMessages[0].id === defaultMessages[0].id
-                  ) {
-                    setPaused(false);
-                  } else if (newMessages.length) {
-                    setMessages(newMessages);
+                    const snapshot = await query.get();
+                    const newMessages = snapshot.docs.map((doc) => {
+                      return { id: doc.id, ...doc.data() };
+                    });
+
+                    if (
+                      newMessages.length &&
+                      defaultMessages &&
+                      newMessages[0].id === defaultMessages[0].id
+                    ) {
+                      setPaused(false);
+                    } else if (newMessages.length) {
+                      setMessages(newMessages);
+                    }
+                  } catch (e) {
+                    console.error(e);
                   }
                 }}
               >
