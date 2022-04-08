@@ -84,7 +84,26 @@ export function MessageList(props) {
               Older
             </button>
           )}
+        </div>
+        {messages &&
+          // Must make a copy because props are immutable
+          [...messages].reverse().map((msg) => (
+            <ChatMessage
+              // NOTE: MUST use msg.id rather than array index because index will change and force re-render
+              key={msg.id}
+              setErrors={setErrors}
+              setAlerts={setAlerts}
+              message={msg}
+              stylesEnabled={stylesEnabled}
+              onClick={onMessageClick}
+              currentUser={currentUser}
+              messagesRef={messagesRef}
+              isPopMuted={isPopMuted}
+              setConfirmModal={setConfirmModal}
+            />
+          ))}
 
+        <div className={styles["pagination-controls"]}>
           {messages.length &&
             defaultMessages &&
             defaultMessages.length &&
@@ -93,15 +112,6 @@ export function MessageList(props) {
                 onClick={async () => {
                   try {
                     setPaused(true);
-
-                    console.log("messages[0].createdAt: ");
-                    console.log(new Date(messages[0].createdAt.seconds * 1000));
-                    console.log("messages[messages.length - 1].createdAt: ");
-                    console.log(
-                      new Date(
-                        messages[messages.length - 1].createdAt.seconds * 1000
-                      )
-                    );
 
                     // NOTE: limitToLast is broken because of another Firestore bug.
                     const query = firestore
@@ -135,26 +145,6 @@ export function MessageList(props) {
                 Newer
               </button>
             )}
-        </div>
-        {messages &&
-          // Must make a copy because props are immutable
-          [...messages].reverse().map((msg) => (
-            <ChatMessage
-              // NOTE: MUST use msg.id rather than array index because index will change and force re-render
-              key={msg.id}
-              setErrors={setErrors}
-              setAlerts={setAlerts}
-              message={msg}
-              stylesEnabled={stylesEnabled}
-              onClick={onMessageClick}
-              currentUser={currentUser}
-              messagesRef={messagesRef}
-              isPopMuted={isPopMuted}
-              setConfirmModal={setConfirmModal}
-            />
-          ))}
-
-        <div className={styles["pagination-controls"]}>
           {messages.length &&
             defaultMessages &&
             defaultMessages.length &&

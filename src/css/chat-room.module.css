@@ -341,6 +341,7 @@ svg {
 
 .messages-section > div > .pagination-controls {
   display: flex;
+  flex-direction: column;
 }
 
 .messages-section > div > .pagination-controls > button {
