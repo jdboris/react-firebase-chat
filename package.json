@@ -1,6 +1,6 @@
 {
   "name": "@jdboris/react-firebase-chat",
-  "version": "1.13.1",
+  "version": "1.14.0",
   "description": "A realtime chat app component built with React and Firebase.",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
@@ -57,7 +57,7 @@
     "@stripe/stripe-js": "^1.17.1",
     "caret-pos": "^2.0.0",
     "emoji-dictionary": "^1.0.11",
-    "firebase": "^9.6.5",
+    "firebase": "^9.6.10",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-firebase-hooks": "^5.0.3",
