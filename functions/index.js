@@ -713,8 +713,12 @@ exports.sendPasswordResetEmail = functions.https.onCall(
       };
     } catch (error) {
       throw new HttpsError(
-        "internal",
-        "Something went wrong. Please try again."
+        error.errorInfo && error.errorInfo.code === "auth/email-not-found"
+          ? "not-found"
+          : "internal",
+        error.errorInfo
+          ? error.errorInfo.message
+          : "Something went wrong. Please try again."
       );
     }
   }
