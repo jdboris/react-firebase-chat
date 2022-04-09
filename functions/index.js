@@ -714,7 +714,7 @@ exports.sendPasswordResetEmail = functions.https.onCall(
     } catch (error) {
       throw new HttpsError(
         error.errorInfo && error.errorInfo.code === "auth/email-not-found"
-          ? "not-found"
+          ? "invalid-argument"
           : "internal",
         error.errorInfo
           ? error.errorInfo.message
