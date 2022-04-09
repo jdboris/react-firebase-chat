@@ -28,6 +28,10 @@ export function MessageList(props) {
     messageList.current.scrollTop = 10;
   }
 
+  function snapToTop() {
+    messageList.current.scrollTop = -9999;
+  }
+
   useEffect(() => {
     if (!paused) {
       setMessages(defaultMessages || []);
@@ -127,6 +131,8 @@ export function MessageList(props) {
                         return { id: doc.id, ...doc.data() };
                       })
                       .reverse();
+
+                    snapToTop();
 
                     if (
                       newMessages.length &&
