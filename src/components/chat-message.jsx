@@ -63,8 +63,8 @@ function Link(props) {
           </a>
         );
 
-        const getOembed = firebase.functions().httpsCallable("getOembed");
-        const result = await getOembed({ url });
+        const getEmbed = firebase.functions().httpsCallable("getEmbed");
+        const result = await getEmbed({ url });
 
         if (result.data.html) {
           setProviderName(result.data.providerName);
