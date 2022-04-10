@@ -6,7 +6,7 @@ import { conversationsRef, firestore, usersRef } from "./chat-room-app";
 import styles from "../css/chat-room.module.css";
 import paginationStyles from "../css/pagination-controls.module.css";
 import { timeout } from "../utils/utils";
-import { translateError } from "../utils/errors";
+import { CustomError } from "../utils/errors";
 
 export function DmsDialog(props) {
   const { conversations } = props;
@@ -89,18 +89,18 @@ export function DmsDialog(props) {
 
               timeout(5000, async () => {
                 if (!username) {
-                  throw new Error("Enter a username.");
+                  throw new CustomError("Enter a username.");
                 }
                 const snapshot = await usersRef
                   .where("lowercaseUsername", "==", username.toLowerCase())
                   .get();
 
                 if (!snapshot.docs.length) {
-                  throw new Error("User not found.");
+                  throw new CustomError("User not found.");
                 }
 
                 if (snapshot.docs[0].id === props.uid) {
-                  throw new Error("Cannot chat with yourself.");
+                  throw new CustomError("Cannot chat with yourself.");
                 }
 
                 const conversationId = combineStrings([
@@ -151,16 +151,18 @@ export function DmsDialog(props) {
                 .catch((error) => {
                   setLoading(false);
                   if (error.code === "permission-denied") {
-                    setErrors(["Verify your email to do that."]);
+                    setErrors([
+                      new CustomError("Verify your email to do that."),
+                    ]);
                     return;
                   }
-                  setErrors([translateError(error).message]);
+                  setErrors([new CustomError(error.message, error)]);
                 });
             }}
           >
             {errors.map((error, i) => (
               <div key={i} className={styles["error"]}>
-                {error}
+                {error.message}
               </div>
             ))}
             <input

@@ -5,6 +5,7 @@ import { useCollectionData } from "react-firebase-hooks/firestore";
 import ReactPaginate from "react-paginate";
 import styles from "../css/chat-room.module.css";
 import paginationStyles from "../css/pagination-controls.module.css";
+import { CustomError } from "../utils/errors";
 import { idConverter } from "../utils/firestore";
 import { usersRef } from "./chat-room-app";
 
@@ -51,7 +52,9 @@ export function ModeratorsDialog(props) {
                     onClick={async () => {
                       const result = await removeModerator(mod.username);
                       if (result.error) {
-                        setErrors([result.error]);
+                        setErrors([
+                          new CustomError(result.error.message, result.error),
+                        ]);
                       } else {
                         setErrors([]);
                       }
@@ -67,7 +70,9 @@ export function ModeratorsDialog(props) {
               e.preventDefault();
               const result = await addModerator(username);
               if (result.data.error) {
-                setErrors([result.data.error]);
+                setErrors([
+                  new CustomError(result.data.error.message, result.data.error),
+                ]);
               } else {
                 setErrors([]);
               }
@@ -75,7 +80,7 @@ export function ModeratorsDialog(props) {
           >
             {errors.map((error, i) => (
               <div key={i} className={styles["error"]}>
-                {error}
+                {error.message}
               </div>
             ))}
             <input

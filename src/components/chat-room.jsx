@@ -6,23 +6,24 @@ import {
   VolumeOff as VolumeOffIcon,
   VolumeUp as VolumeUpIcon,
 } from "@mui/icons-material";
-
 import firebase from "firebase/compat/app";
 import React, { useEffect, useRef, useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
-import { conversationsRef, usersRef } from "./chat-room-app";
 import styles from "../css/chat-room.module.css";
+import { CustomError } from "../utils/errors";
+import { idConverter } from "../utils/firestore";
 import { fonts } from "../utils/fonts";
 import { toggleSelectionMarkup } from "../utils/markdown";
 import { startPresence } from "../utils/presence";
-import { idConverter } from "../utils/firestore";
 import { insertIntoInput, isGiftedPremium } from "../utils/utils";
-import { translateError } from "../utils/errors";
 import { BanlistDialog } from "./banlist-dialog";
+import { conversationsRef, usersRef } from "./chat-room-app";
 import { DmsDialog } from "./dms-dialog";
 import { EmojiSelector } from "./emoji-selector";
 import { ErrorDialog } from "./error-dialog";
+import { FileUploadOverlay } from "./file-upload-overlay";
 import { FilteredWordsDialog } from "./filtered-words-dialog";
+import { LogInForm } from "./log-in-form";
 import { MenuWithButton } from "./menu-with-button";
 import { MessageInputForm } from "./message-input-form";
 import { MessageList } from "./message-list";
@@ -32,8 +33,6 @@ import { PremiumDialog } from "./premium-dialog";
 import { ProfileDialog } from "./profile-dialog";
 import { StyleEditorDialog } from "./style-editor-dialog";
 import { UserStyleControls } from "./user-style-controls";
-import { LogInForm } from "./log-in-form";
-import { FileUploadOverlay } from "./file-upload-overlay";
 
 export function ChatRoom(props) {
   const sendMessageCloud = firebase.functions().httpsCallable("sendMessage");
@@ -142,7 +141,7 @@ export function ChatRoom(props) {
 
     try {
       if (conversationRef && !user.emailVerified) {
-        throw new Error("Verify your email to do that.");
+        throw new CustomError("Verify your email to do that.");
       }
 
       if (text) {
@@ -179,7 +178,7 @@ export function ChatRoom(props) {
       messageInput.current.offsetHeight;
       messageInput.current.style.animation = null;
 
-      setErrors([translateError(error).message]);
+      setErrors([new CustomError(error.message, error)]);
     }
   };
 

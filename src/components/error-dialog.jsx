@@ -17,7 +17,7 @@ export function ErrorDialog(props) {
         <main>
           {props.errors.map((error, i) => (
             <div key={i} className={styles["error"]}>
-              {error}
+              {error.message}
             </div>
           ))}
         </main>

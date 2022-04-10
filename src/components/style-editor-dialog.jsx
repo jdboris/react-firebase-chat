@@ -2,6 +2,7 @@ import { Close as CloseIcon } from "@mui/icons-material";
 import firebase from "firebase/compat/app";
 import { default as React, useState } from "react";
 import styles from "../css/chat-room.module.css";
+import { CustomError } from "../utils/errors";
 import { uploadFile } from "../utils/storage";
 import { timeout } from "../utils/utils";
 import { ChatMessage } from "./chat-message";
@@ -162,7 +163,7 @@ export function StyleEditorDialog(props) {
                   const url = await uploadFile(file);
 
                   if (!url) {
-                    throw new Error("Error uploading file.");
+                    throw new CustomError("Error uploading file.");
                   }
                   await usersRef.doc(user.uid).update({
                     msgBgImg: url,
@@ -170,7 +171,7 @@ export function StyleEditorDialog(props) {
                   setMsgBgImg(url);
                 })
                   .catch((error) => {
-                    props.setErrors([error.message]);
+                    props.setErrors([new CustomError(error.message, error)]);
                   })
                   .finally(() => {
                     setLoading(false);

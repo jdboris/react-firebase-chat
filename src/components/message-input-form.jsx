@@ -1,16 +1,18 @@
-import { CameraAlt as CameraIcon } from "@mui/icons-material";
-import { SentimentVerySatisfied as SmileIcon } from "@mui/icons-material";
-import { TextFormat as TextFormatIcon } from "@mui/icons-material";
+import {
+  CameraAlt as CameraIcon,
+  SentimentVerySatisfied as SmileIcon,
+  TextFormat as TextFormatIcon,
+} from "@mui/icons-material";
+import { position } from "caret-pos";
 import React, { useState } from "react";
-import { hexToRgb } from "../utils/color";
 import styles from "../css/chat-room.module.css";
-import userSelectCss from "./user-select/user-select.module.css";
-import { translateError } from "../utils/errors";
+import { hexToRgb } from "../utils/color";
+import { CustomError } from "../utils/errors";
 import { MARKUP_SYMBOLS } from "../utils/markdown";
 import { uploadFile } from "../utils/storage";
 import { timeout } from "../utils/utils";
-import { position } from "caret-pos";
 import { UserSelect } from "./user-select/user-select";
+import userSelectCss from "./user-select/user-select.module.css";
 
 export const MessageInputForm = React.forwardRef((props, messageInput) => {
   const [loading, setLoading] = useState(false);
@@ -87,13 +89,13 @@ export const MessageInputForm = React.forwardRef((props, messageInput) => {
         const url = await uploadFile(file);
 
         if (!url) {
-          throw new Error("Error uploading file.");
+          throw new CustomError("Error uploading file.");
         }
 
         props.setMessageValue(props.messageValue + " " + url + " ");
       });
     } catch (error) {
-      props.setErrors([translateError(error).message]);
+      props.setErrors([new CustomError(error.message, error)]);
     } finally {
       setLoading(false);
       e.target.form.message.focus();

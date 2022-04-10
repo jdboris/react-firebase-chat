@@ -1,14 +1,15 @@
 import {
-  Close as CloseIcon,
   Add as AddIcon,
+  Close as CloseIcon,
   DoDisturb as DoDisturbIcon,
 } from "@mui/icons-material";
 import { default as React, useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
-import { firestore } from "./chat-room-app";
 import styles from "../css/chat-room.module.css";
+import { CustomError } from "../utils/errors";
 import { sendToCustomerPortal, sendToStripe } from "../utils/stripe";
 import { timeout } from "../utils/utils";
+import { firestore } from "./chat-room-app";
 
 export function PremiumDialog(props) {
   const { isAnonymous, user } = props;
@@ -135,9 +136,9 @@ export function PremiumDialog(props) {
                           recipients.filter((name) => name == recipients[i])
                             .length > 1
                         ) {
-                          const error = new Error("Duplicate user.");
-                          error.field = i;
-                          errors.push(error);
+                          errors.push(
+                            new CustomError("Duplicate user.", { field: i })
+                          );
                           break;
                         }
 
@@ -150,17 +151,21 @@ export function PremiumDialog(props) {
                           )
                           .get();
                         if (!snapshot.docs.length) {
-                          const error = new Error("User not found.");
-                          error.field = i;
-                          errors.push(error);
+                          errors.push(
+                            new CustomError("User not found.", { field: i })
+                          );
                         } else if (snapshot.docs[0].id === user.uid) {
-                          const error = new Error("May not gift to yourself.");
-                          error.field = i;
-                          errors.push(error);
+                          errors.push(
+                            new CustomError("May not gift to yourself.", {
+                              field: i,
+                            })
+                          );
                         } else if ("anonSuffix" in snapshot.docs[0].data()) {
-                          const error = new Error("May not gift to anons.");
-                          error.field = i;
-                          errors.push(error);
+                          errors.push(
+                            new CustomError("May not gift to anons.", {
+                              field: i,
+                            })
+                          );
                         } else {
                           recipientUids.push(snapshot.docs[0].id);
                         }

@@ -1,24 +1,23 @@
-import { Person as PersonIcon } from "@mui/icons-material";
-import { Block as BlockIcon } from "@mui/icons-material";
+import { Block as BlockIcon, Person as PersonIcon } from "@mui/icons-material";
 import firebase from "firebase/compat/app";
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown, { uriTransformer } from "react-markdown";
-import gfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
-import { banUser } from "./chat-room-app";
-import { hexToRgb } from "../utils/color";
+import gfm from "remark-gfm";
 import styles from "../css/chat-room.module.css";
 import "../css/oembed.css";
-import { translateError } from "../utils/errors";
-import {
-  timeout,
-  isImageUrl,
-  getImageSize,
-  stripHtml,
-  flashInTitle,
-} from "../utils/utils";
 import useAudio from "../hooks/use-audio";
 import popSound from "../sound/pop.wav";
+import { hexToRgb } from "../utils/color";
+import { CustomError } from "../utils/errors";
+import {
+  flashInTitle,
+  getImageSize,
+  isImageUrl,
+  stripHtml,
+  timeout,
+} from "../utils/utils";
+import { banUser } from "./chat-room-app";
 
 function Link(props) {
   const [children, setChildren] = useState(props.href);
@@ -359,7 +358,7 @@ export function ChatMessage(props) {
                     const result = await banUser(username);
                     props.setAlerts([result.data.message]);
                   }).catch((error) => {
-                    props.setErrors([translateError(error).message]);
+                    props.setErrors([new CustomError(error.message, error)]);
                   });
                   setConfirmModal(null);
                 },

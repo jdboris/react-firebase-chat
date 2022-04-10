@@ -3,9 +3,10 @@ import firebase from "firebase/compat/app";
 import { default as React, useState } from "react";
 import { useDocumentData } from "react-firebase-hooks/firestore";
 import ReactPaginate from "react-paginate";
-import { settingsRef } from "./chat-room-app";
 import styles from "../css/chat-room.module.css";
 import paginationStyles from "../css/pagination-controls.module.css";
+import { CustomError } from "../utils/errors";
+import { settingsRef } from "./chat-room-app";
 
 export function FilteredWordsDialog(props) {
   const [word, setWord] = useState("");
@@ -72,7 +73,7 @@ export function FilteredWordsDialog(props) {
               e.preventDefault();
 
               if (word.length < 4) {
-                setErrors(["Word must be 4+ characters."]);
+                setErrors([new CustomError("Word must be 4+ characters.")]);
                 return;
               }
               const list = filteredWords ? filteredWords.list : [];
@@ -96,7 +97,7 @@ export function FilteredWordsDialog(props) {
           >
             {errors.map((error, i) => (
               <div key={i} className={styles["error"]}>
-                {error}
+                {error.message}
               </div>
             ))}
             <input
