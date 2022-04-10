@@ -28,7 +28,10 @@ function Link(props) {
       // 10 megabytes
       const sizeLimit = 10 * 1000 * 1000;
 
-      if (isImageUrl(url) && (await getImageSize(url)) <= sizeLimit) {
+      if (
+        isImageUrl(url) &&
+        (await getImageSize(url).catch(() => 0)) <= sizeLimit
+      ) {
         setProviderName("image");
         setChildren(
           <a
@@ -48,6 +51,30 @@ function Link(props) {
             <img src={url} alt="embedded" />
           </a>
         );
+
+        const validateImageEmbedUrl = firebase
+          .functions()
+          .httpsCallable("validateImageEmbedUrl");
+        try {
+          await validateImageEmbedUrl(url);
+        } catch (e) {
+          setChildren(
+            <a
+              href={url}
+              target="_blank"
+              rel="nofollow noreferrer noopener"
+              // NOTE: Must stop propagation so clicking a link won't @ the poster
+              onMouseUp={(e) => {
+                e.stopPropagation();
+              }}
+            >
+              {/* NOTE: MUST keep the <img> tag in the DOM and clear the 
+              src rather than deleting the tag, in order to stop the download. */}
+              <img style={{ display: "none" }} src={""} alt="Embed failed." />
+              {url}
+            </a>
+          );
+        }
       } else {
         setChildren(
           <a

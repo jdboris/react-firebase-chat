@@ -908,6 +908,40 @@ exports.getEmbed = functions.https.onCall(async (data, context) => {
     });
 });
 
+exports.validateImageEmbedUrl = functions.https.onCall(async (url, context) => {
+  //                     10 MB
+  const sizeLimit = 10 * 1000 * 1000;
+  const fetch = require("node-fetch");
+  if (!context.auth || !context.auth.uid) {
+    throw new HttpsError("unauthenticated", "Must be logged in.");
+  }
+
+  const response = await fetch(url);
+  const contentLength = +response.headers.get("Content-Length");
+  const contentType = response.headers.get("Content-Type");
+
+  if (!contentType) {
+    throw new HttpsError("cancelled", "Failed to determine content type.");
+  }
+
+  if (contentLength) {
+    if (contentLength > sizeLimit) {
+      throw new HttpsError("cancelled", "File too large.");
+    }
+  } else {
+    let bytesReceived = 0;
+
+    for await (const chunk of response.body) {
+      bytesReceived += chunk.length;
+      if (bytesReceived > sizeLimit) {
+        throw new HttpsError("cancelled", "File too large.");
+      }
+    }
+  }
+
+  return true;
+});
+
 exports.uploadFile = functions.https.onCall(async (data, context) => {
   const user = await getUser(context.auth.uid);
 
