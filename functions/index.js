@@ -835,7 +835,7 @@ function escapeRegExExceptStar(string) {
   return string.replace(/[.+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
 }
 
-exports.getOembed = functions.https.onCall(async (data, context) => {
+exports.getEmbed = functions.https.onCall(async (data, context) => {
   const fetch = require("node-fetch");
   if (!context.auth || !context.auth.uid) {
     throw new HttpsError("unauthenticated", "Must be logged in.");
