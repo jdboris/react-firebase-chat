@@ -70,7 +70,12 @@ function Link(props) {
             >
               {/* NOTE: MUST keep the <img> tag in the DOM and clear the 
               src rather than deleting the tag, in order to stop the download. */}
-              <img style={{ display: "none" }} src={""} alt="Embed failed." />
+              <img
+                style={{ display: "none" }}
+                src={""}
+                alt="Embed failed."
+                loading="lazy"
+              />
               {url}
             </a>
           );
