@@ -4,7 +4,7 @@ import { useCollectionData } from "react-firebase-hooks/firestore";
 import ReactPaginate from "react-paginate";
 import styles from "../css/chat-room.module.css";
 import paginationStyles from "../css/pagination-controls.module.css";
-import { translateError } from "../utils/errors";
+import { CustomError } from "../utils/errors";
 import { timeout } from "../utils/utils";
 import { idConverter } from "../utils/firestore";
 import { banUser, unbanUser, usersRef } from "./chat-room-app";
@@ -69,7 +69,7 @@ export function BanlistDialog(props) {
                               }
                             });
                           } catch (error) {
-                            setErrors([translateError(error).message]);
+                            setErrors([new CustomError(error.message, error)]);
                           }
                         },
                         Cancel: () => {
@@ -95,13 +95,13 @@ export function BanlistDialog(props) {
                   }
                 });
               } catch (error) {
-                setErrors([translateError(error).message]);
+                setErrors([new CustomError(error.message, error)]);
               }
             }}
           >
             {errors.map((error, i) => (
               <div key={i} className={styles["error"]}>
-                {error}
+                {error.message}
               </div>
             ))}
             <input

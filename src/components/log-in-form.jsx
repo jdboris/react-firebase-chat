@@ -1,10 +1,10 @@
 import { Close as CloseIcon } from "@mui/icons-material";
 import firebase from "firebase/compat/app";
 import React, { useState } from "react";
-import { auth } from "./chat-room-app";
 import styles from "../css/chat-room.module.css";
-import { translateError } from "../utils/errors";
+import { CustomError } from "../utils/errors";
 import { setQueryParam, timeout } from "../utils/utils";
+import { auth } from "./chat-room-app";
 
 export function LogInForm(props) {
   const [username, setUsername] = useState("");
@@ -45,7 +45,7 @@ export function LogInForm(props) {
           // try {
           if (passwordResetLink) {
             if (password.length < 8) {
-              throw new Error("Password must be 8+ characters.");
+              throw new CustomError("Password must be 8+ characters.");
             }
             const oldLink = new URL(passwordResetLink);
 
@@ -64,7 +64,7 @@ export function LogInForm(props) {
             if (!response.ok) {
               setQueryParam("chat-reset-password", null);
               setPasswordResetLink("");
-              throw new Error(
+              throw new CustomError(
                 "Password reset request expired. Please initiate a new reset request."
               );
             }
@@ -89,7 +89,10 @@ export function LogInForm(props) {
             });
 
             if (result.data.error) {
-              throw result.data.error;
+              throw new CustomError(
+                result.data.error.message,
+                result.data.error
+              );
             } else {
               props.setAlerts([result.data.message]);
             }
@@ -99,11 +102,11 @@ export function LogInForm(props) {
           }
 
           if (!email) {
-            throw new Error("Please enter your email address.");
+            throw new CustomError("Please enter your email address.");
           }
 
           if (!password) {
-            throw new Error("Please enter a password.");
+            throw new CustomError("Please enter a password.");
           }
 
           if (isNewUser) {
@@ -116,7 +119,10 @@ export function LogInForm(props) {
             });
 
             if (result.data.error) {
-              throw result.data.error;
+              throw new CustomError(
+                result.data.error.message,
+                result.data.error
+              );
             }
 
             props.setAlerts([
@@ -128,7 +134,7 @@ export function LogInForm(props) {
           await auth
             .signInWithEmailAndPassword(email, password)
             .catch((error) => {
-              throw error;
+              throw new CustomError(error.message, error);
             })
             .finally(() => {
               setLoading(false);
@@ -137,11 +143,11 @@ export function LogInForm(props) {
 
           props.requestClose();
           // } catch (error) {
-          //   setErrors([translateError(error).message]);
+          //   setErrors([new CustomError(error.message, error)]);
           //   setLoading(false);
           // }
         }).catch((error) => {
-          setErrors([translateError(error).message]);
+          setErrors([new CustomError(error.message, error)]);
           setLoading(false);
         });
       }}
@@ -165,7 +171,7 @@ export function LogInForm(props) {
       <fieldset disabled={loading}>
         {errors.map((error, i) => (
           <div key={i} className={styles["error"]}>
-            {error}
+            {error.message}
           </div>
         ))}
 
@@ -294,17 +300,22 @@ export function LogInForm(props) {
                   .httpsCallable("signUp");
                 const result = await signUp({ anonymous: true });
                 if (result.data.error) {
-                  throw result.data.error;
+                  throw new CustomError(
+                    result.data.error.message,
+                    result.data.error
+                  );
                 }
                 await auth
                   .signInWithCustomToken(result.data.token)
                   .catch((error) => {
-                    throw new Error("Something went wrong. Please try again.");
+                    throw new CustomError(
+                      "Something went wrong. Please try again."
+                    );
                   });
                 props.requestClose();
               })
                 .catch((error) => {
-                  setErrors([translateError(error).message]);
+                  setErrors([new CustomError(error.message, error)]);
                 })
                 .finally(() => {
                   setLoading(false);

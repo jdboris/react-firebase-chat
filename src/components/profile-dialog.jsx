@@ -1,13 +1,15 @@
-import { Close as CloseIcon } from "@mui/icons-material";
-import { Person as PersonIcon } from "@mui/icons-material";
-import { Create as PencilIcon } from "@mui/icons-material";
+import {
+  Close as CloseIcon,
+  Create as PencilIcon,
+  Person as PersonIcon,
+} from "@mui/icons-material";
 import firebase from "firebase/compat/app";
-import { auth } from "./chat-room-app";
 import { default as React, useState } from "react";
 import styles from "../css/chat-room.module.css";
+import { CustomError } from "../utils/errors";
 import { uploadFile } from "../utils/storage";
 import { timeout } from "../utils/utils";
-import { translateError } from "../utils/errors";
+import { auth } from "./chat-room-app";
 
 export function ProfileDialog(props) {
   const {
@@ -55,13 +57,13 @@ export function ProfileDialog(props) {
                   const file = e.target.files[0];
                   const url = await uploadFile(file);
                   if (!url) {
-                    throw new Error("Error uploading file.");
+                    throw new CustomError("Error uploading file.");
                   }
                   await auth.currentUser.updateProfile({ photoURL: url });
                   setPhotoUrl(url);
                 })
                   .catch((error) => {
-                    setErrors([error.message]);
+                    setErrors([new CustomError(error.message, error)]);
                   })
                   .finally(() => {
                     setLoadingImg(false);
@@ -96,7 +98,7 @@ export function ProfileDialog(props) {
                   }
                 })
                   .catch((error) => {
-                    setErrors([translateError(error).message]);
+                    setErrors([new CustomError(error.message, error)]);
                   })
                   .finally(() => {
                     setLoadingEmail(false);

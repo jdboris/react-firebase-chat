@@ -1,4 +1,5 @@
 import firebase from "firebase/compat/app";
+import { CustomError } from "../utils/errors";
 
 let providers = null;
 
@@ -11,7 +12,7 @@ export function getProviders() {
       .httpsCallable("getOembedProviders");
     return getOembedProviders().then((result) => {
       if (!result.data.providers) {
-        throw new Error("Failed to fetch providers from backend.");
+        throw new CustomError("Failed to fetch providers from backend.");
       }
       providers = result.data.providers;
       return providers;

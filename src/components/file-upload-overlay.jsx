@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import styles from "../css/chat-room.module.css";
-import { translateError } from "../utils/errors";
+import { CustomError } from "../utils/errors";
 import { uploadFile } from "../utils/storage";
 import { timeout } from "../utils/utils";
 
@@ -35,14 +35,14 @@ export function FileUploadOverlay(props) {
             const url = await uploadFile(file);
 
             if (!url) {
-              throw new Error("Error uploading file.");
+              throw new CustomError("Error uploading file.");
             }
 
             props.messageInput.focus();
             props.setMessageValue(props.messageValue + " " + url + " ");
           })
             .catch((error) => {
-              props.setErrors([translateError(error).message]);
+              props.setErrors([new CustomError(error.message, error)]);
             })
             .finally(() => {
               setLoading(false);

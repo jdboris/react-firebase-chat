@@ -1,6 +1,7 @@
 import emoji from "emoji-dictionary";
 import React, { useState } from "react";
 import styles from "../css/emoji-selector.module.css";
+import { CustomError } from "../utils/errors";
 
 export function EmojiSelector(props) {
   const [searchValue, setSearchValue] = useState("");
@@ -82,7 +83,9 @@ export function EmojiSelector(props) {
                   title={(props.premium ? emoji.names : freeNames)[i]}
                   onClick={() => {
                     if (props.isAnonymous)
-                      return props.setErrors(["Create an account to do that."]);
+                      return props.setErrors([
+                        new CustomError("Create an account to do that."),
+                      ]);
                     props.onSelect(emojiChar);
                   }}
                 >

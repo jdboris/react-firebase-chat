@@ -1,12 +1,15 @@
-import { Add as AddIcon } from "@mui/icons-material";
-import { ArrowDropDown as ArrowDropDownIcon } from "@mui/icons-material";
-import { Close as CloseIcon } from "@mui/icons-material";
-import { FormatColorText as FormatColorTextIcon } from "@mui/icons-material";
+import {
+  Add as AddIcon,
+  ArrowDropDown as ArrowDropDownIcon,
+  Close as CloseIcon,
+  FormatColorText as FormatColorTextIcon,
+} from "@mui/icons-material";
 import React from "react";
-import { usersRef } from "./chat-room-app";
 import styles from "../css/chat-room.module.css";
+import { CustomError } from "../utils/errors";
 import { fonts } from "../utils/fonts";
 import { MARKUP_SYMBOLS } from "../utils/markdown";
+import { usersRef } from "./chat-room-app";
 import { ColorInput } from "./color-input";
 import { MenuWithButton } from "./menu-with-button";
 
@@ -43,7 +46,9 @@ export function UserStyleControls(props) {
           <span
             onClickCapture={() => {
               if (isAnonymous)
-                return setErrors(["Create an account to do that."]);
+                return setErrors([
+                  new CustomError("Create an account to do that."),
+                ]);
               const newValue = !enabled;
               usersRef
                 .doc(uid)
@@ -70,7 +75,9 @@ export function UserStyleControls(props) {
                     fontObj.name + (font.name === fontObj.name ? " ✓" : "")
                   ] = () => {
                     if (isAnonymous)
-                      return setErrors(["Create an account to do that."]);
+                      return setErrors([
+                        new CustomError("Create an account to do that."),
+                      ]);
                     usersRef
                       .doc(uid)
                       .update({ font: fontObj })
@@ -95,7 +102,9 @@ export function UserStyleControls(props) {
                 items={[...Array(6).keys()].reduce((items, number) => {
                   items[9 + number] = () => {
                     if (isAnonymous)
-                      return setErrors(["Create an account to do that."]);
+                      return setErrors([
+                        new CustomError("Create an account to do that."),
+                      ]);
                     usersRef
                       .doc(uid)
                       .update({
@@ -116,7 +125,9 @@ export function UserStyleControls(props) {
                       className={!premium ? styles["disabled"] : ""}
                       onClickCapture={() => {
                         if (isAnonymous)
-                          return setErrors(["Create an account to do that."]);
+                          return setErrors([
+                            new CustomError("Create an account to do that."),
+                          ]);
                         if (!premium) return setPremiumPromptOpen(true);
 
                         usersRef
@@ -164,7 +175,9 @@ export function UserStyleControls(props) {
               <span
                 onClickCapture={() => {
                   if (isAnonymous)
-                    return setErrors(["Create an account to do that."]);
+                    return setErrors([
+                      new CustomError("Create an account to do that."),
+                    ]);
                   setStyleEditorOpen(!isStyleEditorOpen);
                 }}
               >
@@ -187,12 +200,16 @@ export function UserStyleControls(props) {
                   defaultValue={fontColor}
                   onChange={(e) => {
                     if (isAnonymous)
-                      return setErrors(["Create an account to do that."]);
+                      return setErrors([
+                        new CustomError("Create an account to do that."),
+                      ]);
                     setFontColor(e.target.value);
                   }}
                   onChangeComplete={(e) => {
                     if (isAnonymous)
-                      return setErrors(["Create an account to do that."]);
+                      return setErrors([
+                        new CustomError("Create an account to do that."),
+                      ]);
                     usersRef.doc(uid).update({
                       fontColor: e.target.value,
                     });
@@ -200,7 +217,9 @@ export function UserStyleControls(props) {
                   onClick={(e) => {
                     e.stopPropagation();
                     if (isAnonymous)
-                      return setErrors(["Create an account to do that."]);
+                      return setErrors([
+                        new CustomError("Create an account to do that."),
+                      ]);
                   }}
                 />
               </MenuWithButton>
