@@ -32,7 +32,7 @@ export class CustomError extends Error {
           : message
           ? message
           : "Something went wrong. Please try again."),
-      options,
+      ...options,
     });
   }
 }
