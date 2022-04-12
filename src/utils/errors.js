@@ -27,7 +27,7 @@ export class CustomError extends Error {
 
     Object.assign(this, {
       message: (message =
-        errors[options.name] && errors[options.code]
+        errors[options.name] && errors[options.name][options.code]
           ? errors[options.name][options.code].message
           : message
           ? message
