@@ -305,6 +305,7 @@ export function LogInForm(props) {
                     result.data.error
                   );
                 }
+
                 await auth
                   .signInWithCustomToken(result.data.token)
                   .catch((error) => {
@@ -312,6 +313,9 @@ export function LogInForm(props) {
                       "Something went wrong. Please try again."
                     );
                   });
+
+                firebase.app().functions().httpsCallable("validateUser")();
+
                 props.requestClose();
               })
                 .catch((error) => {

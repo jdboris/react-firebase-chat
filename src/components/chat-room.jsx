@@ -15,6 +15,7 @@ import { idConverter } from "../utils/firestore";
 import { fonts } from "../utils/fonts";
 import { toggleSelectionMarkup } from "../utils/markdown";
 import { startPresence } from "../utils/presence";
+import { sendMessage as sendMessageCloud } from "../utils/messages";
 import { insertIntoInput, isGiftedPremium } from "../utils/utils";
 import { BanlistDialog } from "./banlist-dialog";
 import { conversationsRef, usersRef } from "./chat-room-app";
@@ -35,7 +36,7 @@ import { StyleEditorDialog } from "./style-editor-dialog";
 import { UserStyleControls } from "./user-style-controls";
 
 export function ChatRoom(props) {
-  const sendMessageCloud = firebase.functions().httpsCallable("sendMessage");
+  // const sendMessageCloud = firebase.functions().httpsCallable("sendMessage");
   const { messagesRef, conversationRef, user, isLoadingUser } = props;
 
   const dmsPerPage = 10;
@@ -151,7 +152,7 @@ export function ChatRoom(props) {
           return [Date.now(), ...timestamps];
         });
 
-        await sendMessageCloud({
+        await sendMessageCloud(user, {
           conversationId: conversationRef ? conversationRef.id : messagesRef.id,
           text,
           isDeleted: false,
