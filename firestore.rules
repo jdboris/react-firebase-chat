@@ -50,7 +50,26 @@ service cloud.firestore {
       return !("email" in request.auth.token);
     }
 
+    function canCreateMessage() {
+      let user = currentUser();
+      let data = request.resource.data;
+
+      let isBanned = user != null && user.isBanned;
+      let isThisUser = data.uid == request.auth.uid
+                      && data.username == user.username 
+                      && data.lowercaseUsername == user.lowercaseUsername;
+      let hasValidKeys = data.isDeleted == false;
+      // Within one minute of the request.
+      let isValidTime = data.createdAt < request.time + duration.value(1, 'm')
+                        && data.createdAt > request.time - duration.value(1, 'm');
+      let isValidPhotoUrl = data.photoUrl == "" || data.photoUrl == user.photoUrl;
+      let containsFilteredWords = data.text.matches(get(/databases/$(database)/documents/settings/filteredWords).data.regex);
+
+      return isLoggedIn() && !isBanned && isThisUser && hasValidKeys && isValidTime && isValidPhotoUrl && !containsFilteredWords;
+    }
+
     match /messages/{docId} {
+      allow create: if canCreateMessage();
       allow read: if resource.data.isDeleted == false || (isLoggedIn() && (isModerator() || isAdmin()));
       allow update: if (isModerator() || isAdmin()) && 
                       // If the request only has the isDeleted field
@@ -65,7 +84,8 @@ service cloud.firestore {
     }
 
     match /settings/filteredWords {
-      allow read: if isLoggedIn() && isAdmin();
+      // NOTE: May pose a risk (i.e. if filtered words contain secrets that would not be guessable)
+      allow read: if isLoggedIn();
       allow create: if isLoggedIn() && isAdmin();
       allow update: if isLoggedIn() && isAdmin();
       allow delete: if isLoggedIn() && isAdmin();
@@ -78,28 +98,29 @@ service cloud.firestore {
       allow delete: if true;
     }
   
-    match /conversations/{docId} {
+    match /conversations/{conversationId} {
       allow create: if isLoggedIn() && isVerified() && request.auth.uid in request.resource.data.userIds;
       allow read: if isLoggedIn() && request.auth.uid in resource.data.userIds;
       allow update: if isLoggedIn() && request.auth.uid in resource.data.userIds;
-    }
-  
-    match /conversations/{conversationId}/messages/{messageId} {
-      allow create: if isLoggedIn() && isVerified();
-      allow read: if isLoggedIn() && (resource.data.isDeleted == false || isModerator() || isAdmin());
+
+      match /messages/{messageId} {
+        allow create: if isLoggedIn() && isVerified();
+        allow read: if isLoggedIn() && (resource.data.isDeleted == false || isModerator() || isAdmin());
+      }
     }
   
     match /users/{uid} {
       allow read: if true;
       allow update: if isDocOwner(uid)
                     && !isAnonymous()
-                    // NOTE: Don't allow updating these keys
-                    && (!affectedKeys().hasAny(["isAdmin", "isModerator", "isBanned", "ipAddresses", "giftedPremiumStart", "giftedPremiumEnd"]))
-                    // NOTE: Don't allow updating these keys unless user is premium
+                    // NOTE: DON'T allow updating these keys
+                    && (!affectedKeys().hasAny(["isAdmin", "isModerator", "isBanned", "ipAddresses", "giftedPremiumStart", "giftedPremiumEnd", "username", "lowercaseUsername"]))
+                    // NOTE: DON'T allow updating these keys UNLESS user is premium
                     && (isPremium() 
                         || (!affectedKeys()
                             .hasAny(["msgBgImg", "msgBgColor", "msgBgTransparency", "msgBgRepeat", "msgBgPosition", "msgBgImgTransparency"])
                             && (!affectedKeys().hasAny(["fontSize"]) || request.resource.data.fontSize < 15 )));
+      
       match /checkout_sessions/{id} {
         allow read, create: if request.auth.uid == uid;
       }

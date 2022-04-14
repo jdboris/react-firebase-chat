@@ -61,6 +61,16 @@ async function markUserBanned(username) {
     .collection("users")
     .doc(snapshot.docs[0].id)
     .update({ isBanned: true });
+
+  user.ipAddresses &&
+    user.ipAddresses.forEach(async (ip) => {
+      await db
+        .doc(`bannedIps/${ip}`)
+        .set(
+          { bannedAt: admin.firestore.FieldValue.serverTimestamp() },
+          { merge: true }
+        );
+    });
 }
 
 exports.banUser = functions.https.onCall(async (username, context) => {
@@ -110,18 +120,10 @@ async function markUserUnbanned(username) {
     throw new HttpsError("already-exists", "User is not banned.");
   }
 
-  if (user.ipAddresses) {
-    // Get other users that have used any of this user's IPs
-    const otherUsers = await db
-      .collection("users")
-      .where("ipAddresses", "array-contains-any", user.ipAddresses)
-      .get();
-
-    // Unban them all
-    for (const user of otherUsers.docs) {
-      user.ref.update({ isBanned: false });
-    }
-  }
+  user.ipAddresses &&
+    user.ipAddresses.forEach(async (ip) => {
+      await db.doc(`bannedIps/${ip}`).delete();
+    });
 
   snapshot.docs[0].ref.update({ isBanned: false });
 }
@@ -278,115 +280,145 @@ exports.removeModerator = functions.https.onCall(async (username, context) => {
   };
 });
 
-async function filterWords(text) {
-  const filteredWords = await db
-    .collection("settings")
-    .doc("filteredWords")
-    .get();
+// async function filterWords(text) {
+//   const filteredWords = await db
+//     .collection("settings")
+//     .doc("filteredWords")
+//     .get();
 
-  const data = filteredWords.data();
+//   const data = filteredWords.data();
 
-  return data
-    ? text.replace(new RegExp(filteredWords.data().regex, "gi"), "[redacted]")
-    : text;
-}
+//   return data
+//     ? text.replace(new RegExp(filteredWords.data().regex, "gi"), "[redacted]")
+//     : text;
+// }
 
-exports.sendMessage = functions.https.onCall(async (data, context) => {
-  if (!context.auth.uid) {
-    throw new HttpsError("unauthenticated", "Must be logged in.");
+// exports.sendMessage = functions.https.onCall(async (data, context) => {
+//   if (!context.auth.uid) {
+//     throw new HttpsError("unauthenticated", "Must be logged in.");
+//   }
+
+//   const userDoc = await db.doc(`users/${context.auth.uid}`).get();
+//   const user = userDoc.data();
+
+//   if (context.rawRequest.ip) {
+//     const ipSet = new Set((user.ipAddresses || []).reverse());
+//     ipSet.add(context.rawRequest.ip);
+
+//     db.doc(`users/${context.auth.uid}`).update({
+//       ipAddresses: [...ipSet].reverse().slice(0, 10),
+//     });
+//   }
+
+//   if (data.text.length > 2000) {
+//     throw new HttpsError(
+//       "invalid-argument",
+//       "Message too long (2000 character limit)."
+//     );
+//   }
+
+//   if (
+//     data.conversationId !== "messages" &&
+//     !context.auth.token.email_verified
+//   ) {
+//     throw new HttpsError("permission-denied", "Verify your email to do that.");
+//   }
+
+//   const usersDocs = await getUsersByIp(context.rawRequest.ip);
+//   usersDocs.push(userDoc);
+
+//   // If this user is banned, or any user that has used this user's current IP...
+//   if (user.isBanned || usersDocs.find((doc) => doc.data().isBanned)) {
+//     // user.isBanned = true;
+//     // const batch = db.batch();
+//     // usersDocs.forEach((doc) => {
+//     //   if (!doc.data().isBanned) {
+//     //     batch.set(doc.ref, { isBanned: true }, { merge: true });
+//     //   }
+//     // });
+//     // await batch.commit();
+//     throw new HttpsError("permission-denied", "Your account or IP is banned.");
+//   }
+
+//   const authUser = await admin.auth().getUser(context.auth.uid);
+
+//   data.text = await filterWords(data.text);
+
+//   // NOTE: Escape the > character because remark-gfm sanitizes it
+//   data.text = data.text.replace(/[>]/g, "\\$&");
+
+//   const timestamp = admin.firestore.FieldValue.serverTimestamp();
+
+//   const contents = {
+//     ...data,
+//     uid: context.auth.uid,
+//     username: user.username,
+//     lowercaseUsername: user.username.toLowerCase(),
+//     photoUrl: authUser.photoURL || "",
+//     createdAt: timestamp,
+//     premium:
+//       context.auth.token.stripeRole === "premium" || isGiftedPremium(user),
+//     isModMessage: user.isModerator,
+//   };
+
+//   if (data.conversationId != "messages") {
+//     await db
+//       .collection("conversations")
+//       .doc(data.conversationId)
+//       .set(
+//         {
+//           lastMessageSentAt: timestamp,
+//           users: {
+//             [context.auth.uid]: {
+//               lastReadAt: timestamp,
+//             },
+//           },
+//         },
+//         { merge: true }
+//       );
+
+//     await db
+//       .collection("conversations")
+//       .doc(data.conversationId)
+//       .collection("messages")
+//       .add(contents);
+//   } else {
+//     await db.collection("messages").add(contents);
+//   }
+
+//   return {};
+// });
+
+exports.validateUser = functions.https.onCall(async (data, context) => {
+  if (!context.auth.uid) return;
+  const user = await getUser(context.auth.uid);
+  const currentIp = context.rawRequest.ip;
+
+  const ipSet = new Set((user.ipAddresses || []).reverse());
+
+  // Add current IP to recent IPs
+  if (currentIp) {
+    ipSet.add(currentIp);
   }
 
-  if (context.rawRequest.ip) {
-    const doc = await db.doc(`users/${context.auth.uid}`).get();
-    const user = doc.data();
-    const ipSet = new Set((user.ipAddresses || []).reverse());
-    ipSet.add(context.rawRequest.ip);
+  db.doc(`users/${context.auth.uid}`).update({
+    ipAddresses: [...ipSet].reverse().slice(0, 10),
+  });
 
-    db.doc(`users/${context.auth.uid}`).update({
-      ipAddresses: [...ipSet].reverse().slice(0, 10),
-    });
+  // If any of this user's recent IPs are currently banned...
+  let isIpBanned = false;
+  for (const ip of ipSet) {
+    isIpBanned = Boolean((await db.doc(`bannedIps/${ip}`).get()).data());
+    if (isIpBanned) break;
   }
 
-  if (data.text.length > 2000) {
-    throw new HttpsError(
-      "invalid-argument",
-      "Message too long (2000 character limit)."
-    );
+  if (isIpBanned) {
+    // ...ban this user.
+    await db.doc(`users/${context.auth.uid}`).update({ isBanned: true });
+    return false;
   }
 
-  if (
-    data.conversationId !== "messages" &&
-    !context.auth.token.email_verified
-  ) {
-    throw new HttpsError("permission-denied", "Verify your email to do that.");
-  }
-
-  const userDoc = await db.collection("users").doc(context.auth.uid).get();
-  const user = userDoc.data();
-
-  const usersDocs = await getUsersByIp(context.rawRequest.ip);
-  usersDocs.push(userDoc);
-
-  // If this user is banned, or any user that has used this user's current IP...
-  if (user.isBanned || usersDocs.find((doc) => doc.data().isBanned)) {
-    // user.isBanned = true;
-    // const batch = db.batch();
-    // usersDocs.forEach((doc) => {
-    //   if (!doc.data().isBanned) {
-    //     batch.set(doc.ref, { isBanned: true }, { merge: true });
-    //   }
-    // });
-    // await batch.commit();
-    throw new HttpsError("permission-denied", "Your account or IP is banned.");
-  }
-
-  const authUser = await admin.auth().getUser(context.auth.uid);
-
-  data.text = await filterWords(data.text);
-
-  // NOTE: Escape the > character because remark-gfm sanitizes it
-  data.text = data.text.replace(/[>]/g, "\\$&");
-
-  const timestamp = admin.firestore.FieldValue.serverTimestamp();
-
-  const contents = {
-    ...data,
-    uid: context.auth.uid,
-    username: user.username,
-    lowercaseUsername: user.username.toLowerCase(),
-    photoUrl: authUser.photoURL || "",
-    createdAt: timestamp,
-    premium:
-      context.auth.token.stripeRole === "premium" || isGiftedPremium(user),
-    isModMessage: user.isModerator,
-  };
-
-  if (data.conversationId != "messages") {
-    await db
-      .collection("conversations")
-      .doc(data.conversationId)
-      .set(
-        {
-          lastMessageSentAt: timestamp,
-          users: {
-            [context.auth.uid]: {
-              lastReadAt: timestamp,
-            },
-          },
-        },
-        { merge: true }
-      );
-
-    await db
-      .collection("conversations")
-      .doc(data.conversationId)
-      .collection("messages")
-      .add(contents);
-  } else {
-    await db.collection("messages").add(contents);
-  }
-
-  return {};
+  return true;
 });
 
 exports.signUp = functions.https.onCall(async (data, context) => {
@@ -780,12 +812,12 @@ exports.onUserStatusChanged = functions.database
       .where("lastChanged", "<", oneHourAgo)
       .get();
 
-    if (oldUsersSnapshot.docs.length) {
-      console.log(
-        "MARKING USERS OFFLINE: ",
-        oldUsersSnapshot.docs.map((doc) => doc.id)
-      );
-    }
+    // if (oldUsersSnapshot.docs.length) {
+    //   console.log(
+    //     "MARKING USERS OFFLINE: ",
+    //     oldUsersSnapshot.docs.map((doc) => doc.id)
+    //   );
+    // }
 
     for (const userDoc of oldUsersSnapshot.docs) {
       await db.doc(`userPresences/${userDoc.id}`).delete();
