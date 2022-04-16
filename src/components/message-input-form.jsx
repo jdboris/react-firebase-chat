@@ -105,7 +105,13 @@ export const MessageInputForm = React.forwardRef((props, messageInput) => {
   return (
     <form
       className={styles["message-form"]}
-      onSubmit={props.sendMessage}
+      onSubmit={async (e) => {
+        try {
+          await props.sendMessage(e);
+        } catch (error) {
+          props.setErrors([new CustomError(error.message, error)]);
+        }
+      }}
       onFocus={(e) => {
         if (!props.userId) {
           e.preventDefault();
