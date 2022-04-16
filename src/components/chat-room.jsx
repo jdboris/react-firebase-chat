@@ -124,18 +124,57 @@ export function ChatRoom(props) {
   const sendMessage = async (e) => {
     e.preventDefault();
 
-    // Spam limit (1 posts in 20 seconds) for anons
-    if (
-      user.email == null &&
-      timestamps[0] &&
-      Date.now() - timestamps[0] < 20000
-    ) {
-      return;
+    {
+      const timeSince = user.createdAt
+        ? Date.now() - user.createdAt.toMillis()
+        : 0;
+      const timeLeft = user.createdAt ? 3 * 60 * 1000 - timeSince : 0;
+
+      // Prevent posting for the first minute
+      if (user.email == null && timeLeft > 0) {
+        throw new CustomError(
+          `Please wait a little longer (${Math.ceil(
+            timeLeft / 1000
+          )}s) before posting, or make an account.`,
+          {
+            duration: timeLeft,
+          }
+        );
+      }
     }
 
-    // Spam limit (3 posts in 3 seconds)
-    if (timestamps[3] && Date.now() - timestamps[3] < 3000) {
-      return;
+    {
+      const timeSince = timestamps[0] ? Date.now() - timestamps[0] : 0;
+      const timeLeft = timestamps[0] ? 20000 - timeSince : 0;
+
+      // Spam limit (1 posts in 20 seconds) for anons
+      if (user.email == null && timeLeft > 0) {
+        throw new CustomError(
+          `Posting too often. Please wait (${Math.ceil(
+            timeLeft / 1000
+          )}s remaining), or make an account to raise your limit.`,
+          {
+            duration: timeLeft,
+          }
+        );
+      }
+    }
+
+    {
+      const timeSince = timestamps[3] ? Date.now() - timestamps[3] : 0;
+      const timeLeft = timestamps[3] ? 3000 - timeSince : 0;
+
+      // Spam limit (3 posts in 3 seconds)
+      if (timeLeft > 0) {
+        throw new CustomError(
+          `Posting too often. Please wait (${Math.ceil(
+            timeLeft / 1000
+          )}s remaining)...`,
+          {
+            duration: timeLeft,
+          }
+        );
+      }
     }
 
     const text = messageValue;

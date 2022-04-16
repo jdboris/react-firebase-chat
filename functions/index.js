@@ -526,6 +526,7 @@ exports.signUp = functions.https.onCall(async (data, context) => {
       isModerator: false,
       isAdmin: false,
       isCallbacker: false,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
       ...(data.anonymous ? { anonSuffix: anonSuffix } : {}),
     });
 
