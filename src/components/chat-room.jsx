@@ -177,6 +177,46 @@ export function ChatRoom(props) {
       }
     }
 
+    // Restrict new users, to cut down on spam by throwaway accounts...
+    {
+      const presence = onlineUsers.find(
+        (onlineUser) => onlineUser.username === user.username
+      );
+      const timeSinceLogin = presence
+        ? Date.now() - presence.lastChanged.toMillis()
+        : 0;
+
+      const timeSinceCreated = user.createdAt
+        ? Date.now() - user.createdAt.toMillis()
+        : 0;
+
+      const thirtyDays = 1000 * 60 * 60 * 24 * 30;
+      const fiveMinutes = 1000 * 60 * 5;
+
+      // If the user is new (<30 days) OR has been online for less than 5 minutes, AND has less than 20 messages sent
+      if (
+        (timeSinceCreated < thirtyDays || timeSinceLogin < fiveMinutes) &&
+        (!user.messageCount || user.messageCount < 20)
+      ) {
+        const timeSinceLastPost = timestamps[0]
+          ? Date.now() - timestamps[0]
+          : 0;
+        // Spam limit (1 posts in 20 seconds)
+        const timeLeft = timestamps[0] ? 20000 - timeSinceLastPost : 0;
+
+        if (timeLeft > 0) {
+          throw new CustomError(
+            `Posting too often. Please wait (${Math.ceil(
+              timeLeft / 1000
+            )}s remaining)...`,
+            {
+              duration: timeLeft,
+            }
+          );
+        }
+      }
+    }
+
     const text = messageValue;
 
     try {
