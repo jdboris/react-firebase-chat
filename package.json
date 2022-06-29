@@ -1,10 +1,11 @@
 {
   "name": "@jdboris/react-firebase-chat",
-  "version": "1.19.0",
+  "version": "1.20.0",
   "description": "A realtime chat app component built with React and Firebase.",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "scripts": {
+    "emulators": "firebase emulators:start --import=./exported-dev-data --export-on-exit=./exported-dev-data",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook",
     "watch": "rollup -c --watch",
