@@ -129,6 +129,7 @@ export function ChatMessage(props) {
     photoUrl,
     createdAt,
     username,
+    isNewUser,
     fontSize,
     fontColor,
     font,
@@ -278,7 +279,10 @@ export function ChatMessage(props) {
                     }
 
                     // NOTE: If the URL has no '.' (excluding the last character)
-                    if (!props.href.trim().slice(0, -1).includes(".")) {
+                    if (
+                      !props.href.trim().slice(0, -1).includes(".") ||
+                      isNewUser
+                    ) {
                       return <span>{props.href}</span>;
                     }
                     return <Link shouldComponentUpdate={false} {...props} />;

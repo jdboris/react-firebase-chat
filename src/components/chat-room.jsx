@@ -177,14 +177,16 @@ export function ChatRoom(props) {
       }
     }
 
+    let isNewUser = false;
     // Restrict new users, to cut down on spam by throwaway accounts...
     {
       const presence = onlineUsers.find(
         (onlineUser) => onlineUser.username === user.username
       );
-      const timeSinceLogin = presence
-        ? Date.now() - presence.lastChanged.toMillis()
-        : 0;
+      const timeSinceLogin =
+        presence && presence.lastChanged
+          ? Date.now() - presence.lastChanged.toMillis()
+          : 0;
 
       const timeSinceCreated = user.createdAt
         ? Date.now() - user.createdAt.toMillis()
@@ -193,10 +195,12 @@ export function ChatRoom(props) {
       const thirtyDays = 1000 * 60 * 60 * 24 * 30;
       const fiveMinutes = 1000 * 60 * 5;
 
-      // If the user is new (<30 days) OR has been online for less than 5 minutes, AND has less than 20 messages sent
+      isNewUser = !user.messageCount || user.messageCount < 10;
+
+      // If the user is new (<30 days) OR has been online for less than 5 minutes, AND has less than 10 messages sent
       if (
         (timeSinceCreated < thirtyDays || timeSinceLogin < fiveMinutes) &&
-        (!user.messageCount || user.messageCount < 20)
+        isNewUser
       ) {
         const timeSinceLastPost = timestamps[0]
           ? Date.now() - timestamps[0]
@@ -235,6 +239,7 @@ export function ChatRoom(props) {
           conversationId: conversationRef ? conversationRef.id : messagesRef.id,
           text,
           isDeleted: false,
+          isNewUser,
           font,
           fontSize,
           fontColor,
