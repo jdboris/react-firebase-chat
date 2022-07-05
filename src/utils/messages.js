@@ -8,6 +8,7 @@ import {
   addDoc,
   serverTimestamp,
   updateDoc,
+  increment,
 } from "firebase/firestore";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { firestore } from "../components/chat-room-app";
@@ -77,9 +78,11 @@ export async function sendMessage(user, data) {
     await addDoc(collection(db, `messages`), contents);
   }
 
-  await updateDoc(doc(firestore, `users/${user.uid}`), {
-    messageCount: user.messageCount ? user.messageCount + 1 : 1,
-  });
+  if(user.email){
+    await updateDoc(doc(firestore, `users/${user.uid}`), {
+      messageCount: increment(1)
+    });
+  }
 
   // NOTE: Don't bother awaiting
   httpsCallable(getFunctions(), "validateUser")();
