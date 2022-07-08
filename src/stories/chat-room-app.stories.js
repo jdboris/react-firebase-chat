@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { storiesOf } from "@storybook/react";
+import { HiExternalLink } from "react-icons/hi";
 
 import { ChatRoomApp } from "../components/chat-room-app";
 
@@ -23,6 +24,11 @@ stories.add("App", () => {
       //   },
       // ]}
       // callbackToTrigger={callbackToTrigger}
+      headerLinks={[
+        <a href="/chat" target="_blank" rel="noreferrer">
+          <HiExternalLink />
+        </a>,
+      ]}
       onUserChange={(authUser) => {
         setUser(authUser);
       }}

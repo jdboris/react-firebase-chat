@@ -66,6 +66,7 @@ export function ChatRoomApp({
   onUserChange,
   callbackToTrigger,
   callbacks,
+  headerLinks,
 }) {
   const [authUser, isLoadingAuth] = useAuthState(auth);
 
@@ -207,6 +208,7 @@ export function ChatRoomApp({
             setConversationRef={setConversationRef}
             setDmMessagesRef={setDmMessagesRef}
             logout={logout}
+            headerLinks={headerLinks}
           />
         )}
       </>
