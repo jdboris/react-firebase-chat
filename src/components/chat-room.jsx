@@ -37,7 +37,8 @@ import { UserStyleControls } from "./user-style-controls";
 
 export function ChatRoom(props) {
   // const sendMessageCloud = firebase.functions().httpsCallable("sendMessage");
-  const { messagesRef, conversationRef, user, isLoadingUser } = props;
+  const { messagesRef, conversationRef, user, isLoadingUser, headerLinks } =
+    props;
 
   const dmsPerPage = 10;
   let query = user
@@ -412,7 +413,9 @@ export function ChatRoom(props) {
       }}
     >
       <header>
-        {props.header}{" "}
+        <span>
+          {props.header} {headerLinks}
+        </span>
         {props.dms && (
           <CloseIcon
             className={styles["pointer"]}

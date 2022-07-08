@@ -32,7 +32,11 @@ fieldset {
   margin: 0;
 }
 
-a,
+a {
+  color: inherit;
+}
+
+.menu a,
 .chat-app *.link {
   color: #0084eb;
   cursor: pointer;
@@ -87,6 +91,7 @@ label [type="file"] {
 
 svg {
   vertical-align: middle;
+  font-size: 1.5em;
 }
 
 .chat-app svg.outlined {
