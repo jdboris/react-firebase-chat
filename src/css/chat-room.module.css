@@ -36,6 +36,7 @@ a {
   color: inherit;
 }
 
+.messages-section a,
 .menu a,
 .chat-app *.link {
   color: #0084eb;
