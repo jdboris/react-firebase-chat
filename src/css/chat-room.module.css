@@ -34,10 +34,20 @@ fieldset {
 
 a {
   color: inherit;
+
+  color: #0084eb;
+  cursor: pointer;
+  padding: 0.25em 0.5em;
+  text-decoration: none;
+  background: none;
 }
 
-.messages-section a,
-.menu a,
+.chat-section > header a {
+  display: inline-flex;
+  color: inherit;
+  padding: none;
+}
+
 .chat-app *.link {
   color: #0084eb;
   cursor: pointer;
