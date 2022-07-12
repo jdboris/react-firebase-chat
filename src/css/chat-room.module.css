@@ -45,7 +45,7 @@ a {
 .chat-section > header a {
   display: inline-flex;
   color: inherit;
-  padding: none;
+  padding: 0;
 }
 
 .chat-app *.link {
@@ -303,7 +303,7 @@ svg {
   margin: 0 auto;
   background-color: black;
   font-family: sans-serif;
-  padding: 5px;
+  padding: 0 5px 0 5px;
 
   position: relative;
 
@@ -335,10 +335,17 @@ svg {
 .chat-section > header {
   display: flex;
   justify-content: space-between;
+  margin-left: -5px;
+  margin-right: -5px;
 }
 
 .chat-section > header > * {
   vertical-align: middle;
+}
+
+.chat-section > header svg,
+.chat-section > footer svg {
+  margin: 0.2em;
 }
 
 .messages-section {
@@ -421,6 +428,8 @@ svg {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-left: -5px;
+  margin-right: -5px;
 }
 
 .chat-controls span {
