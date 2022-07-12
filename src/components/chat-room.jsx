@@ -501,7 +501,7 @@ export function ChatRoom(props) {
         setLoginOpen={setLoginOpen}
       />
 
-      <div className={styles["chat-controls"]}>
+      <footer className={styles["chat-controls"]}>
         {isPopMuted ? (
           <VolumeOffIcon
             className={styles["pointer"]}
@@ -597,7 +597,7 @@ export function ChatRoom(props) {
             }}
           />
         </div>
-      </div>
+      </footer>
 
       {user && (
         <StyleEditorDialog
