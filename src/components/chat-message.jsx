@@ -244,7 +244,7 @@ export function ChatMessage(props) {
       ) : (
         <PersonIcon className={styles["avatar"]} />
       )}
-      {isNewUser && currentUser.isModerator && (
+      {isNewUser && currentUser && currentUser.isModerator && (
         <small className={styles["new-user-badge"]}>New</small>
       )}
       <div className={expanded ? styles["expanded"] : ""}>
