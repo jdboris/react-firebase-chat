@@ -122,6 +122,8 @@ svg {
   background: #3db72e;
   color: white;
   padding: 0.2em 0.5em;
+  /* NOTE: Compensate for weird inaccurate padding in Chrome */
+  padding-bottom: 0.3em;
   border-radius: 1em;
   font-weight: bold;
   cursor: default;
@@ -359,6 +361,11 @@ svg {
 .chat-section > header > :last-child > :last-child,
 .chat-section > footer > :last-child > :last-child {
   margin-right: -5px;
+}
+
+.chat-section > header > :first-child > :first-child {
+  /* NOTE: Compensate for weird inaccurate margin in Firefox  */
+  margin-left: -4px;
 }
 
 .messages-section {
