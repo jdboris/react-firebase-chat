@@ -1,6 +1,6 @@
 {
   "name": "@jdboris/react-firebase-chat",
-  "version": "1.23.2",
+  "version": "1.24.0",
   "description": "A realtime chat app component built with React and Firebase.",
   "main": "dist/index.js",
   "module": "dist/index.es.js",

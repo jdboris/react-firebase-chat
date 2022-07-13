@@ -414,7 +414,8 @@ export function ChatRoom(props) {
     >
       <header>
         <span>
-          {props.header} {headerLinks}
+          {props.header}
+          {headerLinks}
         </span>
         {props.dms && (
           <CloseIcon
@@ -502,36 +503,33 @@ export function ChatRoom(props) {
       />
 
       <footer className={styles["chat-controls"]}>
-        {isPopMuted ? (
-          <VolumeOffIcon
-            className={styles["pointer"]}
+        <div>
+          <button
+            className={styles["alt-button"]}
             onClick={() => {
-              localStorage.setItem("isPopMuted", false);
-              setPopMuted(false);
+              localStorage.setItem(
+                "isPopMuted",
+                !localStorage.getItem("isPopMuted")
+              );
+              setPopMuted(!isPopMuted);
             }}
-          />
-        ) : (
-          <VolumeUpIcon
-            className={styles["pointer"]}
-            onClick={() => {
-              localStorage.setItem("isPopMuted", true);
-              setPopMuted(true);
-            }}
-          />
-        )}
+          >
+            {isPopMuted ? <VolumeOffIcon /> : <VolumeUpIcon />}
+          </button>
+        </div>
 
         <div>
-          <span
-            className={styles["pointer"] + " " + styles["user-count"]}
+          <button
+            className={styles["alt-button"] + " " + styles["user-count"]}
             onClick={() => {
               setUsersOpen(!isUsersOpen);
             }}
           >
             {onlineUsers ? onlineUsers.length : 1}
-          </span>
+          </button>
 
-          <span
-            className={styles["badge"] + " " + styles["pointer"]}
+          <button
+            className={styles["number-badge"] + " " + styles["alt-button"]}
             data-badge-text={unreadCount ? unreadCount : ""}
             onClick={() => {
               setDmsOpen(!isDmsOpen);
@@ -539,14 +537,12 @@ export function ChatRoom(props) {
           >
             <ChatBubbleIcon
               className={
-                styles["pointer"] +
-                " " +
                 styles["chat-bubble-icon"] +
                 " " +
                 (unreadCount ? styles["yellow"] : "")
               }
             />
-          </span>
+          </button>
 
           {user && user.isModerator && (
             <MenuWithButton

@@ -117,6 +117,17 @@ svg {
   display: none;
 }
 
+.badge {
+  display: inline-flex;
+  background: #3db72e;
+  color: white;
+  padding: 0.2em 0.5em;
+  border-radius: 1em;
+  font-weight: bold;
+  cursor: default;
+  margin: 0.3em;
+}
+
 .loading-placeholder,
 .loading,
 .chat-app *.disabled,
@@ -236,11 +247,11 @@ svg {
   color: yellow;
 }
 
-.badge {
+.number-badge {
   position: relative;
 }
 
-.badge::after {
+.number-badge::after {
   content: attr(data-badge-text);
   position: absolute;
   display: flex;
@@ -313,11 +324,6 @@ svg {
   /* height: 400px; */
 }
 
-.chat-app header {
-  /* min-height: 20px;
-  color: white; */
-}
-
 .chat-app {
   display: flex;
   justify-content: center;
@@ -335,17 +341,24 @@ svg {
 .chat-section > header {
   display: flex;
   justify-content: space-between;
-  margin-left: -5px;
-  margin-right: -5px;
+  align-items: center;
 }
 
-.chat-section > header > * {
+.chat-section > header > *,
+.chat-section > footer > * {
   vertical-align: middle;
+  display: inline-flex;
+  align-items: center;
 }
 
-.chat-section > header svg,
-.chat-section > footer svg {
-  margin: 0.2em;
+.chat-section > header > :first-child > :first-child,
+.chat-section > footer > :first-child > :first-child {
+  margin-left: -5px;
+}
+
+.chat-section > header > :last-child > :last-child,
+.chat-section > footer > :last-child > :last-child {
+  margin-right: -5px;
 }
 
 .messages-section {
@@ -428,8 +441,6 @@ svg {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-left: -5px;
-  margin-right: -5px;
 }
 
 .chat-controls span {
@@ -446,10 +457,6 @@ svg.gavel-icon {
   font-size: 1.1em;
   width: 1.5em;
   padding: 0 0.25em;
-}
-
-.user-count {
-  margin: 0.2em 0.4em;
 }
 
 .dialog {
@@ -748,13 +755,32 @@ button {
   border: 0;
 }
 
-button:not(:last-child) {
-  margin-right: 0.3em;
+button:not(.alt-button) + button:not(.alt-button) {
+  margin-left: 0.3em;
 }
+
+/* button:not(:last-child) {
+  margin-right: 0.3em;
+} */
 
 button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.chat-section > header > * > a,
+button.alt-button {
+  display: inline-block;
+  text-align: center;
+  padding: 0.38em;
+  white-space: nowrap;
+  border-radius: 0;
+  cursor: pointer;
+  border: 0;
+
+  color: inherit;
+  background: none;
+  font-size: inherit;
 }
 
 .login-form button {
@@ -880,15 +906,11 @@ li {
   white-space: pre-wrap;
 }
 
-.message .new-user-badge {
+.message > .badge {
   position: absolute;
-  background: #3db72e;
-  color: white;
-  padding: 0.2em 0.5em;
-  border-radius: 1em;
-  font-weight: bold;
   top: 31px;
   left: 16px;
+  margin: 0;
 }
 
 .message > div {

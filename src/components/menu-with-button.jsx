@@ -17,7 +17,7 @@ export function MenuWithButton(props) {
   }, [props.openKey]);
 
   return (
-    <span style={{ position: "relative" }}>
+    <button className={styles["alt-button"]} style={{ position: "relative" }}>
       <span
         className={styles["pointer"]}
         onClickCapture={() => {
@@ -53,6 +53,6 @@ export function MenuWithButton(props) {
           {props.children}
         </div>
       )}
-    </span>
+    </button>
   );
 }

@@ -61,6 +61,33 @@ export const getCustomerPortalLink = firebase
   .functions()
   .httpsCallable("ext-firestore-stripe-subscriptions-createPortalLink");
 
+function UsernameBadge({ username }) {
+  const [user, setUser] = useState();
+  useEffect(() => {
+    (async () => {
+      setUser(
+        (
+          await usersRef
+            .where("lowercaseUsername", "==", username.toLowerCase())
+            .get()
+        ).docs[0].data()
+      );
+    })();
+  }, []);
+
+  return (
+    <span
+      className={styles["badge"]}
+      style={{
+        background: user && user.msgBgColor ? user.msgBgColor : "white",
+        color: user && user.nameColor ? user.nameColor : "black",
+      }}
+    >
+      {username}
+    </span>
+  );
+}
+
 export function ChatRoomApp({
   className,
   onUserChange,
@@ -179,8 +206,12 @@ export function ChatRoomApp({
       ? conversationRef.id
           .split(":")
           .filter((e) => e !== authUser.displayName)
-          .toString()
-      : "";
+          .map((otherUsername) => (
+            <span>
+              <UsernameBadge username={otherUsername} />
+            </span>
+          ))
+      : null;
 
   return (
     <div className={className + " " + styles["chat-app"]}>
