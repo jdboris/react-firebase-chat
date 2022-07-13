@@ -449,8 +449,7 @@ svg.gavel-icon {
 }
 
 .user-count {
-  margin: 0px 5px;
-  margin-top: 3px;
+  margin: 0.2em 0.4em;
 }
 
 .dialog {
@@ -879,6 +878,17 @@ li {
 
 .message-contents code {
   white-space: pre-wrap;
+}
+
+.message .new-user-badge {
+  position: absolute;
+  background: #3db72e;
+  color: white;
+  padding: 0.2em 0.5em;
+  border-radius: 1em;
+  font-weight: bold;
+  top: 31px;
+  left: 16px;
 }
 
 .message > div {
