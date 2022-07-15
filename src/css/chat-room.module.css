@@ -392,7 +392,8 @@ svg {
   border: 1px solid grey;
   flex-basis: 50%;
   flex-grow: 1;
-  margin: 0;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 [data-format="*"] {
