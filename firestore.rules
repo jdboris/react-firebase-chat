@@ -62,12 +62,14 @@ service cloud.firestore {
       // Within one minute of the request.
       let isValidTime = data.createdAt < request.time + duration.value(1, 'm')
                         && data.createdAt > request.time - duration.value(1, 'm');
+      
+      let isValidLength = data.text.size() < 3000;
 
       let containsFilteredWords = exists(/databases/$(database)/documents/settings/filteredWords) ?
                                   data.text.matches(get(/databases/$(database)/documents/settings/filteredWords).data.regex) :
                                   false;
 
-      return isLoggedIn() && !isBanned && isThisUser && hasValidKeys && isValidTime && !containsFilteredWords;
+      return isLoggedIn() && !isBanned && isThisUser && hasValidKeys && isValidTime && !containsFilteredWords && isValidLength;
     }
 
     match /messages/{docId} {
