@@ -125,6 +125,8 @@ export function ChatRoom(props) {
   const sendMessage = async (e) => {
     e.preventDefault();
 
+    const text = messageValue;
+
     {
       const timeSince = user.createdAt
         ? Date.now() - user.createdAt.toMillis()
@@ -211,18 +213,22 @@ export function ChatRoom(props) {
 
         if (timeLeft > 0) {
           throw new CustomError(
-            `Posting too often. Please wait (${Math.ceil(
+            `Account temporarily restricted. Please wait (${Math.ceil(
               timeLeft / 1000
-            )}s remaining)...`,
+            )}s) to post again...`,
             {
               duration: timeLeft,
             }
           );
         }
+
+        if (text.length > 100) {
+          throw new CustomError(
+            `Account temporarily restricted. Post length limit (100 characters) exceeded.`
+          );
+        }
       }
     }
-
-    const text = messageValue;
 
     try {
       if (conversationRef && !user.emailVerified) {
