@@ -131,10 +131,14 @@ export function ChatRoom(props) {
       const timeSince = user.createdAt
         ? Date.now() - user.createdAt.toMillis()
         : 0;
-      const timeLeft = user.createdAt ? 3 * 60 * 1000 - timeSince : 0;
+      const threeMinutes = 3 * 60 * 1000;
+      const thirtySeconds = 30 * 1000;
+      const timeLeft = user.createdAt
+        ? (user.email == null ? threeMinutes : thirtySeconds) - timeSince
+        : 0;
 
       // Prevent posting for the first minute
-      if (user.email == null && timeLeft > 0) {
+      if (timeLeft > 0) {
         throw new CustomError(
           `Please wait a little longer (${Math.ceil(
             timeLeft / 1000
