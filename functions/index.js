@@ -280,6 +280,28 @@ exports.removeModerator = functions.https.onCall(async (username, context) => {
   };
 });
 
+// exports.onMessageSent = functions.firestore
+//   .ref("/aggregateMessages/{uid}")
+//   .onWrite(async (change, context) => {
+//     const oldList = change.before.val();
+//     const newList = change.after.val();
+
+//     console.log("oldList: ", oldList);
+//     console.log("newList: ", newList);
+//     console.log("change: ", change);
+
+//     // const data = (
+//     //   await db.collection("aggregateMessages").doc("last25").get()
+//     // ).data();
+
+//     // await db
+//     //   .collection("aggregateMessages")
+//     //   .doc("last25")
+//     //   .set({
+//     //     list: data ? [...data.slice(1), newMessage] : [newMessage],
+//     //   });
+//   });
+
 // async function filterWords(text) {
 //   const filteredWords = await db
 //     .collection("settings")

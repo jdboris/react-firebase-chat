@@ -14,6 +14,7 @@ import { getFunctions, httpsCallable } from "firebase/functions";
 import { firestore } from "../components/chat-room-app";
 import { CustomError } from "./errors";
 import { isGiftedPremium } from "./utils";
+import { v4 as uuid } from "uuid";
 
 export async function sendMessage(user, data) {
   const db = getFirestore();
@@ -75,12 +76,17 @@ export async function sendMessage(user, data) {
       { merge: true }
     );
   } else {
-    await addDoc(collection(db, `messages`), contents);
+    addDoc(collection(db, `messages`), contents);
+    setDoc(
+      doc(db, `aggregateMessages/last25`),
+      { list: { [uuid()]: contents } },
+      { merge: true }
+    );
   }
 
-  if(user.email){
+  if (user.email) {
     await updateDoc(doc(firestore, `users/${user.uid}`), {
-      messageCount: increment(1)
+      messageCount: increment(1),
     });
   }
 

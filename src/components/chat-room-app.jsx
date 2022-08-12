@@ -54,6 +54,7 @@ export const modActionLogRef = firestore.collection("modActionLog");
 export const settingsRef = firestore.collection("settings");
 const messagesRef = firestore.collection("messages");
 const callbacksRef = firestore.collection("callbacks");
+const aggregateMessagesRef = firestore.collection("aggregateMessages");
 
 export const banUser = firebase.functions().httpsCallable("banUser");
 export const unbanUser = firebase.functions().httpsCallable("unbanUser");
@@ -225,6 +226,7 @@ export function ChatRoomApp({
             conversationRef={conversationRef}
             setConversationRef={setConversationRef}
             messagesRef={dmMessagesRef}
+            aggregateMessagesRef={aggregateMessagesRef}
             setDmMessagesRef={setDmMessagesRef}
             logout={logout}
             header={header}
@@ -236,6 +238,7 @@ export function ChatRoomApp({
             isLoadingUser={isLoadingUser}
             setAlerts={setAlerts}
             messagesRef={messagesRef}
+            aggregateMessagesRef={aggregateMessagesRef}
             setConversationRef={setConversationRef}
             setDmMessagesRef={setDmMessagesRef}
             logout={logout}
