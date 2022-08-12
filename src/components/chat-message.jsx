@@ -29,6 +29,7 @@ function Link(props) {
       const sizeLimit = 10 * 1000 * 1000;
 
       if (
+        !props.isEmbedDisabled &&
         isImageUrl(url) &&
         (await getImageSize(url).catch(() => 0)) <= sizeLimit
       ) {
@@ -140,6 +141,9 @@ export function ChatMessage(props) {
     msgBgRepeat,
     msgBgPosition,
     msgBgImgTransparency,
+    // NOTE: Derived by ChatRoom
+    isHidden,
+    isEmbedDisabled,
   } = props.message;
 
   const messageContents = useRef();
@@ -217,13 +221,13 @@ export function ChatMessage(props) {
           }
         }
       }}
-      style={
-        stylesEnabled && premium
-          ? {
-              backgroundColor: `rgba(${hexToRgb(bgColor)},${bgTransparency})`,
-            }
-          : {}
-      }
+      style={{
+        ...(stylesEnabled &&
+          premium && {
+            backgroundColor: `rgba(${hexToRgb(bgColor)},${bgTransparency})`,
+          }),
+        ...(isHidden && { display: "none" }),
+      }}
     >
       <div className={styles["mention-highlight"]}></div>
       <div
@@ -288,7 +292,13 @@ export function ChatMessage(props) {
                     ) {
                       return <span>{props.href}</span>;
                     }
-                    return <Link shouldComponentUpdate={false} {...props} />;
+                    return (
+                      <Link
+                        shouldComponentUpdate={false}
+                        {...props}
+                        isEmbedDisabled={isEmbedDisabled}
+                      />
+                    );
                   },
                   // NOTE: Must overwrite the built-in renderer to ensure the text of the link is the URL
                   span: ({ className, children }) => {
@@ -331,7 +341,7 @@ export function ChatMessage(props) {
                 {text}
               </ReactMarkdown>
             );
-          }, [text])}
+          }, [text, isEmbedDisabled])}
         </span>
 
         {messageContents.current &&

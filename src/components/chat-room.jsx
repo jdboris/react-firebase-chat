@@ -45,7 +45,7 @@ import { ProfileDialog } from "./profile-dialog";
 import { StyleEditorDialog } from "./style-editor-dialog";
 import { UserStyleControls } from "./user-style-controls";
 
-const DELAY_MODE_USER_COUNT = 10;
+const DELAY_MODE_USER_COUNT = 100;
 
 export function ChatRoom(props) {
   // const sendMessageCloud = firebase.functions().httpsCallable("sendMessage");
@@ -312,6 +312,7 @@ export function ChatRoom(props) {
         .reverse()
         // Add the "id" field for later.
         .map((pair) => ({ ...pair[1], id: pair[0] }))
+        .sort((a, b) => b.createdAt - a.createdAt)
     );
   }, [delayedMessagesData, realtimeMessagesData]);
 
@@ -326,17 +327,17 @@ export function ChatRoom(props) {
       }
 
       const readMessages = async (delay) => {
-        const { list } =
-          (
-            await getDoc(doc(getFirestore(), "aggregateMessages/last25"))
-          ).data() || {};
+        const data = (
+          await getDoc(doc(getFirestore(), "aggregateMessages/last25"))
+        ).data() || { list: {} };
+        const entries = Object.entries(data.list);
 
-        if (Object.keys(list).length > 25) {
+        if (entries.length > 25) {
           await setDoc(
             doc(getFirestore(), "aggregateMessages/last25"),
             {
               list: Object.fromEntries(
-                Object.entries(list)
+                entries
                   // Get the pairs beyond the 25-message limit...
                   .slice(0, -25)
                   // ...change the values to the "delete" sentinel.
@@ -349,34 +350,53 @@ export function ChatRoom(props) {
           );
         }
 
-        Object.entries(list)
-          .slice(-25)
-          // .reverse()
-          .forEach((pair) => {
-            // NOTE: Documents don't always have their timestamps yet by the time they're read
-            if (pair[1].createdAt) {
-              setTimeout(
-                () => {
-                  setDelayedMessagesData((old) => ({
-                    list: {
-                      ...((old && old.list) || {}),
-                      [pair[0]]: { ...pair[1], id: pair[0] },
-                    },
-                  }));
-                },
-                // Wait until `delay` seconds after the individual message would have appeared.
-                pair[1].createdAt.toMillis() - (Date.now() - delay)
-              );
-            }
-          });
+        setDelayedMessagesData({
+          list: entries
+            .slice(-25)
+            // .reverse()
+            .map((pair) => {
+              // NOTE: Documents don't always have their timestamps yet by the time they're read
+              if (pair[1].createdAt) {
+                // How many milliseconds until the message should appear (after a delay of `delay`).
+                const timeUntil =
+                  pair[1].createdAt.toMillis() - (Date.now() - delay);
 
-        // setDelayedMessages(
-        //   Object.entries(list)
-        //     .slice(-25)
-        //     .reverse()
-        //     // Add the "id" field for later.
-        //     .map((pair) => ({ ...pair[1], id: pair[0] }))
-        // );
+                if (timeUntil > 0) {
+                  // Set a timer to show the message.
+                  setTimeout(
+                    () =>
+                      setDelayedMessagesData((old) => ({
+                        list: {
+                          ...(old && old.list),
+                          [pair[0]]: {
+                            ...pair[1],
+                            id: pair[0],
+                            isHidden: false,
+                            isEmbedDisabled: true,
+                          },
+                        },
+                      })),
+                    // Wait until `delay` milliseconds after the message would have appeared.
+                    timeUntil
+                  );
+                }
+
+                return {
+                  ...pair[1],
+                  id: pair[0],
+                  isHidden: timeUntil > 0,
+                  isEmbedDisabled: true,
+                };
+              }
+
+              return {
+                ...pair[1],
+                id: pair[0],
+                isHidden: true,
+                isEmbedDisabled: true,
+              };
+            }),
+        });
 
         // NOTE: Technically unneccesary but safeguards against costly bugs.
         if (onlineUsers.length >= DELAY_MODE_USER_COUNT) {
