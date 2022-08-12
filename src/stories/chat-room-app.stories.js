@@ -25,7 +25,7 @@ stories.add("App", () => {
       // ]}
       // callbackToTrigger={callbackToTrigger}
       headerLinks={[
-        <a href="/chat" target="_blank" rel="noreferrer">
+        <a href="/chat" target="_blank" rel="noreferrer" key="headerlink-1">
           <HiExternalLink />
         </a>,
       ]}

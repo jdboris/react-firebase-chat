@@ -80,6 +80,13 @@ service cloud.firestore {
                       // https://firebase.google.com/docs/firestore/security/rules-fields#allowing_only_certain_fields_to_be_changed
                       affectedKeys().hasOnly(["isDeleted"]);
     }
+  
+    match /aggregateMessages/{docId} {
+      allow create: if true;
+      allow read: if true;
+      allow update: if true;
+      allow delete: if true;
+    }
 
     match /modActionLog/{docId} {
       allow read: if isLoggedIn() && isAdmin();

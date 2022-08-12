@@ -7,15 +7,28 @@ import {
   VolumeUp as VolumeUpIcon,
 } from "@mui/icons-material";
 import firebase from "firebase/compat/app";
+import {
+  deleteField,
+  doc,
+  getDoc,
+  getFirestore,
+  onSnapshot,
+  setDoc,
+} from "firebase/firestore";
 import React, { useEffect, useRef, useState } from "react";
-import { useCollectionData } from "react-firebase-hooks/firestore";
+import { useMemo } from "react";
+import {
+  useCollectionData,
+  useDocumentData,
+  useDocumentDataOnce,
+} from "react-firebase-hooks/firestore";
 import styles from "../css/chat-room.module.css";
 import { CustomError } from "../utils/errors";
 import { idConverter } from "../utils/firestore";
 import { fonts } from "../utils/fonts";
 import { toggleSelectionMarkup } from "../utils/markdown";
-import { startPresence } from "../utils/presence";
 import { sendMessage as sendMessageCloud } from "../utils/messages";
+import { startPresence } from "../utils/presence";
 import { insertIntoInput, isGiftedPremium } from "../utils/utils";
 import { BanlistDialog } from "./banlist-dialog";
 import { conversationsRef, usersRef } from "./chat-room-app";
@@ -34,6 +47,8 @@ import { PremiumDialog } from "./premium-dialog";
 import { ProfileDialog } from "./profile-dialog";
 import { StyleEditorDialog } from "./style-editor-dialog";
 import { UserStyleControls } from "./user-style-controls";
+
+const DELAY_MODE_USER_COUNT = 50;
 
 export function ChatRoom(props) {
   // const sendMessageCloud = firebase.functions().httpsCallable("sendMessage");
@@ -71,10 +86,12 @@ export function ChatRoom(props) {
   const [premium, setPremium] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
   const [messageValue, setMessageValue] = useState("");
-  const [onlineUsers, setOnlineUsers] = useState([]);
-  const unknownUserCount = onlineUsers.reduce((total, user) => {
-    return total + (user.username ? 0 : 1);
-  }, 0);
+  const [onlineUsers, setOnlineUsers] = useState(null);
+  const unknownUserCount =
+    onlineUsers &&
+    onlineUsers.reduce((total, user) => {
+      return total + (user.username ? 0 : 1);
+    }, 0);
 
   // NOTE: Required for useEffect dependencies
   const userId = user ? user.uid : null;
@@ -127,112 +144,112 @@ export function ChatRoom(props) {
 
     const text = messageValue;
 
-    {
-      const timeSince = user.createdAt
-        ? Date.now() - user.createdAt.toMillis()
-        : 0;
-      const threeMinutes = 3 * 60 * 1000;
-      const thirtySeconds = 30 * 1000;
-      const timeLeft = user.createdAt
-        ? (user.email == null ? threeMinutes : thirtySeconds) - timeSince
-        : 0;
+    // {
+    //   const timeSince = user.createdAt
+    //     ? Date.now() - user.createdAt.toMillis()
+    //     : 0;
+    //   const threeMinutes = 3 * 60 * 1000;
+    //   const thirtySeconds = 30 * 1000;
+    //   const timeLeft = user.createdAt
+    //     ? (user.email == null ? threeMinutes : thirtySeconds) - timeSince
+    //     : 0;
 
-      // Prevent posting for the first minute
-      if (timeLeft > 0) {
-        throw new CustomError(
-          `Please wait a little longer (${Math.ceil(
-            timeLeft / 1000
-          )}s) before posting, or make an account.`,
-          {
-            duration: timeLeft,
-          }
-        );
-      }
-    }
+    //   // Prevent posting for the first minute
+    //   if (timeLeft > 0) {
+    //     throw new CustomError(
+    //       `Please wait a little longer (${Math.ceil(
+    //         timeLeft / 1000
+    //       )}s) before posting, or make an account.`,
+    //       {
+    //         duration: timeLeft,
+    //       }
+    //     );
+    //   }
+    // }
 
-    {
-      const timeSince = timestamps[0] ? Date.now() - timestamps[0] : 0;
-      const timeLeft = timestamps[0] ? 20000 - timeSince : 0;
+    // {
+    //   const timeSince = timestamps[0] ? Date.now() - timestamps[0] : 0;
+    //   const timeLeft = timestamps[0] ? 20000 - timeSince : 0;
 
-      // Spam limit (1 posts in 20 seconds) for anons
-      if (user.email == null && timeLeft > 0) {
-        throw new CustomError(
-          `Posting too often. Please wait (${Math.ceil(
-            timeLeft / 1000
-          )}s remaining), or make an account to raise your limit.`,
-          {
-            duration: timeLeft,
-          }
-        );
-      }
-    }
+    //   // Spam limit (1 posts in 20 seconds) for anons
+    //   if (user.email == null && timeLeft > 0) {
+    //     throw new CustomError(
+    //       `Posting too often. Please wait (${Math.ceil(
+    //         timeLeft / 1000
+    //       )}s remaining), or make an account to raise your limit.`,
+    //       {
+    //         duration: timeLeft,
+    //       }
+    //     );
+    //   }
+    // }
 
-    {
-      const timeSince = timestamps[3] ? Date.now() - timestamps[3] : 0;
-      const timeLeft = timestamps[3] ? 3000 - timeSince : 0;
+    // {
+    //   const timeSince = timestamps[3] ? Date.now() - timestamps[3] : 0;
+    //   const timeLeft = timestamps[3] ? 3000 - timeSince : 0;
 
-      // Spam limit (3 posts in 3 seconds)
-      if (timeLeft > 0) {
-        throw new CustomError(
-          `Posting too often. Please wait (${Math.ceil(
-            timeLeft / 1000
-          )}s remaining)...`,
-          {
-            duration: timeLeft,
-          }
-        );
-      }
-    }
+    //   // Spam limit (3 posts in 3 seconds)
+    //   if (timeLeft > 0) {
+    //     throw new CustomError(
+    //       `Posting too often. Please wait (${Math.ceil(
+    //         timeLeft / 1000
+    //       )}s remaining)...`,
+    //       {
+    //         duration: timeLeft,
+    //       }
+    //     );
+    //   }
+    // }
 
     let isNewUser = false;
-    // Restrict new users, to cut down on spam by throwaway accounts...
-    {
-      const presence = onlineUsers.find(
-        (onlineUser) => onlineUser.username === user.username
-      );
-      const timeSinceLogin =
-        presence && presence.lastChanged
-          ? Date.now() - presence.lastChanged.toMillis()
-          : 0;
+    // // Restrict new users, to cut down on spam by throwaway accounts...
+    // {
+    //   const presence = onlineUsers.find(
+    //     (onlineUser) => onlineUser.username === user.username
+    //   );
+    //   const timeSinceLogin =
+    //     presence && presence.lastChanged
+    //       ? Date.now() - presence.lastChanged.toMillis()
+    //       : 0;
 
-      const timeSinceCreated = user.createdAt
-        ? Date.now() - user.createdAt.toMillis()
-        : 0;
+    //   const timeSinceCreated = user.createdAt
+    //     ? Date.now() - user.createdAt.toMillis()
+    //     : 0;
 
-      const thirtyDays = 1000 * 60 * 60 * 24 * 30;
-      const fiveMinutes = 1000 * 60 * 5;
+    //   const thirtyDays = 1000 * 60 * 60 * 24 * 30;
+    //   const fiveMinutes = 1000 * 60 * 5;
 
-      isNewUser = !user.messageCount || user.messageCount < 10;
+    //   isNewUser = !user.messageCount || user.messageCount < 10;
 
-      // If the user is new (<30 days) OR has been online for less than 5 minutes, AND has less than 10 messages sent
-      if (
-        (timeSinceCreated < thirtyDays || timeSinceLogin < fiveMinutes) &&
-        isNewUser
-      ) {
-        const timeSinceLastPost = timestamps[0]
-          ? Date.now() - timestamps[0]
-          : 0;
-        // Spam limit (1 posts in 20 seconds)
-        const timeLeft = timestamps[0] ? 20000 - timeSinceLastPost : 0;
+    //   // If the user is new (<30 days) OR has been online for less than 5 minutes, AND has less than 10 messages sent
+    //   if (
+    //     (timeSinceCreated < thirtyDays || timeSinceLogin < fiveMinutes) &&
+    //     isNewUser
+    //   ) {
+    //     const timeSinceLastPost = timestamps[0]
+    //       ? Date.now() - timestamps[0]
+    //       : 0;
+    //     // Spam limit (1 posts in 20 seconds)
+    //     const timeLeft = timestamps[0] ? 20000 - timeSinceLastPost : 0;
 
-        if (timeLeft > 0) {
-          throw new CustomError(
-            `Account temporarily restricted. Please wait (${Math.ceil(
-              timeLeft / 1000
-            )}s) to post again...`,
-            {
-              duration: timeLeft,
-            }
-          );
-        }
+    //     if (timeLeft > 0) {
+    //       throw new CustomError(
+    //         `Account temporarily restricted. Please wait (${Math.ceil(
+    //           timeLeft / 1000
+    //         )}s) to post again...`,
+    //         {
+    //           duration: timeLeft,
+    //         }
+    //       );
+    //     }
 
-        if (text.length > 100) {
-          throw new CustomError(
-            `Account temporarily restricted. Post length limit (100 characters) exceeded.`
-          );
-        }
-      }
-    }
+    //     if (text.length > 100) {
+    //       throw new CustomError(
+    //         `Account temporarily restricted. Post length limit (100 characters) exceeded.`
+    //       );
+    //     }
+    //   }
+    // }
 
     try {
       if (conversationRef && !user.emailVerified) {
@@ -282,13 +299,104 @@ export function ChatRoom(props) {
     setMenuOpenKey(menuOpenKey + 1);
   };
 
-  query = messagesRef
-    .limit(25)
-    .orderBy("createdAt", "desc")
-    .where("isDeleted", "==", false)
-    .withConverter(idConverter);
+  const [delayedMessagesData, setDelayedMessagesData] = useState(null);
+  const [realtimeMessagesData] = useDocumentData(
+    delayedMessagesData ? null : doc(getFirestore(), "aggregateMessages/last25")
+  );
 
-  const [messages] = useCollectionData(query);
+  const messages = useMemo(() => {
+    return (
+      (delayedMessagesData || realtimeMessagesData) &&
+      Object.entries(
+        (delayedMessagesData && delayedMessagesData.list) ||
+          (realtimeMessagesData && realtimeMessagesData.list)
+      )
+        .slice(-25)
+        .reverse()
+        // Add the "id" field for later.
+        .map((pair) => ({ ...pair[1], id: pair[0] }))
+    );
+  }, [delayedMessagesData, realtimeMessagesData]);
+
+  useEffect(() => {
+    if (onlineUsers) {
+      let timeout = null;
+
+      // Below the delay mode user threshold
+      if (onlineUsers.length < DELAY_MODE_USER_COUNT) {
+        setDelayedMessagesData(null);
+        return;
+      }
+
+      const readMessages = async (delay) => {
+        const { list } =
+          (
+            await getDoc(doc(getFirestore(), "aggregateMessages/last25"))
+          ).data() || {};
+
+        if (Object.keys(list).length > 25) {
+          await setDoc(
+            doc(getFirestore(), "aggregateMessages/last25"),
+            {
+              list: Object.fromEntries(
+                Object.entries(list)
+                  // Get the pairs beyond the 25-message limit...
+                  .slice(0, -25)
+                  // ...change the values to the "delete" sentinel.
+                  .map((pair) => [pair[0], deleteField()])
+              ),
+            },
+            {
+              merge: true,
+            }
+          );
+        }
+
+        Object.entries(list)
+          .slice(-25)
+          .reverse()
+          .forEach((pair) => {
+            setTimeout(
+              () => {
+                setDelayedMessagesData((old) => ({
+                  list: {
+                    ...((old && old.list) || {}),
+                    [pair[0]]: { ...pair[1], id: pair[0] },
+                  },
+                }));
+              },
+              // Wait until `delay` seconds after the individual message would have appeared.
+              pair[1].createdAt.toMillis() - delay - Date.now()
+            );
+          });
+
+        // setDelayedMessages(
+        //   Object.entries(list)
+        //     .slice(-25)
+        //     .reverse()
+        //     // Add the "id" field for later.
+        //     .map((pair) => ({ ...pair[1], id: pair[0] }))
+        // );
+
+        // NOTE: Technically unneccesary but safeguards against costly bugs.
+        if (onlineUsers.length >= DELAY_MODE_USER_COUNT) {
+          // NOTE: Add 3000ms as a buffer in the lower user count range.
+          // +1000ms delay per hundred users
+          const delay = 3000 + onlineUsers.length * 10;
+          timeout = setTimeout(() => readMessages(delay), delay);
+        }
+      };
+
+      readMessages();
+
+      return () => {
+        if (timeout !== null) {
+          clearTimeout(timeout);
+        }
+      };
+    }
+    // If there are online users AND there are enough to trigger delay mode.
+  }, [onlineUsers !== null && onlineUsers.length >= DELAY_MODE_USER_COUNT]);
 
   useEffect(() => {
     const unsubOnlineUsers = firebase
@@ -648,9 +756,14 @@ export function ChatRoom(props) {
             />
           </header>
           <ul>
-            {onlineUsers.map((user, i) => {
-              return user.username && <li key={i}>{user.username}</li>;
-            })}
+            {onlineUsers &&
+              onlineUsers.map((user, i) => {
+                return (
+                  user.username && (
+                    <li key={`online-${user.username}`}>{user.username}</li>
+                  )
+                );
+              })}
           </ul>
           {unknownUserCount > 0 && `${unknownUserCount} unknown user(s)`}
         </div>
