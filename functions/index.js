@@ -641,6 +641,10 @@ exports.resendVerificationEmail = functions.https.onCall(
 );
 
 async function sendVerificationEmail(email, link) {
+  if(!functions.config().accounts){
+    return;
+  }
+
   const nodemailer = require("nodemailer");
   return new Promise((resolve, reject) => {
     // https://support.google.com/a/answer/176600?hl=en

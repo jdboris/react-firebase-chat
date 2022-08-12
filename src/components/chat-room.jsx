@@ -12,15 +12,12 @@ import {
   doc,
   getDoc,
   getFirestore,
-  onSnapshot,
   setDoc,
 } from "firebase/firestore";
-import React, { useEffect, useRef, useState } from "react";
-import { useMemo } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   useCollectionData,
   useDocumentData,
-  useDocumentDataOnce,
 } from "react-firebase-hooks/firestore";
 import styles from "../css/chat-room.module.css";
 import { CustomError } from "../utils/errors";
@@ -48,7 +45,7 @@ import { ProfileDialog } from "./profile-dialog";
 import { StyleEditorDialog } from "./style-editor-dialog";
 import { UserStyleControls } from "./user-style-controls";
 
-const DELAY_MODE_USER_COUNT = 50;
+const DELAY_MODE_USER_COUNT = 10;
 
 export function ChatRoom(props) {
   // const sendMessageCloud = firebase.functions().httpsCallable("sendMessage");
@@ -354,20 +351,23 @@ export function ChatRoom(props) {
 
         Object.entries(list)
           .slice(-25)
-          .reverse()
+          // .reverse()
           .forEach((pair) => {
-            setTimeout(
-              () => {
-                setDelayedMessagesData((old) => ({
-                  list: {
-                    ...((old && old.list) || {}),
-                    [pair[0]]: { ...pair[1], id: pair[0] },
-                  },
-                }));
-              },
-              // Wait until `delay` seconds after the individual message would have appeared.
-              pair[1].createdAt.toMillis() - delay - Date.now()
-            );
+            // NOTE: Documents don't always have their timestamps yet by the time they're read
+            if (pair[1].createdAt) {
+              setTimeout(
+                () => {
+                  setDelayedMessagesData((old) => ({
+                    list: {
+                      ...((old && old.list) || {}),
+                      [pair[0]]: { ...pair[1], id: pair[0] },
+                    },
+                  }));
+                },
+                // Wait until `delay` seconds after the individual message would have appeared.
+                pair[1].createdAt.toMillis() - (Date.now() - delay)
+              );
+            }
           });
 
         // setDelayedMessages(
