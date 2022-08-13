@@ -10,6 +10,7 @@ import useAudio from "../hooks/use-audio";
 import popSound from "../sound/pop.wav";
 import { hexToRgb } from "../utils/color";
 import { CustomError } from "../utils/errors";
+import { deleteMessage } from "../utils/messages";
 import {
   flashInTitle,
   getImageSize,
@@ -190,10 +191,6 @@ export function ChatMessage(props) {
       }
     }
   }, []);
-
-  function deleteMessage() {
-    messagesRef.doc(props.message.id).update({ isDeleted: true });
-  }
 
   return (
     <div
@@ -424,9 +421,10 @@ export function ChatMessage(props) {
             <BlockIcon />
           </button>
         )}
+
         {currentUser && currentUser.isModerator && (
           <button
-            onClick={deleteMessage}
+            onClick={() => deleteMessage(props.message)}
             // NOTE: Must stop propagation so clicking a link won't @ the poster
             onMouseUp={(e) => {
               e.stopPropagation();

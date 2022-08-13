@@ -9,6 +9,7 @@ import {
   serverTimestamp,
   updateDoc,
   increment,
+  deleteField,
 } from "firebase/firestore";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { firestore } from "../components/chat-room-app";
@@ -76,12 +77,14 @@ export async function sendMessage(user, data) {
       { merge: true }
     );
   } else {
-    addDoc(collection(db, `messages`), contents);
+    const id = uuid();
     setDoc(
       doc(db, `aggregateMessages/last25`),
-      { list: { [uuid()]: contents } },
+      { list: { [id]: contents } },
       { merge: true }
     );
+
+    setDoc(doc(db, `messages/${id}`), contents);
   }
 
   if (user.email) {
@@ -107,4 +110,20 @@ async function filterWords(text) {
   return filteredWords
     ? text.replace(new RegExp(filteredWords.regex, "gi"), "[redacted]")
     : text;
+}
+
+export async function deleteMessage(message) {
+  setDoc(
+    doc(getFirestore(), "aggregateMessages/last25"),
+    {
+      list: { [message.id]: deleteField() },
+    },
+    {
+      merge: true,
+    }
+  );
+
+  updateDoc(doc(getFirestore(), `messages/${message.id}`), {
+    isDeleted: true,
+  });
 }
