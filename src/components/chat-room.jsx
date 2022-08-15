@@ -142,6 +142,7 @@ export function ChatRoom(props) {
 
     const text = messageValue;
 
+    let isNewUser = false;
     // RESTRICTIONS
     {
       const timeSince = user.createdAt
@@ -200,9 +201,6 @@ export function ChatRoom(props) {
       }
     }
 
-    let isNewUser = false;
-
-    // RESTRICTIONS
     // Restrict new users, to cut down on spam by throwaway accounts...
     {
       const presence = onlineUsers.find(
@@ -251,6 +249,7 @@ export function ChatRoom(props) {
         }
       }
     }
+    // ------------------------------------------------------------------------------------------------
 
     try {
       if (conversationRef && !user.emailVerified) {
@@ -344,6 +343,11 @@ export function ChatRoom(props) {
               .slice(0, -25)
               // ...change the values to the "delete" sentinel.
               .map((pair) => [pair[0], deleteField()])
+          ),
+          lastDeleted: Object.fromEntries(
+            entries
+              // Get the pairs beyond the 25-message limit...
+              .slice(0, -25)
           ),
         },
         {

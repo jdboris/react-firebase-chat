@@ -50,9 +50,8 @@ service cloud.firestore {
       return !("email" in request.auth.token);
     }
 
-    function canCreateMessage() {
+    function canCreateMessage(data) {
       let user = currentUser();
-      let data = request.resource.data;
 
       let isBanned = user != null && user.isBanned;
       let isThisUser = data.uid == request.auth.uid
@@ -73,19 +72,60 @@ service cloud.firestore {
     }
 
     match /messages/{docId} {
-      allow create: if canCreateMessage();
+      allow create: if canCreateMessage(request.resource.data);
       allow read: if resource.data.isDeleted == false || (isLoggedIn() && (isModerator() || isAdmin()));
       allow update: if (isModerator() || isAdmin()) && 
                       // If the request only has the isDeleted field
                       // https://firebase.google.com/docs/firestore/security/rules-fields#allowing_only_certain_fields_to_be_changed
                       affectedKeys().hasOnly(["isDeleted"]);
     }
+
+    function canUpdateAggregateMessages(){
+      
+      let data = request.resource.data;
+      let listAfter = data.list;
+      let newMessage = data.get("lastCreated", null);
+      let deletedMessages = data.get("lastDeleted", null);
+      let diff = listAfter.diff(resource.data.list);
+
+      let isCreate = 
+        // THIS IS A CREATE IF...
+        // ...1 new message in list...
+        (diff.addedKeys().size() == 1 
+        // ...AND 1 new message (new "lastCreated")...
+        && (newMessage != null)
+        // ...AND new message is only change in new list...
+        && diff.affectedKeys().hasOnly([newMessage.id]));
+
+      let isDelete = 
+        // THIS IS A DELETE IF...
+        // ...any messages removed...
+        (diff.removedKeys().size() > 0 
+        // ...AND there are deleted messages (new "lastDeleted")...
+        && (deletedMessages != null)
+        // ...AND deleted messages are only change in new list...
+        && diff.affectedKeys().hasOnly(deletedMessages.keys()));
+      
+      let isInvalid = 
+        // THIS OPERATION IS INVALID IF...
+        // ...it is a create AND a delete...
+        (isCreate && isDelete) 
+        // ...OR it's neither...
+        || (!isCreate && !isDelete)
+        // ...OR creating more than 1 message...
+        || (diff.addedKeys().size() > 1)
+        // ...OR deleting more than allowed...
+        || (isDelete && diff.unchangedKeys().size() < 25 && !(isModerator() || isAdmin()))
+        || (isCreate && !canCreateMessage(newMessage));
+
+      return !isInvalid;
+    }
   
     match /aggregateMessages/{docId} {
       allow create: if true;
       allow read: if true;
-      allow update: if true;
-      allow delete: if true;
+      allow update: if canUpdateAggregateMessages();
+      allow delete: if isModerator() || isAdmin();
     }
 
     match /modActionLog/{docId} {
@@ -141,7 +181,6 @@ service cloud.firestore {
     }
     
     function isDocOwner(docId) {
-      // debug( request.auth.uid );
       let isOwner = request.auth.uid == docId;
 
       return isLoggedIn() && isOwner;
