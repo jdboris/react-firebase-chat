@@ -80,7 +80,7 @@ export async function sendMessage(user, data) {
     const id = uuid();
     setDoc(
       doc(db, `aggregateMessages/last25`),
-      { list: { [id]: contents } },
+      { list: { [id]: { ...contents, id } }, lastCreated: { ...contents, id } },
       { merge: true }
     );
 
@@ -117,6 +117,7 @@ export async function deleteMessage(message) {
     doc(getFirestore(), "aggregateMessages/last25"),
     {
       list: { [message.id]: deleteField() },
+      lastDeleted: { [message.id]: message },
     },
     {
       merge: true,
