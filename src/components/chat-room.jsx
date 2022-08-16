@@ -14,6 +14,7 @@ import {
   getFirestore,
   setDoc,
   Timestamp,
+  updateDoc,
 } from "firebase/firestore";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -334,33 +335,27 @@ export function ChatRoom(props) {
     );
 
     if (entries.length > 25) {
-      setDoc(
-        doc(getFirestore(), "aggregateMessages/last25"),
-        {
-          list: Object.fromEntries(
-            entries
-              // Get the pairs beyond the 25-message limit...
-              .slice(0, -25)
-              // ...change the values to the "delete" sentinel.
-              .map((pair) => [pair[0], deleteField()])
-          ),
-          lastDeleted: Object.fromEntries(
-            entries
-              // Get the pairs beyond the 25-message limit...
-              .slice(0, -25)
-          ),
-        },
-        {
-          merge: true,
-        }
-      );
+      updateDoc(doc(getFirestore(), "aggregateMessages/last25"), {
+        ...Object.fromEntries(
+          entries
+            // Get the pairs beyond the 25-message limit...
+            .slice(0, -25)
+            // ...change the values to the "delete" sentinel.
+            .map((pair) => [`list.${pair[0]}`, deleteField()])
+        ),
+        // lastDeleted: Object.fromEntries(
+        //   entries
+        //     // Get the pairs beyond the 25-message limit...
+        //     .slice(0, -25)
+        // ),
+      });
     }
 
     return (
       entries
         .slice(-25)
         // Add the "id" field for later.
-        .map((pair) => ({ ...pair[1], id: pair[0] }))
+        .map((pair) => ({ ...pair[1] }))
         .reverse()
     );
   }, [delayedMessagesData, realtimeMessagesData, dmData]);
@@ -375,67 +370,75 @@ export function ChatRoom(props) {
         return;
       }
 
-      const readMessages = async (delay) => {
+      const readMessages = async (delay, onlineUsers) => {
         const data = (
           await getDoc(doc(getFirestore(), "aggregateMessages/last25"))
         ).data() || { list: {} };
         const entries = Object.entries(data.list);
 
         setDelayedMessagesData({
-          list: entries.map((pair) => {
-            // NOTE: Documents don't always have their timestamps yet by the time they're read
-            if (pair[1].createdAt) {
-              // How many milliseconds until the message should appear (after a delay of `delay`).
-              const timeUntil =
-                pair[1].createdAt.toMillis() - (Date.now() - delay);
+          list: Object.fromEntries(
+            entries.map((pair) => {
+              // NOTE: Documents don't always have their timestamps yet by the time they're read
+              if (pair[1].createdAt) {
+                // How many milliseconds until the message should appear (after a delay of `delay`).
+                const timeUntil =
+                  pair[1].createdAt.toMillis() - (Date.now() - delay);
 
-              if (timeUntil > 0) {
-                // Set a timer to show the message.
-                setTimeout(
-                  () =>
-                    setDelayedMessagesData((old) => ({
-                      list: {
-                        ...(old && old.list),
-                        [pair[0]]: {
-                          ...pair[1],
-                          id: pair[0],
-                          isHidden: false,
-                          isEmbedDisabled: true,
+                if (timeUntil > 0) {
+                  // Set a timer to show the message.
+                  setTimeout(
+                    () =>
+                      setDelayedMessagesData((old) => ({
+                        list: {
+                          ...(old && old.list),
+                          [pair[0]]: {
+                            ...pair[1],
+                            id: pair[0],
+                            isHidden: false,
+                            isEmbedDisabled: true,
+                          },
                         },
-                      },
-                    })),
-                  // Wait until `delay` milliseconds after the message would have appeared.
-                  timeUntil
-                );
+                      })),
+                    // Wait until `delay` milliseconds after the message would have appeared.
+                    timeUntil
+                  );
+                }
+
+                return [
+                  pair[0],
+                  {
+                    ...pair[1],
+                    id: pair[0],
+                    isHidden: timeUntil > 0,
+                    isEmbedDisabled: true,
+                  },
+                ];
               }
 
-              return {
-                ...pair[1],
-                id: pair[0],
-                isHidden: timeUntil > 0,
-                isEmbedDisabled: true,
-              };
-            }
-
-            return {
-              ...pair[1],
-              id: pair[0],
-              isHidden: true,
-              isEmbedDisabled: true,
-            };
-          }),
+              return [
+                pair[0],
+                {
+                  ...pair[1],
+                  id: pair[0],
+                  isHidden: true,
+                  isEmbedDisabled: true,
+                },
+              ];
+            })
+          ),
         });
 
         // NOTE: Technically unneccesary but safeguards against costly bugs.
         if (onlineUsers.length >= DELAY_MODE_USER_COUNT) {
-          // NOTE: Add 2000ms as a buffer in the lower user count range.
+          // NOTE: Add 3000ms as a buffer in the lower user count range.
           // +1000ms delay per hundred users
-          const delay = 2000 + onlineUsers.length * 10;
-          timeout = setTimeout(() => readMessages(delay), delay);
+          const delay = 3000 + onlineUsers.length * 10;
+          timeout = setTimeout(() => readMessages(delay, onlineUsers), delay);
         }
       };
 
-      readMessages();
+      readMessages(1, onlineUsers);
 
       return () => {
         if (timeout !== null) {
