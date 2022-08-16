@@ -113,16 +113,10 @@ async function filterWords(text) {
 }
 
 export async function deleteMessage(message) {
-  setDoc(
-    doc(getFirestore(), "aggregateMessages/last25"),
-    {
-      list: { [message.id]: deleteField() },
-      lastDeleted: { [message.id]: message },
-    },
-    {
-      merge: true,
-    }
-  );
+  updateDoc(doc(getFirestore(), "aggregateMessages/last25"), {
+    [`list.${message.id}`]: deleteField(),
+    // lastDeleted: { [message.id]: message },
+  });
 
   updateDoc(doc(getFirestore(), `messages/${message.id}`), {
     isDeleted: true,

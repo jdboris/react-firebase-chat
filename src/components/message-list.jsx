@@ -94,7 +94,7 @@ export function MessageList(props) {
           [...messages].reverse().map((msg) => (
             <ChatMessage
               // NOTE: MUST use msg.id rather than array index because index will change and force re-render
-              key={msg.id}
+              key={`message-${msg.id}`}
               setErrors={setErrors}
               setAlerts={setAlerts}
               message={msg}
