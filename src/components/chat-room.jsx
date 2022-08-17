@@ -343,11 +343,11 @@ export function ChatRoom(props) {
             // ...change the values to the "delete" sentinel.
             .map((pair) => [`list.${pair[0]}`, deleteField()])
         ),
-        // lastDeleted: Object.fromEntries(
-        //   entries
-        //     // Get the pairs beyond the 25-message limit...
-        //     .slice(0, -25)
-        // ),
+        lastDeleted: Object.fromEntries(
+          entries
+            // Get the pairs beyond the 25-message limit...
+            .slice(0, -25)
+        ),
       });
     }
 
