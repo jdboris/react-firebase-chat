@@ -47,7 +47,7 @@ import { ProfileDialog } from "./profile-dialog";
 import { StyleEditorDialog } from "./style-editor-dialog";
 import { UserStyleControls } from "./user-style-controls";
 
-const DELAY_MODE_USER_COUNT = 100;
+const DELAY_MODE_USER_COUNT = 1;
 
 export function ChatRoom(props) {
   // const sendMessageCloud = firebase.functions().httpsCallable("sendMessage");
@@ -145,111 +145,111 @@ export function ChatRoom(props) {
 
     let isNewUser = false;
     // RESTRICTIONS
-    {
-      const timeSince = user.createdAt
-        ? Date.now() - user.createdAt.toMillis()
-        : 0;
-      const threeMinutes = 3 * 60 * 1000;
-      const thirtySeconds = 30 * 1000;
-      const timeLeft = user.createdAt
-        ? (user.email == null ? threeMinutes : thirtySeconds) - timeSince
-        : 0;
+    // {
+    //   const timeSince = user.createdAt
+    //     ? Date.now() - user.createdAt.toMillis()
+    //     : 0;
+    //   const threeMinutes = 3 * 60 * 1000;
+    //   const thirtySeconds = 30 * 1000;
+    //   const timeLeft = user.createdAt
+    //     ? (user.email == null ? threeMinutes : thirtySeconds) - timeSince
+    //     : 0;
 
-      // Prevent posting for the first minute
-      if (timeLeft > 0) {
-        throw new CustomError(
-          `Please wait a little longer (${Math.ceil(
-            timeLeft / 1000
-          )}s) before posting, or make an account.`,
-          {
-            duration: timeLeft,
-          }
-        );
-      }
-    }
+    //   // Prevent posting for the first minute
+    //   if (timeLeft > 0) {
+    //     throw new CustomError(
+    //       `Please wait a little longer (${Math.ceil(
+    //         timeLeft / 1000
+    //       )}s) before posting, or make an account.`,
+    //       {
+    //         duration: timeLeft,
+    //       }
+    //     );
+    //   }
+    // }
 
-    {
-      const timeSince = timestamps[0] ? Date.now() - timestamps[0] : 0;
-      const timeLeft = timestamps[0] ? 20000 - timeSince : 0;
+    // {
+    //   const timeSince = timestamps[0] ? Date.now() - timestamps[0] : 0;
+    //   const timeLeft = timestamps[0] ? 20000 - timeSince : 0;
 
-      // Spam limit (1 posts in 20 seconds) for anons
-      if (user.email == null && timeLeft > 0) {
-        throw new CustomError(
-          `Posting too often. Please wait (${Math.ceil(
-            timeLeft / 1000
-          )}s remaining), or make an account to raise your limit.`,
-          {
-            duration: timeLeft,
-          }
-        );
-      }
-    }
+    //   // Spam limit (1 posts in 20 seconds) for anons
+    //   if (user.email == null && timeLeft > 0) {
+    //     throw new CustomError(
+    //       `Posting too often. Please wait (${Math.ceil(
+    //         timeLeft / 1000
+    //       )}s remaining), or make an account to raise your limit.`,
+    //       {
+    //         duration: timeLeft,
+    //       }
+    //     );
+    //   }
+    // }
 
-    {
-      const timeSince = timestamps[3] ? Date.now() - timestamps[3] : 0;
-      const timeLeft = timestamps[3] ? 3000 - timeSince : 0;
+    // {
+    //   const timeSince = timestamps[3] ? Date.now() - timestamps[3] : 0;
+    //   const timeLeft = timestamps[3] ? 3000 - timeSince : 0;
 
-      // Spam limit (3 posts in 3 seconds)
-      if (timeLeft > 0) {
-        throw new CustomError(
-          `Posting too often. Please wait (${Math.ceil(
-            timeLeft / 1000
-          )}s remaining)...`,
-          {
-            duration: timeLeft,
-          }
-        );
-      }
-    }
+    //   // Spam limit (3 posts in 3 seconds)
+    //   if (timeLeft > 0) {
+    //     throw new CustomError(
+    //       `Posting too often. Please wait (${Math.ceil(
+    //         timeLeft / 1000
+    //       )}s remaining)...`,
+    //       {
+    //         duration: timeLeft,
+    //       }
+    //     );
+    //   }
+    // }
 
-    // Restrict new users, to cut down on spam by throwaway accounts...
-    {
-      const presence = onlineUsers.find(
-        (onlineUser) => onlineUser.username === user.username
-      );
-      const timeSinceLogin =
-        presence && presence.lastChanged
-          ? Date.now() - presence.lastChanged.toMillis()
-          : 0;
+    // // Restrict new users, to cut down on spam by throwaway accounts...
+    // {
+    //   const presence = onlineUsers.find(
+    //     (onlineUser) => onlineUser.username === user.username
+    //   );
+    //   const timeSinceLogin =
+    //     presence && presence.lastChanged
+    //       ? Date.now() - presence.lastChanged.toMillis()
+    //       : 0;
 
-      const timeSinceCreated = user.createdAt
-        ? Date.now() - user.createdAt.toMillis()
-        : 0;
+    //   const timeSinceCreated = user.createdAt
+    //     ? Date.now() - user.createdAt.toMillis()
+    //     : 0;
 
-      const thirtyDays = 1000 * 60 * 60 * 24 * 30;
-      const fiveMinutes = 1000 * 60 * 5;
+    //   const thirtyDays = 1000 * 60 * 60 * 24 * 30;
+    //   const fiveMinutes = 1000 * 60 * 5;
 
-      isNewUser = !user.messageCount || user.messageCount < 10;
+    //   isNewUser = !user.messageCount || user.messageCount < 10;
 
-      // If the user is new (<30 days) OR has been online for less than 5 minutes, AND has less than 10 messages sent
-      if (
-        (timeSinceCreated < thirtyDays || timeSinceLogin < fiveMinutes) &&
-        isNewUser
-      ) {
-        const timeSinceLastPost = timestamps[0]
-          ? Date.now() - timestamps[0]
-          : 0;
-        // Spam limit (1 posts in 20 seconds)
-        const timeLeft = timestamps[0] ? 20000 - timeSinceLastPost : 0;
+    //   // If the user is new (<30 days) OR has been online for less than 5 minutes, AND has less than 10 messages sent
+    //   if (
+    //     (timeSinceCreated < thirtyDays || timeSinceLogin < fiveMinutes) &&
+    //     isNewUser
+    //   ) {
+    //     const timeSinceLastPost = timestamps[0]
+    //       ? Date.now() - timestamps[0]
+    //       : 0;
+    //     // Spam limit (1 posts in 20 seconds)
+    //     const timeLeft = timestamps[0] ? 20000 - timeSinceLastPost : 0;
 
-        if (timeLeft > 0) {
-          throw new CustomError(
-            `Account temporarily restricted. Please wait (${Math.ceil(
-              timeLeft / 1000
-            )}s) to post again...`,
-            {
-              duration: timeLeft,
-            }
-          );
-        }
+    //     if (timeLeft > 0) {
+    //       throw new CustomError(
+    //         `Account temporarily restricted. Please wait (${Math.ceil(
+    //           timeLeft / 1000
+    //         )}s) to post again...`,
+    //         {
+    //           duration: timeLeft,
+    //         }
+    //       );
+    //     }
 
-        if (text.length > 100) {
-          throw new CustomError(
-            `Account temporarily restricted. Post length limit (100 characters) exceeded.`
-          );
-        }
-      }
-    }
+    //     if (text.length > 100) {
+    //       throw new CustomError(
+    //         `Account temporarily restricted. Post length limit (100 characters) exceeded.`
+    //       );
+    //     }
+    //   }
+    // }
     // ------------------------------------------------------------------------------------------------
 
     try {
@@ -335,20 +335,48 @@ export function ChatRoom(props) {
     );
 
     if (entries.length > 25) {
-      updateDoc(doc(getFirestore(), "aggregateMessages/last25"), {
-        ...Object.fromEntries(
-          entries
-            // Get the pairs beyond the 25-message limit...
-            .slice(0, -25)
-            // ...change the values to the "delete" sentinel.
-            .map((pair) => [`list.${pair[0]}`, deleteField()])
-        ),
-        lastDeleted: Object.fromEntries(
-          entries
-            // Get the pairs beyond the 25-message limit...
-            .slice(0, -25)
-        ),
-      });
+      (async () => {
+        try {
+          console.log(
+            "SOMETHING CHANGED...",
+            delayedMessagesData,
+            realtimeMessagesData,
+            dmData
+          );
+          console.log(`MESSAGE LIST LENGTH (${entries.length}) TOO HIGH`);
+          console.log(`ATTEMPTING TO DELETE SOME...`);
+          console.log({
+            ...Object.fromEntries(
+              entries
+                // Get the pairs beyond the 25-message limit...
+                .slice(0, -25)
+                // ...change the values to the "delete" sentinel.
+                .map((pair) => [`list.${pair[0]}`, deleteField()])
+            ),
+            lastDeleted: Object.fromEntries(
+              entries
+                // Get the pairs beyond the 25-message limit...
+                .slice(0, -25)
+            ),
+          });
+          await updateDoc(doc(getFirestore(), "aggregateMessages/last25"), {
+            ...Object.fromEntries(
+              entries
+                // Get the pairs beyond the 25-message limit...
+                .slice(0, -25)
+                // ...change the values to the "delete" sentinel.
+                .map((pair) => [`list.${pair[0]}`, deleteField()])
+            ),
+            lastDeleted: Object.fromEntries(
+              entries
+                // Get the pairs beyond the 25-message limit...
+                .slice(0, -25)
+            ),
+          });
+        } catch (error) {
+          console.log("error in updateDoc: ", error);
+        }
+      })();
     }
 
     return (
