@@ -100,25 +100,25 @@ service cloud.firestore {
       let isDelete = 
         // THIS IS A DELETE IF...
         // ...any messages removed...
-        (diff.removedKeys().size() > 0 
+        (debug(diff.removedKeys().size() > 0)
         // ...AND there are deleted messages (new "lastDeleted")...
-        && (deletedMessages != null)
+        && debug(deletedMessages != null)
         // ...AND deleted messages are only change in new list...
-        && diff.affectedKeys().hasOnly(deletedMessages.keys()));
+        && debug(diff.affectedKeys().hasOnly(deletedMessages.keys())));
       
       let isInvalid = 
         // THIS OPERATION IS INVALID IF...
         // ...it is a create AND a delete...
-        (isCreate && isDelete) 
+        debug(isCreate && isDelete) 
         // ...OR it's neither...
-        || (!isCreate && !isDelete)
+        || debug(!isCreate && !isDelete)
         // ...OR creating more than 1 message...
-        || (diff.addedKeys().size() > 1)
+        || debug(diff.addedKeys().size() > 1)
         // ...OR deleting more than allowed...
-        || (isDelete && diff.unchangedKeys().size() < 25 && !(isModerator() || isAdmin()))
-        || (isCreate && !canCreateMessage(newMessage));
+        || debug(isDelete && diff.unchangedKeys().size() < 25 && !(isModerator() || isAdmin()))
+        || debug(isCreate && !canCreateMessage(newMessage));
 
-      return !isInvalid;
+      return debug(!isInvalid);
 
       // return true;
     }
