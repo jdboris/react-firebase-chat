@@ -21,6 +21,7 @@
 .env.production.local
 /?
 firebase-export*
+exported-dev-data
 
 npm-debug.log*
 yarn-debug.log*

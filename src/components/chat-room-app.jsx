@@ -95,6 +95,7 @@ export function ChatRoomApp({
   callbackToTrigger,
   callbacks,
   headerLinks,
+  style,
 }) {
   const [authUser, isLoadingAuth] = useAuthState(auth);
 
@@ -215,7 +216,7 @@ export function ChatRoomApp({
       : null;
 
   return (
-    <div className={className + " " + styles["chat-app"]}>
+    <div className={className + " " + styles["chat-app"]} style={style}>
       {/* {user ? ( */}
       <>
         {dmMessagesRef ? (
