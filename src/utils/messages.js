@@ -1,21 +1,21 @@
 // import { firestore as db } from "..components";
 import {
-  getFirestore,
-  doc,
-  collection,
-  getDoc,
-  setDoc,
   addDoc,
-  serverTimestamp,
-  updateDoc,
-  increment,
+  collection,
   deleteField,
+  doc,
+  getDoc,
+  getFirestore,
+  increment,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
 } from "firebase/firestore";
 import { getFunctions, httpsCallable } from "firebase/functions";
+import { v4 as uuid } from "uuid";
 import { firestore } from "../components/chat-room-app";
 import { CustomError } from "./errors";
 import { isGiftedPremium } from "./utils";
-import { v4 as uuid } from "uuid";
 
 export async function sendMessage(user, data, messages) {
   const db = getFirestore();
