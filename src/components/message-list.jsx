@@ -34,7 +34,15 @@ export function MessageList(props) {
 
   useEffect(() => {
     if (!paused) {
-      setMessages(defaultMessages.slice(0, messageCount) || []);
+      const hiddenMessageCount = defaultMessages.reduce(
+        (total, message) => total + (message.isHidden ? 1 : 0),
+        0
+      );
+
+      // Show leftovers until hidden messages are revealed...
+      setMessages(
+        defaultMessages.slice(0, messageCount + hiddenMessageCount) || []
+      );
 
       // If near the bottom of the list
       if (Math.abs(messageList.current.scrollTop) < 100) {

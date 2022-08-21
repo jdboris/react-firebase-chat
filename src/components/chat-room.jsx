@@ -40,6 +40,7 @@ import { MessageInputForm } from "./message-input-form";
 import { MessageList } from "./message-list";
 import { ModActionLogDialog } from "./mod-action-log-dialog";
 import { ModeratorsDialog } from "./moderators-dialog";
+import { OnlineUsersDialog } from "./online-users-dialog";
 import { PremiumDialog } from "./premium-dialog";
 import { ProfileDialog } from "./profile-dialog";
 import { StyleEditorDialog } from "./style-editor-dialog";
@@ -83,11 +84,6 @@ export function ChatRoom(props) {
   const [isOnline, setIsOnline] = useState(true);
   const [messageValue, setMessageValue] = useState("");
   const [onlineUsers, setOnlineUsers] = useState(null);
-  const unknownUserCount =
-    onlineUsers &&
-    onlineUsers.reduce((total, user) => {
-      return total + (user.username ? 0 : 1);
-    }, 0);
 
   // NOTE: Required for useEffect dependencies
   const userId = user ? user.uid : null;
@@ -801,29 +797,11 @@ export function ChatRoom(props) {
         />
       )}
 
-      {isUsersOpen && (
-        <div className={styles["dialog"]}>
-          <header>
-            People here now
-            <CloseIcon
-              onClick={() => {
-                setUsersOpen(false);
-              }}
-            />
-          </header>
-          <ul>
-            {onlineUsers &&
-              onlineUsers.map((user, i) => {
-                return (
-                  user.username && (
-                    <li key={`online-${user.username}`}>{user.username}</li>
-                  )
-                );
-              })}
-          </ul>
-          {unknownUserCount > 0 && `${unknownUserCount} unknown user(s)`}
-        </div>
-      )}
+      <OnlineUsersDialog
+        open={isUsersOpen}
+        requestClose={() => setUsersOpen(false)}
+        onlineUsers={onlineUsers}
+      />
 
       {user && (
         <DmsDialog
