@@ -17,7 +17,7 @@ import { CustomError } from "./errors";
 import { isGiftedPremium } from "./utils";
 import { v4 as uuid } from "uuid";
 
-export async function sendMessage(user, data) {
+export async function sendMessage(user, data, messages) {
   const db = getFirestore();
 
   if (!user.auth || !user) {
@@ -78,11 +78,31 @@ export async function sendMessage(user, data) {
     );
   } else {
     const id = uuid();
-    setDoc(
-      doc(db, `aggregateMessages/last25`),
-      { list: { [id]: { ...contents, id } }, lastCreated: { ...contents, id } },
-      { merge: true }
-    );
+
+    updateDoc(doc(db, `aggregateMessages/last25`), {
+      // CREATE
+      [`list.${id}`]: { ...contents, id },
+      lastCreated: { ...contents, id },
+      // DELETE
+      ...(messages.length > 25 && {
+        ...messages
+          // Get the messages beyond the 25-message limit...
+          .slice(-(messages.length - 25))
+          // ...change them to "delete" sentinels.
+          .reduce(
+            (list, message) => ({
+              ...list,
+              [`list.${message.id}`]: deleteField(),
+            }),
+            {}
+          ),
+        lastDeleted: Object.fromEntries(
+          messages
+            .slice(-(messages.length - 25))
+            .map((message) => [message.id, message])
+        ),
+      }),
+    });
 
     setDoc(doc(db, `messages/${id}`), contents);
   }

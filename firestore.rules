@@ -83,44 +83,42 @@ service cloud.firestore {
     function canUpdateAggregateMessages(){
       
       let data = request.resource.data;
-      let listAfter = data.list;
+      let listAfter = (data.list);
       let newMessage = data.get("lastCreated", null);
       let deletedMessages = data.get("lastDeleted", null);
-      let diff = listAfter.diff(resource.data.list);
+      let diff = (listAfter.diff(resource.data.list));
 
       let isCreate = 
         // THIS IS A CREATE IF...
         // ...1 new message in list...
-        (diff.addedKeys().size() == 1 
+        ((diff.addedKeys().size() == 1 )
         // ...AND 1 new message (new "lastCreated")...
         && (newMessage != null)
-        // ...AND new message is only change in new list...
-        && diff.affectedKeys().hasOnly([newMessage.id]));
+        // ...AND promised new message is only new one...
+        && (diff.addedKeys().hasOnly([newMessage.id])));
 
       let isDelete = 
         // THIS IS A DELETE IF...
         // ...any messages removed...
-        (debug(diff.removedKeys().size() > 0)
+        ((diff.removedKeys().size() > 0)
         // ...AND there are deleted messages (new "lastDeleted")...
-        && debug(deletedMessages != null)
-        // ...AND deleted messages are only change in new list...
-        && debug(diff.affectedKeys().hasOnly(deletedMessages.keys())));
+        && (deletedMessages != null)
+        // ...AND promised deleted messages are the only ones deleted...
+        && (diff.removedKeys().hasOnly(deletedMessages.keys())));
       
       let isInvalid = 
         // THIS OPERATION IS INVALID IF...
-        // ...it is a create AND a delete...
-        debug(isCreate && isDelete) 
-        // ...OR it's neither...
-        || debug(!isCreate && !isDelete)
+        // ...it is not a delete AND not a create...
+        (!isDelete && !isCreate) 
+        // ...OR it is a delete AND not a create (AND not a mod)...
+        || (isDelete && !isCreate && !(isModerator() || isAdmin())) 
         // ...OR creating more than 1 message...
-        || debug(diff.addedKeys().size() > 1)
+        || (diff.addedKeys().size() > 1)
         // ...OR deleting more than allowed...
-        || debug(isDelete && diff.unchangedKeys().size() < 25 && !(isModerator() || isAdmin()))
-        || debug(isCreate && !canCreateMessage(newMessage));
+        || (isDelete && diff.unchangedKeys().size() < 25 && !(isModerator() || isAdmin()))
+        || (isCreate && !canCreateMessage(newMessage));
 
-      return debug(!isInvalid);
-
-      // return true;
+      return (!isInvalid);
     }
   
     match /aggregateMessages/{docId} {
