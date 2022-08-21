@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import { firestore } from "./chat-room-app";
 import styles from "../css/chat-room.module.css";
 import { ChatMessage } from "./chat-message";
 
@@ -15,6 +14,7 @@ export function MessageList(props) {
     sentMsgCount,
     isPopMuted,
     setConfirmModal,
+    messageCount = 25,
   } = props;
   const messageList = useRef();
 
@@ -34,7 +34,7 @@ export function MessageList(props) {
 
   useEffect(() => {
     if (!paused) {
-      setMessages(defaultMessages || []);
+      setMessages(defaultMessages.slice(0, messageCount) || []);
 
       // If near the bottom of the list
       if (Math.abs(messageList.current.scrollTop) < 100) {
@@ -64,16 +64,15 @@ export function MessageList(props) {
     >
       <div>
         <div className={styles["pagination-controls"]}>
-          {messages.length >= 25 && (
+          {messages.length >= messageCount && (
             <button
               onClick={async () => {
                 setPaused(true);
-                const query = firestore
-                  .collection("messages")
+                const query = messagesRef
                   .where("isDeleted", "==", false)
                   .orderBy("createdAt", "desc")
                   .startAfter(messages[messages.length - 1].createdAt)
-                  .limit(25);
+                  .limit(messageCount);
 
                 const snapshot = await query.get();
                 const newMessages = snapshot.docs.map((doc) => {
@@ -82,7 +81,7 @@ export function MessageList(props) {
 
                 snapToBottom();
 
-                setMessages(newMessages);
+                setMessages(newMessages.slice(-messageCount));
               }}
             >
               Older
@@ -114,37 +113,32 @@ export function MessageList(props) {
             messages[0].id !== defaultMessages[0].id && (
               <button
                 onClick={async () => {
-                  try {
-                    setPaused(true);
+                  setPaused(true);
 
-                    // NOTE: limitToLast is broken because of another Firestore bug.
-                    const query = firestore
-                      .collection("messages")
-                      .where("isDeleted", "==", false)
-                      .orderBy("createdAt", "asc")
-                      .startAfter(messages[0].createdAt)
-                      .limit(25);
+                  // NOTE: limitToLast is broken because of another Firestore bug.
+                  const query = messagesRef
+                    .where("isDeleted", "==", false)
+                    .orderBy("createdAt", "asc")
+                    .startAfter(messages[0].createdAt)
+                    .limit(messageCount);
 
-                    const snapshot = await query.get();
-                    const newMessages = snapshot.docs
-                      .map((doc) => {
-                        return { id: doc.id, ...doc.data() };
-                      })
-                      .reverse();
+                  const snapshot = await query.get();
+                  const newMessages = snapshot.docs
+                    .map((doc) => {
+                      return { id: doc.id, ...doc.data() };
+                    })
+                    .reverse();
 
-                    snapToTop();
+                  snapToTop();
 
-                    if (
-                      newMessages.length &&
-                      defaultMessages &&
-                      newMessages[0].id === defaultMessages[0].id
-                    ) {
-                      setPaused(false);
-                    } else if (newMessages.length) {
-                      setMessages(newMessages);
-                    }
-                  } catch (e) {
-                    console.error(e);
+                  if (
+                    newMessages.length &&
+                    defaultMessages &&
+                    newMessages[0].id === defaultMessages[0].id
+                  ) {
+                    setPaused(false);
+                  } else if (newMessages.length) {
+                    setMessages(newMessages.slice(-messageCount));
                   }
                 }}
               >

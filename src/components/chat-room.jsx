@@ -7,16 +7,14 @@ import {
   VolumeUp as VolumeUpIcon,
 } from "@mui/icons-material";
 import firebase from "firebase/compat/app";
-import {
-  deleteField,
-  doc,
-  getDoc,
-  getFirestore,
-  setDoc,
-  Timestamp,
-  updateDoc,
-} from "firebase/firestore";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { doc, getDoc, getFirestore, Timestamp } from "firebase/firestore";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   useCollectionData,
   useDocumentData,
@@ -50,7 +48,6 @@ import { UserStyleControls } from "./user-style-controls";
 const DELAY_MODE_USER_COUNT = 100;
 
 export function ChatRoom(props) {
-  // const sendMessageCloud = firebase.functions().httpsCallable("sendMessage");
   const { messagesRef, conversationRef, user, isLoadingUser, headerLinks } =
     props;
 
@@ -264,22 +261,28 @@ export function ChatRoom(props) {
           return [Date.now(), ...timestamps];
         });
 
-        await sendMessageCloud(user, {
-          conversationId: conversationRef ? conversationRef.id : messagesRef.id,
-          text,
-          isDeleted: false,
-          isNewUser,
-          font,
-          fontSize,
-          fontColor,
-          backgroundImage: msgBgImg,
-          bgColor: msgBgColor,
-          nameColor,
-          bgTransparency: msgBgTransparency,
-          msgBgRepeat,
-          msgBgPosition,
-          msgBgImgTransparency,
-        });
+        await sendMessageCloud(
+          user,
+          {
+            conversationId: conversationRef
+              ? conversationRef.id
+              : messagesRef.id,
+            text,
+            isDeleted: false,
+            isNewUser,
+            font,
+            fontSize,
+            fontColor,
+            backgroundImage: msgBgImg,
+            bgColor: msgBgColor,
+            nameColor,
+            bgTransparency: msgBgTransparency,
+            msgBgRepeat,
+            msgBgPosition,
+            msgBgImgTransparency,
+          },
+          messages
+        );
 
         setSentMsgCount(sentMsgCount + 1);
       }
@@ -334,54 +337,8 @@ export function ChatRoom(props) {
         (b[1].createdAt || new Timestamp())
     );
 
-    if (entries.length > 25) {
-      (async () => {
-        try {
-          // console.log(
-          //   "SOMETHING CHANGED...",
-          //   delayedMessagesData,
-          //   realtimeMessagesData,
-          //   dmData
-          // );
-          // console.log(`MESSAGE LIST LENGTH (${entries.length}) TOO HIGH`);
-          // console.log(`ATTEMPTING TO DELETE SOME...`);
-          // console.log({
-          //   ...Object.fromEntries(
-          //     entries
-          //       // Get the pairs beyond the 25-message limit...
-          //       .slice(0, -25)
-          //       // ...change the values to the "delete" sentinel.
-          //       .map((pair) => [`list.${pair[0]}`, deleteField()])
-          //   ),
-          //   lastDeleted: Object.fromEntries(
-          //     entries
-          //       // Get the pairs beyond the 25-message limit...
-          //       .slice(0, -25)
-          //   ),
-          // });
-          await updateDoc(doc(getFirestore(), "aggregateMessages/last25"), {
-            ...Object.fromEntries(
-              entries
-                // Get the pairs beyond the 25-message limit...
-                .slice(0, -25)
-                // ...change the values to the "delete" sentinel.
-                .map((pair) => [`list.${pair[0]}`, deleteField()])
-            ),
-            lastDeleted: Object.fromEntries(
-              entries
-                // Get the pairs beyond the 25-message limit...
-                .slice(0, -25)
-            ),
-          });
-        } catch (error) {
-          console.log("error in updateDoc: ", error);
-        }
-      })();
-    }
-
     return (
       entries
-        .slice(-25)
         // Add the "id" field for later.
         .map((pair) => ({ ...pair[1] }))
         .reverse()
@@ -459,9 +416,9 @@ export function ChatRoom(props) {
 
         // NOTE: Technically unneccesary but safeguards against costly bugs.
         if (onlineUsers.length >= DELAY_MODE_USER_COUNT) {
-          // NOTE: Add 3000ms as a buffer in the lower user count range.
+          // NOTE: Add 4000ms as a buffer in the lower user count range.
           // +1000ms delay per hundred users
-          const delay = 3000 + onlineUsers.length * 10;
+          const delay = 4000 + onlineUsers.length * 10;
           timeout = setTimeout(() => readMessages(delay, onlineUsers), delay);
         }
       };
@@ -595,6 +552,14 @@ export function ChatRoom(props) {
     markMessagesRead();
   }, [props.dms, conversationRef, userId]);
 
+  const mentionUser = useCallback(
+    (targetUsername) => {
+      setMessageValue(messageValue + " @" + targetUsername + " ");
+      messageInput.current.focus();
+    },
+    [messageInput]
+  );
+
   return (
     <section
       className={
@@ -623,21 +588,33 @@ export function ChatRoom(props) {
           />
         )}
       </header>
-      <MessageList
-        setErrors={setErrors}
-        setAlerts={props.setAlerts}
-        messagesRef={messagesRef}
-        defaultMessages={messages}
-        stylesEnabled={stylesEnabled}
-        onMessageClick={(targetUsername) => {
-          setMessageValue(messageValue + " @" + targetUsername + " ");
-          messageInput.current.focus();
-        }}
-        sentMsgCount={sentMsgCount}
-        currentUser={user}
-        isPopMuted={isPopMuted}
-        setConfirmModal={setConfirmModal}
-      />
+
+      {useMemo(
+        () => (
+          <MessageList
+            setErrors={setErrors}
+            setAlerts={props.setAlerts}
+            messagesRef={messagesRef}
+            defaultMessages={messages}
+            stylesEnabled={stylesEnabled}
+            onMessageClick={mentionUser}
+            sentMsgCount={sentMsgCount}
+            currentUser={user}
+            isPopMuted={isPopMuted}
+            setConfirmModal={setConfirmModal}
+          />
+        ),
+        [
+          messages,
+          messagesRef,
+          stylesEnabled,
+          messageInput,
+          messageValue,
+          sentMsgCount,
+          user,
+          isPopMuted,
+        ]
+      )}
 
       {user && (
         <UserStyleControls
