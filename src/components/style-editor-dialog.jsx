@@ -10,13 +10,15 @@ import { usersRef } from "./chat-room-app";
 import { ColorInput } from "./color-input";
 import { SliderInput } from "./slider-input";
 
-export function StyleEditorDialog(props) {
-  const {
-    user,
-    premium,
-    requestClose,
-    setPremiumPromptOpen,
-    messagesRef,
+export function StyleEditorDialog({
+  open,
+  setErrors,
+  requestClose,
+  setPremiumPromptOpen,
+  messagesRef,
+  premium,
+
+  user: {
     fontSize,
     fontColor,
     font,
@@ -28,23 +30,12 @@ export function StyleEditorDialog(props) {
     msgBgPosition,
     msgBgImgTransparency,
     stylesEnabled,
-    setNameColor,
-    setMsgBgColor,
-    setMsgBgTransparency,
-    setMsgBgImg,
-    setMsgBgRepeat,
-    setMsgBgPosition,
-    setMsgBgImgTransparency,
-  } = props;
-  //   const [username, setUsername] = useState("");
-  //   const query = props.open
-  //     ? usersRef.orderBy("lowercaseUsername").where("isBanned", "==", true).withConverter(idConverter)
-  //     : null;
-  //   const [bannedUsers] = useCollectionData(query);
+  },
+}) {
   const [loading, setLoading] = useState(false);
 
   return (
-    props.open && (
+    open && (
       <div className={styles["dialog"] + " " + styles["message-style-editor"]}>
         <header>
           Message style editor
@@ -85,9 +76,6 @@ export function StyleEditorDialog(props) {
           Name color
           <ColorInput
             defaultValue={nameColor}
-            onChange={(e) => {
-              setNameColor(e.target.value);
-            }}
             onChangeComplete={(e) => {
               usersRef.doc(user.uid).update({
                 nameColor: e.target.value,
@@ -103,9 +91,6 @@ export function StyleEditorDialog(props) {
           Bg color
           <ColorInput
             defaultValue={msgBgColor}
-            onChange={(e) => {
-              setMsgBgColor(e.target.value);
-            }}
             onChangeComplete={(e) => {
               usersRef.doc(user.uid).update({
                 msgBgColor: e.target.value,
@@ -124,9 +109,6 @@ export function StyleEditorDialog(props) {
             min="0"
             max="100"
             defaultValue={msgBgTransparency * 100}
-            onChange={(e) => {
-              setMsgBgTransparency(e.target.value / 100);
-            }}
             onChangeComplete={(e) => {
               usersRef.doc(user.uid).update({
                 msgBgTransparency: e.target.value / 100,
@@ -168,10 +150,9 @@ export function StyleEditorDialog(props) {
                   await usersRef.doc(user.uid).update({
                     msgBgImg: url,
                   });
-                  setMsgBgImg(url);
                 })
                   .catch((error) => {
-                    props.setErrors([new CustomError(error.message, error)]);
+                    setErrors([new CustomError(error.message, error)]);
                   })
                   .finally(() => {
                     setLoading(false);
@@ -188,7 +169,6 @@ export function StyleEditorDialog(props) {
               await usersRef.doc(user.uid).update({
                 msgBgImg: "",
               });
-              setMsgBgImg("");
             }}
             className={
               styles["button"] + " " + (!premium ? styles["disabled"] : "")
@@ -211,8 +191,6 @@ export function StyleEditorDialog(props) {
                   await usersRef.doc(user.uid).update({
                     msgBgRepeat: checked ? "repeat" : "no-repeat",
                   });
-
-                  setMsgBgRepeat(checked ? "repeat" : "no-repeat");
                 }}
                 defaultChecked={msgBgRepeat === "repeat"}
                 disabled={!premium}
@@ -240,7 +218,6 @@ export function StyleEditorDialog(props) {
                       await usersRef.doc(user.uid).update({
                         msgBgPosition: "left 0px top 0px",
                       });
-                      setMsgBgPosition("left 0px top 0px");
                     }
                   }}
                   disabled={!premium}
@@ -262,7 +239,6 @@ export function StyleEditorDialog(props) {
                       await usersRef.doc(user.uid).update({
                         msgBgPosition: "right 0px top 0px",
                       });
-                      setMsgBgPosition("right 0px top 0px");
                     }
                   }}
                   disabled={!premium}
@@ -280,9 +256,6 @@ export function StyleEditorDialog(props) {
                 min="0"
                 max="100"
                 defaultValue={msgBgImgTransparency * 100}
-                onChange={(e) => {
-                  setMsgBgImgTransparency(e.target.value / 100);
-                }}
                 onChangeComplete={(e) => {
                   usersRef.doc(user.uid).update({
                     msgBgImgTransparency: e.target.value / 100,

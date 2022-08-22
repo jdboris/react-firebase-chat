@@ -162,7 +162,8 @@ service cloud.firestore {
   
     match /users/{uid} {
       allow read: if true;
-      allow update: if isDocOwner(uid)
+      allow update: if isAdmin() ||
+                    ( isDocOwner(uid)
                     && !isAnonymous()
                     // NOTE: DON'T allow updating these keys
                     && (!affectedKeys().hasAny(["isAdmin", "isModerator", "isBanned", "ipAddresses", "giftedPremiumStart", "giftedPremiumEnd", "username", "lowercaseUsername"]))
@@ -170,7 +171,7 @@ service cloud.firestore {
                     && (isPremium() 
                         || (!affectedKeys()
                             .hasAny(["msgBgImg", "msgBgColor", "msgBgTransparency", "msgBgRepeat", "msgBgPosition", "msgBgImgTransparency"])
-                            && (!affectedKeys().hasAny(["fontSize"]) || request.resource.data.fontSize < 15 )));
+                            && (!affectedKeys().hasAny(["fontSize"]) || request.resource.data.fontSize < 15 ))) );
       
       match /checkout_sessions/{id} {
         allow read, create: if request.auth.uid == uid;

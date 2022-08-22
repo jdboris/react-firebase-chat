@@ -1,5 +1,6 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+const { fonts } = require("../src/utils/fonts");
 // const { Logging } = require("@google-cloud/logging");
 // const logging = new Logging({
 //   projectId: process.env.GCLOUD_PROJECT,
@@ -550,6 +551,18 @@ exports.signUp = functions.https.onCall(async (data, context) => {
       isCallbacker: false,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       ...(data.anonymous ? { anonSuffix: anonSuffix } : {}),
+
+      nameColor: "#000000",
+      font: fonts[0],
+      fontColor: "#000000",
+      fontSize: 13,
+      msgBgImg: "",
+      msgBgColor: "#FFFFFF",
+      msgBgTransparency: 1,
+      msgBgRepeat: "no-repeat",
+      msgBgPosition: "left 0px top 0px",
+      msgBgImgTransparency: 1,
+      stylesEnabled: true,
     });
 
     const token = await admin.auth().createCustomToken(authUser.uid);
@@ -641,7 +654,7 @@ exports.resendVerificationEmail = functions.https.onCall(
 );
 
 async function sendVerificationEmail(email, link) {
-  if(!functions.config().accounts){
+  if (!functions.config().accounts) {
     return;
   }
 
