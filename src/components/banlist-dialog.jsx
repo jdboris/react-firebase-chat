@@ -1,5 +1,5 @@
-import { Close as CloseIcon } from "@mui/icons-material";
-import { default as React, useState } from "react";
+import { Close as CloseIcon, Search as SearchIcon } from "@mui/icons-material";
+import { default as React, useMemo, useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import ReactPaginate from "react-paginate";
 import styles from "../css/chat-room.module.css";
@@ -11,12 +11,15 @@ import { banUser, unbanUser, usersRef } from "./chat-room-app";
 
 export function BanlistDialog(props) {
   const { setConfirmModal, setAlerts } = props;
-  const [username, setUsername] = useState("");
+  const [searchUsername, setSearchUsername] = useState("");
+  const [banUsername, setBanUsername] = useState("");
   const [errors, setErrors] = useState([]);
   const query = props.open
     ? usersRef
         .orderBy("lowercaseUsername")
         .where("isBanned", "==", true)
+        .where("lowercaseUsername", ">=", searchUsername)
+        .where("lowercaseUsername", "<=", searchUsername + "\uf8ff")
         .withConverter(idConverter)
     : null;
   const [bannedUsers] = useCollectionData(query);
@@ -32,13 +35,27 @@ export function BanlistDialog(props) {
           Banlist
           <CloseIcon
             onClick={() => {
-              setUsername("");
+              setBanUsername("");
               setErrors([]);
               props.requestClose();
             }}
           />
         </header>
         <main>
+          <label>
+            <input
+              type="text"
+              placeholder="Username..."
+              onInput={(e) => {
+                setSearchUsername(e.target.value.toLowerCase());
+                setPage(1);
+              }}
+              value={searchUsername}
+            />
+            <button className={styles["alt-button"]}>
+              <SearchIcon />
+            </button>
+          </label>
           {bannedUsers &&
             bannedUsers.slice(start, end).map((user, i) => {
               return (
@@ -88,7 +105,7 @@ export function BanlistDialog(props) {
               e.preventDefault();
               try {
                 await timeout(5000, async () => {
-                  const result = await banUser(username);
+                  const result = await banUser(banUsername);
                   setErrors([]);
                   if (result.data.message) {
                     setAlerts([result.data.message]);
@@ -108,9 +125,9 @@ export function BanlistDialog(props) {
               type="text"
               placeholder="Username"
               onInput={(e) => {
-                setUsername(e.target.value);
+                setBanUsername(e.target.value);
               }}
-              value={username}
+              value={banUsername}
             />{" "}
             <button>Ban</button>
           </form>
