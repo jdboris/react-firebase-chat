@@ -1,23 +1,47 @@
-import { Close as CloseIcon } from "@mui/icons-material";
-import { default as React, useState } from "react";
+import { Close as CloseIcon, Search as SearchIcon } from "@mui/icons-material";
 import firebase from "firebase/compat/app";
+import { default as React, useEffect, useMemo, useState } from "react";
+import { useCollectionData } from "react-firebase-hooks/firestore";
 import ReactPaginate from "react-paginate";
-import { conversationsRef, firestore, usersRef } from "./chat-room-app";
 import styles from "../css/chat-room.module.css";
 import paginationStyles from "../css/pagination-controls.module.css";
-import { timeout } from "../utils/utils";
 import { CustomError } from "../utils/errors";
+import { idConverter } from "../utils/firestore";
+import { timeout } from "../utils/utils";
+import { conversationsRef, firestore, usersRef } from "./chat-room-app";
 
 export function DmsDialog(props) {
-  const { conversations } = props;
+  const { userId, onChange } = props;
 
+  const [searchUsername, setSearchUsername] = useState("");
   const [username, setUsername] = useState("");
   const [errors, setErrors] = useState([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
-  const itemsPerPage = props.itemsPerPage;
+  const itemsPerPage = 10;
   const start = (page - 1) * itemsPerPage;
   const end = page * itemsPerPage;
+
+  const query = userId
+    ? conversationsRef
+        .where("userIds", "array-contains", userId)
+        .orderBy("lastMessageSentAt", "desc")
+        .withConverter(idConverter)
+    : null;
+  const [conversationsData] = useCollectionData(query);
+
+  const conversations = useMemo(
+    () =>
+      conversationsData &&
+      conversationsData.filter((conversation) =>
+        conversation.id.toLowerCase().includes(searchUsername)
+      ),
+    [searchUsername, conversationsData]
+  );
+
+  useEffect(() => {
+    onChange(conversations);
+  }, [conversations, userId]);
 
   const combineStrings = (strings) => {
     strings.sort();
@@ -38,10 +62,24 @@ export function DmsDialog(props) {
           />
         </header>
         <main>
+          <label>
+            <input
+              type="text"
+              placeholder="Username..."
+              onInput={(e) => {
+                setSearchUsername(e.target.value.toLowerCase());
+                setPage(1);
+              }}
+              value={searchUsername}
+            />
+            <button className={styles["alt-button"]}>
+              <SearchIcon />
+            </button>
+          </label>
           <ul>
             {conversations &&
               conversations.slice(start, end).map((conversation, i) => {
-                const lastReadAt = conversation.users[props.uid].lastReadAt;
+                const lastReadAt = conversation.users[userId].lastReadAt;
                 let isUnread = false;
 
                 // NOTE: lastReadAt will be null from latency compensation
@@ -99,7 +137,7 @@ export function DmsDialog(props) {
                   throw new CustomError("User not found.");
                 }
 
-                if (snapshot.docs[0].id === props.uid) {
+                if (snapshot.docs[0].id === userId) {
                   throw new CustomError("Cannot chat with yourself.");
                 }
 
@@ -112,9 +150,9 @@ export function DmsDialog(props) {
                   {
                     lastMessageSentAt: 0,
                     // NOTE: This insanity is required for later queries with NoSQL
-                    userIds: [props.uid, snapshot.docs[0].id],
+                    userIds: [userId, snapshot.docs[0].id],
                     users: {
-                      [props.uid]: {
+                      [userId]: {
                         lastReadAt:
                           firebase.firestore.FieldValue.serverTimestamp(),
                       },
@@ -181,6 +219,8 @@ export function DmsDialog(props) {
         <footer className={paginationStyles["pagination-controls"]}>
           {conversations && (
             <ReactPaginate
+              initialPage={page - 1}
+              forcePage={page - 1}
               pageCount={Math.ceil(conversations.length / itemsPerPage)}
               pageRangeDisplayed={5}
               marginPagesDisplayed={2}
