@@ -52,30 +52,6 @@ export function ChatRoom(props) {
   const { messagesRef, conversationRef, user, isLoadingUser, headerLinks } =
     props;
 
-  const dmsPerPage = 10;
-  let query = user
-    ? conversationsRef
-        .where("userIds", "array-contains", user.uid)
-        .orderBy("lastMessageSentAt", "desc")
-        .limit(dmsPerPage)
-        .withConverter(idConverter)
-    : null;
-  const [conversations] = useCollectionData(query);
-
-  const unreadCount =
-    conversations && user
-      ? conversations.reduce((unreadCount, conversation) => {
-          const lastReadAt = conversation.users[user.uid].lastReadAt;
-          let isUnread = false;
-
-          // NOTE: lastReadAt will be null from latency compensation
-          if (lastReadAt !== null) {
-            isUnread = conversation.lastMessageSentAt > lastReadAt;
-          }
-          return isUnread ? unreadCount + 1 : unreadCount;
-        }, 0)
-      : 0;
-
   const [presence, setPresence] = useState(null);
   const [isLoadingPresence, setLoadingPresence] = useState(false);
   const [errors, setErrors] = useState([]);
@@ -105,6 +81,7 @@ export function ChatRoom(props) {
 
   const [isPremiumPromptOpen, setPremiumPromptOpen] = useState(false);
   const [isPremiumOpen, setPremiumOpen] = useState(false);
+  const [unreadDmCount, setUnreadDmCount] = useState(0);
   const [isDmsOpen, setDmsOpen] = useState(false);
   const [isUsersOpen, setUsersOpen] = useState(false);
   const [isBanlistOpen, setBanlistOpen] = useState(false);
@@ -700,7 +677,7 @@ export function ChatRoom(props) {
 
           <button
             className={styles["number-badge"] + " " + styles["alt-button"]}
-            data-badge-text={unreadCount ? unreadCount : ""}
+            data-badge-text={unreadDmCount ? unreadDmCount : ""}
             onClick={() => {
               setDmsOpen(!isDmsOpen);
             }}
@@ -709,7 +686,7 @@ export function ChatRoom(props) {
               className={
                 styles["chat-bubble-icon"] +
                 " " +
-                (unreadCount ? styles["yellow"] : "")
+                (unreadDmCount ? styles["yellow"] : "")
               }
             />
           </button>
@@ -807,11 +784,25 @@ export function ChatRoom(props) {
         <DmsDialog
           open={isDmsOpen}
           username={user.username}
-          uid={user.uid}
+          userId={user.uid}
           setConversationRef={props.setConversationRef}
           setDmMessagesRef={props.setDmMessagesRef}
-          conversations={conversations}
-          itemsPerPage={dmsPerPage}
+          onChange={(conversations) => {
+            setUnreadDmCount(
+              conversations && user
+                ? conversations.reduce((total, conversation) => {
+                    const lastReadAt = conversation.users[user.uid].lastReadAt;
+                    let isUnread = false;
+
+                    // NOTE: lastReadAt will be null from latency compensation
+                    if (lastReadAt !== null) {
+                      isUnread = conversation.lastMessageSentAt > lastReadAt;
+                    }
+                    return isUnread ? total + 1 : total;
+                  }, 0)
+                : 0
+            );
+          }}
           requestClose={() => {
             setDmsOpen(false);
           }}
