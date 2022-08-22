@@ -66,16 +66,6 @@ export function ChatRoom(props) {
   const username = user && user.username ? user.username : null;
 
   const [photoUrl, setPhotoUrl] = useState(user ? user.photoUrl : null);
-  const [font, setFont] = useState(fonts[0]);
-  const [fontSize, setFontSize] = useState(13);
-  const [fontColor, setFontColor] = useState("#000000");
-  const [nameColor, setNameColor] = useState("#000000");
-  const [msgBgImg, setMsgBgImg] = useState("");
-  const [msgBgColor, setMsgBgColor] = useState("#FFFFFF");
-  const [msgBgTransparency, setMsgBgTransparency] = useState(1);
-  const [msgBgRepeat, setMsgBgRepeat] = useState("no-repeat");
-  const [msgBgPosition, setMsgBgPosition] = useState("left 0px top 0px");
-  const [msgBgImgTransparency, setMsgBgImgTransparency] = useState(1);
 
   const [stylesEnabled, setStylesEnabled] = useState(true);
 
@@ -243,16 +233,6 @@ export function ChatRoom(props) {
             text,
             isDeleted: false,
             isNewUser,
-            font,
-            fontSize,
-            fontColor,
-            backgroundImage: msgBgImg,
-            bgColor: msgBgColor,
-            nameColor,
-            bgTransparency: msgBgTransparency,
-            msgBgRepeat,
-            msgBgPosition,
-            msgBgImgTransparency,
           },
           messages
         );
@@ -461,29 +441,6 @@ export function ChatRoom(props) {
       }
 
       if (user && username) {
-        const doc = await usersRef.doc(userId).get();
-
-        if (doc.exists) {
-          const preferences = doc.data();
-          if ("fontSize" in preferences) setFontSize(preferences.fontSize);
-          if ("fontColor" in preferences) setFontColor(preferences.fontColor);
-          if ("font" in preferences) setFont(preferences.font);
-          if ("stylesEnabled" in preferences)
-            setStylesEnabled(preferences.stylesEnabled);
-          if ("msgBgImg" in preferences) setMsgBgImg(preferences.msgBgImg);
-          if ("nameColor" in preferences) setNameColor(preferences.nameColor);
-          if ("msgBgColor" in preferences)
-            setMsgBgColor(preferences.msgBgColor);
-          if ("msgBgTransparency" in preferences)
-            setMsgBgTransparency(preferences.msgBgTransparency);
-          if ("msgBgRepeat" in preferences)
-            setMsgBgRepeat(preferences.msgBgRepeat);
-          if ("msgBgPosition" in preferences)
-            setMsgBgPosition(preferences.msgBgPosition);
-          if ("msgBgImgTransparency" in preferences)
-            setMsgBgImgTransparency(preferences.msgBgImgTransparency);
-        }
-
         const idTokenResult = await user.auth.getIdTokenResult();
         setPremium(
           idTokenResult.claims.stripeRole === "premium" || isGiftedPremium(user)
@@ -569,10 +526,9 @@ export function ChatRoom(props) {
             setAlerts={props.setAlerts}
             messagesRef={messagesRef}
             defaultMessages={messages}
-            stylesEnabled={stylesEnabled}
             onMessageClick={mentionUser}
             sentMsgCount={sentMsgCount}
-            currentUser={user}
+            currentUser={user || {}}
             isPopMuted={isPopMuted}
             setConfirmModal={setConfirmModal}
           />
@@ -580,7 +536,6 @@ export function ChatRoom(props) {
         [
           messages,
           messagesRef,
-          stylesEnabled,
           messageInput,
           messageValue,
           sentMsgCount,
@@ -591,25 +546,17 @@ export function ChatRoom(props) {
 
       {user && (
         <UserStyleControls
-          uid={user.uid}
+          user={user}
           open={isFormatOpen}
           premium={premium}
           isAnonymous={user.email == null}
           menuOpenKey={menuOpenKey}
           setMenuOpenKey={setMenuOpenKey}
           setErrors={setErrors}
-          stylesEnabled={stylesEnabled}
-          setStylesEnabled={setStylesEnabled}
-          font={font}
-          setFont={setFont}
-          fontSize={fontSize}
-          setFontSize={setFontSize}
           messageInput={messageInput.current}
           setMessageValue={setMessageValue}
           setStyleEditorOpen={setStyleEditorOpen}
           isStyleEditorOpen={isStyleEditorOpen}
-          fontColor={fontColor}
-          setFontColor={setFontColor}
           toggleSelectionMarkup={(symbol) => {
             return toggleSelectionMarkup(messageInput.current, symbol);
           }}
@@ -619,6 +566,7 @@ export function ChatRoom(props) {
       )}
 
       <MessageInputForm
+        user={user || {}}
         premium={premium}
         sendMessage={sendMessage}
         ref={messageInput}
@@ -630,20 +578,10 @@ export function ChatRoom(props) {
         toggleSelectionMarkup={(symbol) => {
           return toggleSelectionMarkup(messageInput.current, symbol);
         }}
-        stylesEnabled={stylesEnabled}
-        font={font}
-        fontSize={fontSize}
-        fontColor={fontColor}
-        msgBgImg={msgBgImg}
-        msgBgTransparency={msgBgTransparency}
-        msgBgColor={msgBgColor}
-        msgBgRepeat={msgBgRepeat}
-        msgBgPosition={msgBgPosition}
         isEmojisOpen={isEmojisOpen}
         setEmojisOpen={setEmojisOpen}
         isFormatOpen={isFormatOpen}
         setFormatOpen={setFormatOpen}
-        msgBgImgTransparency={msgBgImgTransparency}
         userId={userId}
         onlineUsers={onlineUsers}
         setLoginOpen={setLoginOpen}
@@ -753,24 +691,6 @@ export function ChatRoom(props) {
           setPremiumPromptOpen={setPremiumPromptOpen}
           messagesRef={messagesRef}
           user={user}
-          fontSize={fontSize}
-          fontColor={fontColor}
-          font={font}
-          msgBgImg={msgBgImg}
-          nameColor={nameColor}
-          msgBgColor={msgBgColor}
-          msgBgTransparency={msgBgTransparency}
-          msgBgRepeat={msgBgRepeat}
-          msgBgPosition={msgBgPosition}
-          msgBgImgTransparency={msgBgImgTransparency}
-          stylesEnabled={stylesEnabled}
-          setNameColor={setNameColor}
-          setMsgBgColor={setMsgBgColor}
-          setMsgBgTransparency={setMsgBgTransparency}
-          setMsgBgImg={setMsgBgImg}
-          setMsgBgRepeat={setMsgBgRepeat}
-          setMsgBgPosition={setMsgBgPosition}
-          setMsgBgImgTransparency={setMsgBgImgTransparency}
         />
       )}
 

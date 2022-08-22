@@ -157,10 +157,13 @@ export function ChatMessage(props) {
   // Cap the font size for non-premium users
   fontSize = !premium && fontSize >= 15 ? 15 : fontSize;
 
-  const { currentUser, stylesEnabled, messagesRef, setConfirmModal } = props;
+  const { currentUser, setConfirmModal } = props;
 
   const messageClass =
     currentUser && uid === currentUser.uid ? "sent" : "received";
+
+  const stylesEnabled =
+    "stylesEnabled" in currentUser ? currentUser.stylesEnabled : true;
 
   let mouseDownSpot = null;
 

@@ -46,8 +46,33 @@ export async function sendMessage(user, data, messages) {
   // const timestamp = new Date();
   const timestamp = serverTimestamp();
 
+  const {
+    font,
+    fontColor,
+    fontSize,
+    msgBgImg,
+    msgBgColor,
+    msgBgTransparency,
+    nameColor,
+    msgBgRepeat,
+    msgBgPosition,
+    msgBgImgTransparency,
+  } = user;
+
   const contents = {
     ...data,
+
+    font,
+    fontSize,
+    fontColor,
+    backgroundImage: msgBgImg,
+    bgColor: msgBgColor,
+    nameColor,
+    bgTransparency: msgBgTransparency,
+    msgBgRepeat,
+    msgBgPosition,
+    msgBgImgTransparency,
+
     uid: user.uid,
     username: user.username,
     lowercaseUsername: user.username.toLowerCase(),

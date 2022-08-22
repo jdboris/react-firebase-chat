@@ -13,30 +13,20 @@ import { usersRef } from "./chat-room-app";
 import { ColorInput } from "./color-input";
 import { MenuWithButton } from "./menu-with-button";
 
-export function UserStyleControls(props) {
-  const {
-    uid,
-    isAnonymous,
-    setErrors,
-    stylesEnabled,
-    setStylesEnabled,
-    open,
-    premium,
-    setPremiumPromptOpen,
-    menuOpenKey,
-    font,
-    setFont,
-    fontSize,
-    setFontSize,
-    fontColor,
-    setFontColor,
-    toggleSelectionMarkup,
-    setMessageValue,
-    setSelection,
-    isStyleEditorOpen,
-    setStyleEditorOpen,
-  } = props;
-
+export function UserStyleControls({
+  user: { uid, font, fontSize, fontColor, stylesEnabled },
+  isAnonymous,
+  setErrors,
+  open,
+  premium,
+  setPremiumPromptOpen,
+  menuOpenKey,
+  toggleSelectionMarkup,
+  setMessageValue,
+  setSelection,
+  isStyleEditorOpen,
+  setStyleEditorOpen,
+}) {
   const enabled = stylesEnabled;
 
   return (
@@ -50,12 +40,7 @@ export function UserStyleControls(props) {
                   new CustomError("Create an account to do that."),
                 ]);
               const newValue = !enabled;
-              usersRef
-                .doc(uid)
-                .update({ stylesEnabled: newValue })
-                .then(() => {
-                  setStylesEnabled(newValue);
-                });
+              usersRef.doc(uid).update({ stylesEnabled: newValue });
             }}
           >
             {enabled ? <CloseIcon /> : <AddIcon />}
@@ -78,12 +63,7 @@ export function UserStyleControls(props) {
                       return setErrors([
                         new CustomError("Create an account to do that."),
                       ]);
-                    usersRef
-                      .doc(uid)
-                      .update({ font: fontObj })
-                      .then(() => {
-                        setFont(fontObj);
-                      });
+                    usersRef.doc(uid).update({ font: fontObj });
                   };
 
                   return items;
@@ -105,14 +85,9 @@ export function UserStyleControls(props) {
                       return setErrors([
                         new CustomError("Create an account to do that."),
                       ]);
-                    usersRef
-                      .doc(uid)
-                      .update({
-                        fontSize: 9 + number,
-                      })
-                      .then(() => {
-                        setFontSize(9 + number);
-                      });
+                    usersRef.doc(uid).update({
+                      fontSize: 9 + number,
+                    });
                   };
 
                   return items;
@@ -130,14 +105,9 @@ export function UserStyleControls(props) {
                           ]);
                         if (!premium) return setPremiumPromptOpen(true);
 
-                        usersRef
-                          .doc(uid)
-                          .update({
-                            fontSize: 15 + number,
-                          })
-                          .then(() => {
-                            setFontSize(15 + number);
-                          });
+                        usersRef.doc(uid).update({
+                          fontSize: 15 + number,
+                        });
                       }}
                     >
                       {15 + number}
@@ -198,13 +168,6 @@ export function UserStyleControls(props) {
               >
                 <ColorInput
                   defaultValue={fontColor}
-                  onChange={(e) => {
-                    if (isAnonymous)
-                      return setErrors([
-                        new CustomError("Create an account to do that."),
-                      ]);
-                    setFontColor(e.target.value);
-                  }}
                   onChangeComplete={(e) => {
                     if (isAnonymous)
                       return setErrors([

@@ -2,20 +2,18 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import styles from "../css/chat-room.module.css";
 import { ChatMessage } from "./chat-message";
 
-export function MessageList(props) {
-  const {
-    setErrors,
-    setAlerts,
-    messagesRef,
-    defaultMessages,
-    stylesEnabled,
-    onMessageClick,
-    currentUser,
-    sentMsgCount,
-    isPopMuted,
-    setConfirmModal,
-    messageCount = 25,
-  } = props;
+export function MessageList({
+  setErrors,
+  setAlerts,
+  messagesRef,
+  defaultMessages,
+  onMessageClick,
+  currentUser,
+  sentMsgCount,
+  isPopMuted,
+  setConfirmModal,
+  messageCount = 25,
+}) {
   const messageList = useRef();
 
   const [messages, setMessages] = useState([]);
@@ -111,7 +109,6 @@ export function MessageList(props) {
                 setErrors={setErrors}
                 setAlerts={setAlerts}
                 message={msg}
-                stylesEnabled={stylesEnabled}
                 onClick={onMessageClick}
                 currentUser={currentUser}
                 messagesRef={messagesRef}
@@ -178,7 +175,6 @@ export function MessageList(props) {
       messagesRef,
       isPopMuted,
       currentUser,
-      stylesEnabled,
       messageCount,
       stickToBottom,
     ]
