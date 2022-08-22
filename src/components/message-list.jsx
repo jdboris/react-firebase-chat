@@ -61,6 +61,11 @@ export function MessageList(props) {
     setStickToBottom(true);
   }, [sentMsgCount]);
 
+  // Unpause when changing to/from DMs
+  useEffect(() => {
+    setPaused(false);
+  }, [messagesRef]);
+
   return useMemo(
     () => (
       <section
