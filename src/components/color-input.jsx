@@ -1,30 +1,16 @@
-import React, { useState } from "react";
+import React from "react";
+import { useDebounce } from "../utils/utils";
 
 export function ColorInput(props) {
-  const [completeTimeout, setCompleteTimeout] = useState(null);
-  const [delayTimeout, setDelayTimeout] = useState(null);
+  const setDebounce = useDebounce();
 
   return (
     <input
       type="color"
-      // NOTE: Delay calling the provided onChange listener, because sliding the color input
+      // NOTE: Delay (debounce) calling the provided onChange listener, because sliding the color input
       //       around will trigger the onChange event very rapidly, which could perform poorly.
       onChange={(e) => {
-        if (delayTimeout === null) {
-          setDelayTimeout(
-            setTimeout(() => {
-              clearTimeout(completeTimeout);
-              setCompleteTimeout(
-                setTimeout(() => {
-                  props.onChangeComplete(e);
-                }, 500)
-              );
-
-              props.onChange(e);
-              setDelayTimeout(null);
-            }, 200)
-          );
-        }
+        setDebounce(() => props.onChange(e), 500);
       }}
       onClick={props.onClick}
       onClickCapture={props.onClickCapture}

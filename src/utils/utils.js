@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 const SUPPORTED_IMAGE_EXTENSIONS = [
   "apng",
   "avif",
@@ -107,4 +109,17 @@ export function isGiftedPremium(user) {
       new Date() >= user.giftedPremiumStart.toDate() &&
       new Date() <= user.giftedPremiumEnd.toDate()
   );
+}
+
+export function useDebounce(value = null) {
+  const [debounce, setDebounce] = useState(value);
+
+  useEffect(() => {
+    if (debounce) {
+      const timeout = setTimeout(debounce[0], debounce[1]);
+      return () => clearTimeout(timeout);
+    }
+  }, [debounce]);
+
+  return (callback, delay) => setDebounce([callback, delay]);
 }
