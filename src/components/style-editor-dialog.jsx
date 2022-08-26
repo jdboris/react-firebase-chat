@@ -18,7 +18,11 @@ export function StyleEditorDialog({
   messagesRef,
   premium,
 
-  user: {
+  user,
+}) {
+  const {
+    uid,
+    username,
     fontSize,
     fontColor,
     font,
@@ -30,8 +34,8 @@ export function StyleEditorDialog({
     msgBgPosition,
     msgBgImgTransparency,
     stylesEnabled,
-  },
-}) {
+  } = user;
+
   const [loading, setLoading] = useState(false);
 
   return (
@@ -49,12 +53,12 @@ export function StyleEditorDialog({
           <ChatMessage
             message={{
               text: "Sample message text",
-              uid: user.uid,
+              uid: uid,
               createdAt: new firebase.firestore.Timestamp(
                 1726757369,
                 337000000
               ),
-              username: user.username,
+              username: username,
               fontSize,
               fontColor,
               font,
@@ -76,8 +80,8 @@ export function StyleEditorDialog({
           Name color
           <ColorInput
             defaultValue={nameColor}
-            onChangeComplete={(e) => {
-              usersRef.doc(user.uid).update({
+            onChange={(e) => {
+              usersRef.doc(uid).update({
                 nameColor: e.target.value,
               });
             }}
@@ -91,8 +95,8 @@ export function StyleEditorDialog({
           Bg color
           <ColorInput
             defaultValue={msgBgColor}
-            onChangeComplete={(e) => {
-              usersRef.doc(user.uid).update({
+            onChange={(e) => {
+              usersRef.doc(uid).update({
                 msgBgColor: e.target.value,
               });
             }}
@@ -109,8 +113,8 @@ export function StyleEditorDialog({
             min="0"
             max="100"
             defaultValue={msgBgTransparency * 100}
-            onChangeComplete={(e) => {
-              usersRef.doc(user.uid).update({
+            onChange={(e) => {
+              usersRef.doc(uid).update({
                 msgBgTransparency: e.target.value / 100,
               });
             }}
@@ -147,7 +151,7 @@ export function StyleEditorDialog({
                   if (!url) {
                     throw new CustomError("Error uploading file.");
                   }
-                  await usersRef.doc(user.uid).update({
+                  await usersRef.doc(uid).update({
                     msgBgImg: url,
                   });
                 })
@@ -166,7 +170,7 @@ export function StyleEditorDialog({
           <label
             onClick={async (e) => {
               if (!premium) return setPremiumPromptOpen(true);
-              await usersRef.doc(user.uid).update({
+              await usersRef.doc(uid).update({
                 msgBgImg: "",
               });
             }}
@@ -188,7 +192,7 @@ export function StyleEditorDialog({
                 type="checkbox"
                 onChange={async (e) => {
                   const checked = e.target.checked;
-                  await usersRef.doc(user.uid).update({
+                  await usersRef.doc(uid).update({
                     msgBgRepeat: checked ? "repeat" : "no-repeat",
                   });
                 }}
@@ -215,7 +219,7 @@ export function StyleEditorDialog({
                   onChange={async (e) => {
                     const checked = e.target.checked;
                     if (checked) {
-                      await usersRef.doc(user.uid).update({
+                      await usersRef.doc(uid).update({
                         msgBgPosition: "left 0px top 0px",
                       });
                     }
@@ -236,7 +240,7 @@ export function StyleEditorDialog({
                   onChange={async (e) => {
                     const checked = e.target.checked;
                     if (checked) {
-                      await usersRef.doc(user.uid).update({
+                      await usersRef.doc(uid).update({
                         msgBgPosition: "right 0px top 0px",
                       });
                     }
@@ -256,8 +260,8 @@ export function StyleEditorDialog({
                 min="0"
                 max="100"
                 defaultValue={msgBgImgTransparency * 100}
-                onChangeComplete={(e) => {
-                  usersRef.doc(user.uid).update({
+                onChange={(e) => {
+                  usersRef.doc(uid).update({
                     msgBgImgTransparency: e.target.value / 100,
                   });
                 }}

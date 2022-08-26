@@ -168,7 +168,7 @@ export function UserStyleControls({
               >
                 <ColorInput
                   defaultValue={fontColor}
-                  onChangeComplete={(e) => {
+                  onChange={(e) => {
                     if (isAnonymous)
                       return setErrors([
                         new CustomError("Create an account to do that."),
