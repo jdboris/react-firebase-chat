@@ -20,8 +20,8 @@ import {
 } from "../utils/utils";
 import { banUser } from "./chat-room-app";
 
-function Link(props) {
-  const [children, setChildren] = useState(props.href);
+function Link({ href, isEmbedDisabled }) {
+  const [children, setChildren] = useState(href);
   const [providerName, setProviderName] = useState("");
 
   useEffect(() => {
@@ -30,7 +30,7 @@ function Link(props) {
       const sizeLimit = 10 * 1000 * 1000;
 
       if (
-        !props.isEmbedDisabled &&
+        !isEmbedDisabled &&
         isImageUrl(url) &&
         (await getImageSize(url).catch(() => 0)) <= sizeLimit
       ) {
@@ -107,8 +107,8 @@ function Link(props) {
           );
         }
       }
-    })(props.href);
-  }, [props.href]);
+    })(href);
+  }, [href]);
 
   return (
     <span
