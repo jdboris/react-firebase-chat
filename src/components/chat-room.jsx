@@ -104,7 +104,10 @@ export function ChatRoom(props) {
     const text = messageValue;
 
     let isNewUser = false;
+    // ------------------------------------------------------------------------------------------------
     // RESTRICTIONS
+    // ------------------------------------------------------------------------------------------------
+
     {
       const timeSince = user.createdAt
         ? Date.now() - user.createdAt.toMillis()

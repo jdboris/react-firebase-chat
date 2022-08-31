@@ -64,119 +64,108 @@ export function MessageList({
     setPaused(false);
   }, [messagesRef]);
 
-  return useMemo(
-    () => (
-      <section
-        ref={messageList}
-        className={
-          styles["messages-section"] +
-          " " +
-          (stickToBottom ? styles["stick-to-bottom"] : "")
-        }
-      >
-        <div>
-          <div className={styles["pagination-controls"]}>
-            {messages.length >= messageCount && (
-              <button
-                onClick={async () => {
-                  setPaused(true);
-                  const query = messagesRef
-                    .where("isDeleted", "==", false)
-                    .orderBy("createdAt", "desc")
-                    .startAfter(messages[messages.length - 1].createdAt)
-                    .limit(messageCount);
+  return (
+    <section
+      ref={messageList}
+      className={
+        styles["messages-section"] +
+        " " +
+        (stickToBottom ? styles["stick-to-bottom"] : "")
+      }
+    >
+      <div>
+        <div className={styles["pagination-controls"]}>
+          {messages.length >= messageCount && (
+            <button
+              onClick={async () => {
+                setPaused(true);
+                const query = messagesRef
+                  .where("isDeleted", "==", false)
+                  .orderBy("createdAt", "desc")
+                  .startAfter(messages[messages.length - 1].createdAt)
+                  .limit(messageCount);
 
-                  const snapshot = await query.get();
-                  const newMessages = snapshot.docs.map((doc) => {
-                    return { id: doc.id, ...doc.data() };
-                  });
+                const snapshot = await query.get();
+                const newMessages = snapshot.docs.map((doc) => {
+                  return { id: doc.id, ...doc.data() };
+                });
 
-                  snapToBottom();
+                snapToBottom();
 
-                  setMessages(newMessages.slice(-messageCount));
-                }}
-              >
-                Older
-              </button>
-            )}
-          </div>
-          {messages &&
-            // Must make a copy because props are immutable
-            [...messages].reverse().map((msg) => (
-              <ChatMessage
-                // NOTE: MUST use msg.id rather than array index because index will change and force re-render
-                key={`message-${msg.id}`}
-                setErrors={setErrors}
-                setAlerts={setAlerts}
-                message={msg}
-                onClick={onMessageClick}
-                currentUser={currentUser}
-                messagesRef={messagesRef}
-                isPopMuted={isPopMuted}
-                setConfirmModal={setConfirmModal}
-              />
-            ))}
-
-          <div className={styles["pagination-controls"]}>
-            {messages.length &&
-              defaultMessages &&
-              defaultMessages.length &&
-              messages[0].id !== defaultMessages[0].id && (
-                <>
-                  <button
-                    onClick={async () => {
-                      setPaused(true);
-
-                      // NOTE: limitToLast is broken because of another Firestore bug.
-                      const query = messagesRef
-                        .where("isDeleted", "==", false)
-                        .orderBy("createdAt", "asc")
-                        .startAfter(messages[0].createdAt)
-                        .limit(messageCount);
-
-                      const snapshot = await query.get();
-                      const newMessages = snapshot.docs
-                        .map((doc) => {
-                          return { id: doc.id, ...doc.data() };
-                        })
-                        .reverse();
-
-                      snapToTop();
-
-                      if (
-                        newMessages.length &&
-                        defaultMessages &&
-                        newMessages[0].id === defaultMessages[0].id
-                      ) {
-                        setPaused(false);
-                      } else if (newMessages.length) {
-                        setMessages(newMessages.slice(-messageCount));
-                      }
-                    }}
-                  >
-                    Newer
-                  </button>
-                  <button
-                    onClick={() => {
-                      setPaused(false);
-                    }}
-                  >
-                    Jump to present
-                  </button>
-                </>
-              )}
-          </div>
+                setMessages(newMessages.slice(-messageCount));
+              }}
+            >
+              Older
+            </button>
+          )}
         </div>
-      </section>
-    ),
-    [
-      messages,
-      messageList,
-      messagesRef,
-      isPopMuted,
-      currentUser,
-      messageCount,
-      stickToBottom,
-    ]
+        {messages &&
+          // Must make a copy because props are immutable
+          [...messages].reverse().map((msg) => (
+            <ChatMessage
+              // NOTE: MUST use msg.id rather than array index because index will change and force re-render
+              key={`message-${msg.id}`}
+              setErrors={setErrors}
+              setAlerts={setAlerts}
+              message={msg}
+              onClick={onMessageClick}
+              currentUser={currentUser}
+              messagesRef={messagesRef}
+              isPopMuted={isPopMuted}
+              setConfirmModal={setConfirmModal}
+            />
+          ))}
+
+        <div className={styles["pagination-controls"]}>
+          {messages.length &&
+            defaultMessages &&
+            defaultMessages.length &&
+            messages[0].id !== defaultMessages[0].id && (
+              <>
+                <button
+                  onClick={async () => {
+                    setPaused(true);
+
+                    // NOTE: limitToLast is broken because of another Firestore bug.
+                    const query = messagesRef
+                      .where("isDeleted", "==", false)
+                      .orderBy("createdAt", "asc")
+                      .startAfter(messages[0].createdAt)
+                      .limit(messageCount);
+
+                    const snapshot = await query.get();
+                    const newMessages = snapshot.docs
+                      .map((doc) => {
+                        return { id: doc.id, ...doc.data() };
+                      })
+                      .reverse();
+
+                    snapToTop();
+
+                    if (
+                      newMessages.length &&
+                      defaultMessages &&
+                      newMessages[0].id === defaultMessages[0].id
+                    ) {
+                      setPaused(false);
+                    } else if (newMessages.length) {
+                      setMessages(newMessages.slice(-messageCount));
+                    }
+                  }}
+                >
+                  Newer
+                </button>
+                <button
+                  onClick={() => {
+                    setPaused(false);
+                  }}
+                >
+                  Jump to present
+                </button>
+              </>
+            )}
+        </div>
+      </div>
+    </section>
   );
 }
