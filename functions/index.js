@@ -1,6 +1,5 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-const { fonts } = require("../src/utils/fonts");
 // const { Logging } = require("@google-cloud/logging");
 // const logging = new Logging({
 //   projectId: process.env.GCLOUD_PROJECT,
@@ -445,6 +444,8 @@ exports.validateUser = functions.https.onCall(async (data, context) => {
 });
 
 exports.signUp = functions.https.onCall(async (data, context) => {
+  const { fonts } = require("./utils/fonts");
+
   try {
     let anonSuffix;
 
