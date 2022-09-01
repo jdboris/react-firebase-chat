@@ -323,7 +323,7 @@ export function ChatMessage(props) {
                   "ol",
                   "ul",
                   "li",
-                  "del",
+                  "blockquote",
                 ]}
                 transformLinkUri={(href, children, title) => {
                   const url = new URL(href);

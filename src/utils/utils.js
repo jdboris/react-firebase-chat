@@ -123,3 +123,13 @@ export function useDebounce(value = null) {
 
   return (callback, delay) => setDebounce([callback, delay]);
 }
+
+export function getSelectionText() {
+  if (window.getSelection) {
+    return window.getSelection().toString();
+  }
+
+  if (document.selection && document.selection.type != "Control") {
+    return document.selection.createRange().text;
+  }
+}

@@ -26,7 +26,11 @@ import { fonts } from "../utils/fonts";
 import { toggleSelectionMarkup } from "../utils/markdown";
 import { sendMessage as sendMessageCloud } from "../utils/messages";
 import { startPresence } from "../utils/presence";
-import { insertIntoInput, isGiftedPremium } from "../utils/utils";
+import {
+  getSelectionText,
+  insertIntoInput,
+  isGiftedPremium,
+} from "../utils/utils";
 import { BanlistDialog } from "./banlist-dialog";
 import { conversationsRef, usersRef } from "./chat-room-app";
 import { DmsDialog } from "./dms-dialog";
@@ -487,10 +491,19 @@ export function ChatRoom(props) {
 
   const mentionUser = useCallback(
     (targetUsername) => {
-      setMessageValue(messageValue + " @" + targetUsername + " ");
+      setMessageValue(
+        messageValue +
+          " @" +
+          targetUsername +
+          " \n" +
+          "> " +
+          getSelectionText() +
+          "\n"
+      );
+
       messageInput.current.focus();
     },
-    [messageInput]
+    [messageInput, messageValue]
   );
 
   return (
