@@ -38,8 +38,8 @@ export async function sendMessage(user, data, messages) {
 
   data.text = await filterWords(data.text);
 
-  // NOTE: Escape the > character because remark-gfm sanitizes it
-  data.text = data.text.replace(/[>]/g, "\\$&");
+  // NOTE: Escape the > character when not followed by whitespace, so it won't be rendered as a blockquote
+  data.text = data.text.replace(/>(?!\s)/g, "\\$&");
 
   const idTokenResult = await user.auth.getIdTokenResult();
 

@@ -105,6 +105,13 @@ svg {
   font-size: 1.5em;
 }
 
+blockquote {
+  margin: 0.2em;
+  padding: 0.7em;
+  border-left: 0.5em solid gray;
+  background: #fbfbfb;
+}
+
 .chat-app svg.outlined {
   border: 1px solid;
 }
