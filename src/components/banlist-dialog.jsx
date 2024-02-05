@@ -69,7 +69,7 @@ export function BanlistDialog(props) {
           {bannedUsers &&
             bannedUsers.slice(start, end).map((user, i) => {
               return (
-                <div key={i}>
+                <div key={`banned-user-entry-${i}`}>
                   {user.username}{" "}
                   <button
                     className={styles["link"]}
@@ -127,7 +127,10 @@ export function BanlistDialog(props) {
             }}
           >
             {errors.map((error, i) => (
-              <div key={i} className={styles["error"]}>
+              <div
+                key={`banlist-dialog-error-message-${i}`}
+                className={styles["error"]}
+              >
                 {error.message}
               </div>
             ))}

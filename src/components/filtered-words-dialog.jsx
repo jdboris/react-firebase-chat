@@ -43,7 +43,7 @@ export function FilteredWordsDialog(props) {
           {filteredWords &&
             filteredWords.list.slice(start, end).map((word, i) => {
               return (
-                <div key={i}>
+                <div key={`filtered-words-dialog-word-entry-${i}`}>
                   {word}{" "}
                   <button
                     className={styles["link"]}
@@ -113,7 +113,10 @@ export function FilteredWordsDialog(props) {
             }}
           >
             {errors.map((error, i) => (
-              <div key={i} className={styles["error"]}>
+              <div
+                key={`filtered-words-dialog-error-message-${i}`}
+                className={styles["error"]}
+              >
                 {error.message}
               </div>
             ))}

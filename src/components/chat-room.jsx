@@ -895,8 +895,8 @@ export function ChatRoom(props) {
           <footer>
             {Object.entries(confirmModal)
               .filter(([key]) => key !== "message")
-              .map(([key, value]) => (
-                <button key={key} onClick={value}>
+              .map(([key, value], i) => (
+                <button key={`confirm-modal-button-${i}`} onClick={value}>
                   {key}
                 </button>
               ))}
