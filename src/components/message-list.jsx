@@ -92,7 +92,7 @@ export function MessageList({
 
                 const snapshot = await getDocs(
                   query(
-                    collection(getFirestore(), "messages"),
+                    messagesRef,
                     where("isDeleted", "==", false),
                     orderBy("createdAt", "desc"),
                     startAfter(messages[messages.length - 1].createdAt),
@@ -142,7 +142,7 @@ export function MessageList({
                     // NOTE: limitToLast is broken because of another Firestore bug.
                     const snapshot = await getDocs(
                       query(
-                        collection(getFirestore(), "messages"),
+                        messagesRef,
                         where("isDeleted", "==", false),
                         orderBy("createdAt", "asc"),
                         startAfter(messages[0].createdAt),
