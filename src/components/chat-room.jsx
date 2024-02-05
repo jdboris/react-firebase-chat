@@ -283,7 +283,8 @@ export function ChatRoom(props) {
   const [dmData] = useCollectionData(
     props.dms
       ? query(
-          collection(getFirestore(), "messages"),
+          // NOTE: Must use messagesRef, since the parent specifies which collection to use
+          messagesRef,
           limit(25),
           orderBy("createdAt", "desc"),
           where("isDeleted", "==", false)
