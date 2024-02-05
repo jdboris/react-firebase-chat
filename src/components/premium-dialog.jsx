@@ -10,14 +10,6 @@ import { CustomError } from "../utils/errors";
 import { sendToCustomerPortal, sendToStripe } from "../utils/stripe";
 import { timeout } from "../utils/utils";
 import { firestore } from "./chat-room-app";
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  query,
-  where,
-} from "firebase/firestore";
 
 export function PremiumDialog(props) {
   const { isAnonymous, user } = props;
@@ -27,14 +19,14 @@ export function PremiumDialog(props) {
   const [errors, setErrors] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const [normalSubscriptions] = useCollectionData(
-    query(
-      collection(firestore, "users", user.uid, "subscriptions"),
-      where("status", "==", "active"),
-      where("role", "==", "premium")
-    )
-  );
+  const query = firestore
+    .collection("users")
+    .doc(user.uid)
+    .collection("subscriptions")
+    .where("status", "==", "active")
+    .where("role", "==", "premium");
 
+  const [normalSubscriptions] = useCollectionData(query);
   const subscriptions = [
     ...(normalSubscriptions ? normalSubscriptions : []),
     ...(user.giftedPremiumEnd && user.giftedPremiumEnd.toDate() > new Date()
@@ -71,9 +63,7 @@ export function PremiumDialog(props) {
                 });
 
                 return (
-                  <span
-                    key={`premium-dialog-subscription-expiration-message-${i}`}
-                  >
+                  <span key={i}>
                     Your subscription expires {formatter.format(expiration)}
                   </span>
                 );
@@ -152,17 +142,14 @@ export function PremiumDialog(props) {
                           break;
                         }
 
-                        const snapshot = await getDocs(
-                          query(
-                            collection(firestore, "users"),
-                            where(
-                              "lowercaseUsername",
-                              "==",
-                              recipients[i].toLowerCase()
-                            )
+                        const snapshot = await firestore
+                          .collection("users")
+                          .where(
+                            "lowercaseUsername",
+                            "==",
+                            recipients[i].toLowerCase()
                           )
-                        );
-
+                          .get();
                         if (!snapshot.docs.length) {
                           errors.push(
                             new CustomError("User not found.", { field: i })
@@ -253,22 +240,17 @@ export function PremiumDialog(props) {
                       <span className={styles.errors}>
                         {errors
                           .filter((error) => !("field" in error))
-                          .map((error, i) => (
-                            <span key={`premium-dialog-error-message-${i}`}>
-                              {error.message}
-                            </span>
+                          .map((error) => (
+                            <span>{error.message}</span>
                           ))}
                       </span>
                       <ul>
                         {recipients.map((recipient, i) => (
-                          <li key={`premium-dialog-recipient-${i}`}>
+                          <li key={i}>
                             {errors
                               .filter((error) => error.field === i)
-                              .map((error, j) => (
-                                <span
-                                  key={`premium-dialog-recipient-${i}-error-message-${j}`}
-                                  className={styles["error"]}
-                                >
+                              .map((error) => (
+                                <span className={styles["error"]}>
                                   {error.message}
                                 </span>
                               ))}

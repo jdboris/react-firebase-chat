@@ -1,25 +1,17 @@
 import { Close as CloseIcon } from "@mui/icons-material";
-import {
-  arrayRemove,
-  arrayUnion,
-  doc,
-  getFirestore,
-  setDoc,
-  updateDoc,
-} from "firebase/firestore";
+import firebase from "firebase/compat/app";
 import { default as React, useState } from "react";
 import { useDocumentData } from "react-firebase-hooks/firestore";
 import ReactPaginate from "react-paginate";
 import styles from "../css/chat-room.module.css";
 import paginationStyles from "../css/pagination-controls.module.css";
 import { CustomError } from "../utils/errors";
+import { settingsRef } from "./chat-room-app";
 
 export function FilteredWordsDialog(props) {
   const [word, setWord] = useState("");
   const [errors, setErrors] = useState([]);
-  const query = props.open
-    ? doc(getFirestore(), "settings", "filteredWords")
-    : null;
+  const query = props.open ? settingsRef.doc("filteredWords") : null;
   const [filteredWords] = useDocumentData(query);
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;
@@ -43,7 +35,7 @@ export function FilteredWordsDialog(props) {
           {filteredWords &&
             filteredWords.list.slice(start, end).map((word, i) => {
               return (
-                <div key={`filtered-words-dialog-word-entry-${i}`}>
+                <div key={i}>
                   {word}{" "}
                   <button
                     className={styles["link"]}
@@ -53,28 +45,22 @@ export function FilteredWordsDialog(props) {
                       const newWords = [...filteredWords.list];
                       newWords.splice(newWords.indexOf(word), 1);
 
-                      updateDoc(
-                        doc(getFirestore(), "settings", "filteredWords"),
-                        {
-                          list: arrayRemove(word),
-                          regex: newWords.length
-                            ? new RegExp(
-                                newWords
-                                  // Escape special characters
-                                  .map((s) =>
-                                    s.replace(
-                                      /[()[\]{}*+?^$|#.,\\\s-]/g,
-                                      "\\$&"
-                                    )
-                                  )
-                                  // Sort for maximal munch
-                                  .sort((a, b) => b.length - a.length)
-                                  .join("|"),
-                                "gi"
-                              ).source
-                            : null,
-                        }
-                      );
+                      settingsRef.doc("filteredWords").update({
+                        list: firebase.firestore.FieldValue.arrayRemove(word),
+                        regex: newWords.length
+                          ? new RegExp(
+                              newWords
+                                // Escape special characters
+                                .map((s) =>
+                                  s.replace(/[()[\]{}*+?^$|#.,\\\s-]/g, "\\$&")
+                                )
+                                // Sort for maximal munch
+                                .sort((a, b) => b.length - a.length)
+                                .join("|"),
+                              "gi"
+                            ).source
+                          : null,
+                      });
                     }}
                   >
                     remove
@@ -91,11 +77,9 @@ export function FilteredWordsDialog(props) {
                 return;
               }
               const list = filteredWords ? filteredWords.list : [];
-
-              setDoc(
-                doc(getFirestore(), "settings", "filteredWords"),
+              settingsRef.doc("filteredWords").set(
                 {
-                  list: arrayUnion(word),
+                  list: firebase.firestore.FieldValue.arrayUnion(word),
                   regex: new RegExp(
                     [...new Set([...list, word])]
                       // Escape special characters
@@ -108,15 +92,11 @@ export function FilteredWordsDialog(props) {
                 },
                 { merge: true }
               );
-
               setErrors([]);
             }}
           >
             {errors.map((error, i) => (
-              <div
-                key={`filtered-words-dialog-error-message-${i}`}
-                className={styles["error"]}
-              >
+              <div key={i} className={styles["error"]}>
                 {error.message}
               </div>
             ))}

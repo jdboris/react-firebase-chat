@@ -106,12 +106,10 @@ svg {
 }
 
 blockquote {
-  background: #fbfbfb;
-  border-left: 0.5em solid #b3b3b3;
   margin: 0.2em;
   padding: 0.7em;
-  color: #303030;
-  font-size: 16px;
+  border-left: 0.5em solid gray;
+  background: #fbfbfb;
 }
 
 .chat-app svg.outlined {

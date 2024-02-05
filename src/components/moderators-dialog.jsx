@@ -1,6 +1,5 @@
 import { Close as CloseIcon } from "@mui/icons-material";
-import { collection, getFirestore, where } from "firebase/firestore";
-import { getFunctions, httpsCallable } from "firebase/functions";
+import firebase from "firebase/compat/app";
 import { default as React, useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import ReactPaginate from "react-paginate";
@@ -8,18 +7,19 @@ import styles from "../css/chat-room.module.css";
 import paginationStyles from "../css/pagination-controls.module.css";
 import { CustomError } from "../utils/errors";
 import { idConverter } from "../utils/firestore";
+import { usersRef } from "./chat-room-app";
 
 export function ModeratorsDialog(props) {
   const [username, setUsername] = useState("");
   const [errors, setErrors] = useState([]);
-  const addModerator = httpsCallable(getFunctions(), "addModerator");
-  const removeModerator = httpsCallable(getFunctions(), "removeModerator");
+  const addModerator = firebase.functions().httpsCallable("addModerator");
+  const removeModerator = firebase.functions().httpsCallable("removeModerator");
 
   let query = props.open
-    ? query(
-        collection(getFirestore(), "users"),
-        where("isModerator", "==", true)
-      ).withConverter(idConverter)
+    ? usersRef
+        .orderBy("lowercaseUsername")
+        .where("isModerator", "==", true)
+        .withConverter(idConverter)
     : null;
 
   const [mods] = useCollectionData(query);
@@ -45,7 +45,7 @@ export function ModeratorsDialog(props) {
           {mods &&
             mods.slice(start, end).map((mod, i) => {
               return (
-                <div key={`moderators-dialog-mod-entry-${i}`}>
+                <div key={i}>
                   {mod.username}{" "}
                   <button
                     className={styles["link"]}
@@ -79,10 +79,7 @@ export function ModeratorsDialog(props) {
             }}
           >
             {errors.map((error, i) => (
-              <div
-                key={`moderators-dialog-error-message-${i}`}
-                className={styles["error"]}
-              >
+              <div key={i} className={styles["error"]}>
                 {error.message}
               </div>
             ))}

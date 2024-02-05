@@ -1,15 +1,5 @@
 import { Close as CloseIcon, Search as SearchIcon } from "@mui/icons-material";
-import {
-  collection,
-  doc,
-  getDocs,
-  getFirestore,
-  orderBy,
-  query,
-  serverTimestamp,
-  setDoc,
-  where,
-} from "firebase/firestore";
+import firebase from "firebase/compat/app";
 import { default as React, useEffect, useMemo, useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import ReactPaginate from "react-paginate";
@@ -18,6 +8,7 @@ import paginationStyles from "../css/pagination-controls.module.css";
 import { CustomError } from "../utils/errors";
 import { idConverter } from "../utils/firestore";
 import { timeout } from "../utils/utils";
+import { conversationsRef, firestore, usersRef } from "./chat-room-app";
 
 export function DmsDialog(props) {
   const { userId, onChange } = props;
@@ -31,15 +22,13 @@ export function DmsDialog(props) {
   const start = (page - 1) * itemsPerPage;
   const end = page * itemsPerPage;
 
-  const [conversationsData] = useCollectionData(
-    userId
-      ? query(
-          collection(getFirestore(), "conversations"),
-          where("userIds", "array-contains", userId),
-          orderBy("lastMessageSentAt", "desc")
-        ).withConverter(idConverter)
-      : null
-  );
+  const query = userId
+    ? conversationsRef
+        .where("userIds", "array-contains", userId)
+        .orderBy("lastMessageSentAt", "desc")
+        .withConverter(idConverter)
+    : null;
+  const [conversationsData] = useCollectionData(query);
 
   const conversations = useMemo(
     () =>
@@ -99,7 +88,7 @@ export function DmsDialog(props) {
                 }
 
                 return (
-                  <li key={`conversation-list-entry-${i}`}>
+                  <li key={i}>
                     <button
                       className={
                         styles["link"] +
@@ -108,15 +97,15 @@ export function DmsDialog(props) {
                       }
                       onClick={async () => {
                         await props.setConversationRef(
-                          doc(getFirestore(), "conversations", conversation.id)
+                          firestore
+                            .collection("conversations")
+                            .doc(conversation.id)
                         );
                         await props.setDmMessagesRef(
-                          collection(
-                            getFirestore(),
-                            "conversations",
-                            conversation.id,
-                            "messages"
-                          )
+                          firestore
+                            .collection("conversations")
+                            .doc(conversation.id)
+                            .collection("messages")
                         );
                         props.requestClose();
                       }}
@@ -140,13 +129,9 @@ export function DmsDialog(props) {
                 if (!username) {
                   throw new CustomError("Enter a username.");
                 }
-
-                const snapshot = await getDocs(
-                  query(
-                    collection(getFirestore(), "users"),
-                    where("lowercaseUsername", "==", username.toLowerCase())
-                  )
-                );
+                const snapshot = await usersRef
+                  .where("lowercaseUsername", "==", username.toLowerCase())
+                  .get();
 
                 if (!snapshot.docs.length) {
                   throw new CustomError("User not found.");
@@ -161,18 +146,19 @@ export function DmsDialog(props) {
                   snapshot.docs[0].data().username,
                 ]);
 
-                setDoc(
-                  doc(getFirestore(), "conversations", conversationId),
+                await conversationsRef.doc(conversationId).set(
                   {
                     lastMessageSentAt: 0,
                     // NOTE: This insanity is required for later queries with NoSQL
                     userIds: [userId, snapshot.docs[0].id],
                     users: {
                       [userId]: {
-                        lastReadAt: serverTimestamp(),
+                        lastReadAt:
+                          firebase.firestore.FieldValue.serverTimestamp(),
                       },
                       [snapshot.docs[0].id]: {
-                        lastReadAt: serverTimestamp(),
+                        lastReadAt:
+                          firebase.firestore.FieldValue.serverTimestamp(),
                       },
                     },
                   },
@@ -184,14 +170,14 @@ export function DmsDialog(props) {
                 //   .collection("messages");
 
                 await props.setConversationRef(
-                  doc(getFirestore(), `conversations/${conversationId}`)
+                  firestore.collection("conversations").doc(conversationId)
                 );
 
                 await props.setDmMessagesRef(
-                  collection(
-                    getFirestore(),
-                    `conversations/${conversationId}/messages`
-                  )
+                  firestore
+                    .collection("conversations")
+                    .doc(conversationId)
+                    .collection("messages")
                 );
 
                 props.requestClose();
@@ -213,10 +199,7 @@ export function DmsDialog(props) {
             }}
           >
             {errors.map((error, i) => (
-              <div
-                key={`dms-dialog-error-message-${i}`}
-                className={styles["error"]}
-              >
+              <div key={i} className={styles["error"]}>
                 {error.message}
               </div>
             ))}
