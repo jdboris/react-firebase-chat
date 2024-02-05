@@ -12,6 +12,7 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  where,
 } from "firebase/firestore";
 import {
   connectFunctionsEmulator,
