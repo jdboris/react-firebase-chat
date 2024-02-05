@@ -10,47 +10,56 @@
 }
 
 /* Youtube */
-[data-provider=YouTube] > span {
+[data-provider="YouTube"] > span {
   display: inline-block;
   width: min(300px, 100%);
   aspect-ratio: 16/9;
 }
-[data-provider=YouTube] iframe {
+
+/* Youtube */
+[data-provider="YouTube"] iframe {
   width: 100%;
   height: 100%;
 }
 
 /* Twitter */
-[data-provider=Twitter] blockquote.twitter-tweet {
+[data-provider="Twitter"] blockquote.twitter-tweet {
   display: inline-block;
   font-family: "Helvetica Neue", Roboto, "Segoe UI", Calibri, sans-serif;
   font-size: 12px;
   font-weight: bold;
+  background: white;
+  color: black;
   line-height: 16px;
   border-color: #eee #ddd #bbb;
   border-radius: 5px;
   border-style: solid;
   border-width: 1px;
+  -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
   margin: 10px 5px;
   padding: 0 16px 16px 16px;
   min-height: initial;
   max-width: 600px;
 }
-[data-provider=Twitter] p {
+
+[data-provider="Twitter"] p {
   font-size: 16px;
   font-weight: normal;
   line-height: 20px;
   margin: 16px 0px;
   display: block;
 }
-[data-provider=Twitter] blockquote.twitter-tweet a {
-  color: rgb(27, 149, 224);
+
+[data-provider="Twitter"] blockquote.twitter-tweet a {
+  color: #1b95e0;
   font-weight: normal;
   text-decoration: none;
   outline: 0 none;
 }
-[data-provider=Twitter] blockquote.twitter-tweet a:hover,
-[data-provider=Twitter] blockquote.twitter-tweet a:focus {
+
+[data-provider="Twitter"] blockquote.twitter-tweet a:hover,
+[data-provider="Twitter"] blockquote.twitter-tweet a:focus {
   text-decoration: underline;
-}/*# sourceMappingURL=oembed.css.map */
+}
+/*# sourceMappingURL=oembed.css.map */

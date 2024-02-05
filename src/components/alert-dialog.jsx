@@ -17,7 +17,7 @@ export function AlertDialog(props) {
         </header>
         <main>
           {props.alerts.map((alert, i) => (
-            <div key={`alert-dialog-message-${i}`} className={styles["alert"]}>
+            <div key={i} className={styles["alert"]}>
               {alert}
             </div>
           ))}

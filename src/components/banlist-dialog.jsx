@@ -8,31 +8,21 @@ import { CustomError } from "../utils/errors";
 import { timeout } from "../utils/utils";
 import { idConverter } from "../utils/firestore";
 import { banUser, unbanUser, usersRef } from "./chat-room-app";
-import {
-  collection,
-  getFirestore,
-  orderBy,
-  query,
-  where,
-} from "firebase/firestore";
 
 export function BanlistDialog(props) {
   const { setConfirmModal, setAlerts } = props;
   const [searchUsername, setSearchUsername] = useState("");
   const [banUsername, setBanUsername] = useState("");
   const [errors, setErrors] = useState([]);
-
-  const [bannedUsers] = useCollectionData(
-    props.open
-      ? query(
-          collection(getFirestore(), "users"),
-          orderBy("lowercaseUsername"),
-          where("isBanned", "==", true),
-          where("lowercaseUsername", ">=", searchUsername),
-          where("lowercaseUsername", "<=", searchUsername + "\uf8ff")
-        ).withConverter(idConverter)
-      : null
-  );
+  const query = props.open
+    ? usersRef
+        .orderBy("lowercaseUsername")
+        .where("isBanned", "==", true)
+        .where("lowercaseUsername", ">=", searchUsername)
+        .where("lowercaseUsername", "<=", searchUsername + "\uf8ff")
+        .withConverter(idConverter)
+    : null;
+  const [bannedUsers] = useCollectionData(query);
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;
   const start = (page - 1) * itemsPerPage;
@@ -69,7 +59,7 @@ export function BanlistDialog(props) {
           {bannedUsers &&
             bannedUsers.slice(start, end).map((user, i) => {
               return (
-                <div key={`banned-user-entry-${i}`}>
+                <div key={i}>
                   {user.username}{" "}
                   <button
                     className={styles["link"]}
@@ -127,10 +117,7 @@ export function BanlistDialog(props) {
             }}
           >
             {errors.map((error, i) => (
-              <div
-                key={`banlist-dialog-error-message-${i}`}
-                className={styles["error"]}
-              >
+              <div key={i} className={styles["error"]}>
                 {error.message}
               </div>
             ))}

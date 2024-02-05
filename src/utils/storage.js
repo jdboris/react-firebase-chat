@@ -1,8 +1,8 @@
-import { getFunctions, httpsCallable } from "firebase/functions";
+import firebase from "firebase/compat/app";
 
 export function uploadFile(file) {
   return new Promise((resolve, reject) => {
-    const uploadFileFunction = httpsCallable(getFunctions(), "uploadFile");
+    const uploadFileFunction = firebase.functions().httpsCallable("uploadFile");
 
     const reader = new FileReader();
 

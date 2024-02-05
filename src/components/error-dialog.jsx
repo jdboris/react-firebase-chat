@@ -24,10 +24,7 @@ export function ErrorDialog(props) {
         </header>
         <main>
           {props.errors.map((error, i) => (
-            <div
-              key={`error-dialog-error-message-${i}`}
-              className={styles["error"]}
-            >
+            <div key={i} className={styles["error"]}>
               {error.message}
             </div>
           ))}

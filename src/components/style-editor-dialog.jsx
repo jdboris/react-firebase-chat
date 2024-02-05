@@ -1,5 +1,5 @@
 import { Close as CloseIcon } from "@mui/icons-material";
-import { Timestamp, doc, updateDoc } from "firebase/firestore";
+import firebase from "firebase/compat/app";
 import { default as React, useState } from "react";
 import styles from "../css/chat-room.module.css";
 import { CustomError } from "../utils/errors";
@@ -54,7 +54,10 @@ export function StyleEditorDialog({
             message={{
               text: "Sample message text",
               uid: uid,
-              createdAt: new Timestamp(1726757369, 337000000),
+              createdAt: new firebase.firestore.Timestamp(
+                1726757369,
+                337000000
+              ),
               username: username,
               fontSize,
               fontColor,
@@ -78,7 +81,7 @@ export function StyleEditorDialog({
           <ColorInput
             defaultValue={nameColor}
             onChange={(e) => {
-              updateDoc(doc(usersRef, uid), {
+              usersRef.doc(uid).update({
                 nameColor: e.target.value,
               });
             }}
@@ -93,7 +96,7 @@ export function StyleEditorDialog({
           <ColorInput
             defaultValue={msgBgColor}
             onChange={(e) => {
-              updateDoc(doc(usersRef, uid), {
+              usersRef.doc(uid).update({
                 msgBgColor: e.target.value,
               });
             }}
@@ -111,7 +114,7 @@ export function StyleEditorDialog({
             max="100"
             defaultValue={msgBgTransparency * 100}
             onChange={(e) => {
-              updateDoc(doc(usersRef, uid), {
+              usersRef.doc(uid).update({
                 msgBgTransparency: e.target.value / 100,
               });
             }}
@@ -148,7 +151,7 @@ export function StyleEditorDialog({
                   if (!url) {
                     throw new CustomError("Error uploading file.");
                   }
-                  await updateDoc(doc(usersRef, uid), {
+                  await usersRef.doc(uid).update({
                     msgBgImg: url,
                   });
                 })
@@ -167,7 +170,7 @@ export function StyleEditorDialog({
           <label
             onClick={async (e) => {
               if (!premium) return setPremiumPromptOpen(true);
-              await updateDoc(doc(usersRef, uid), {
+              await usersRef.doc(uid).update({
                 msgBgImg: "",
               });
             }}
@@ -189,7 +192,7 @@ export function StyleEditorDialog({
                 type="checkbox"
                 onChange={async (e) => {
                   const checked = e.target.checked;
-                  await updateDoc(doc(usersRef, uid), {
+                  await usersRef.doc(uid).update({
                     msgBgRepeat: checked ? "repeat" : "no-repeat",
                   });
                 }}
@@ -216,7 +219,7 @@ export function StyleEditorDialog({
                   onChange={async (e) => {
                     const checked = e.target.checked;
                     if (checked) {
-                      await updateDoc(doc(usersRef, uid), {
+                      await usersRef.doc(uid).update({
                         msgBgPosition: "left 0px top 0px",
                       });
                     }
@@ -237,7 +240,7 @@ export function StyleEditorDialog({
                   onChange={async (e) => {
                     const checked = e.target.checked;
                     if (checked) {
-                      await updateDoc(doc(usersRef, uid), {
+                      await usersRef.doc(uid).update({
                         msgBgPosition: "right 0px top 0px",
                       });
                     }
@@ -258,7 +261,7 @@ export function StyleEditorDialog({
                 max="100"
                 defaultValue={msgBgImgTransparency * 100}
                 onChange={(e) => {
-                  updateDoc(doc(usersRef, uid), {
+                  usersRef.doc(uid).update({
                     msgBgImgTransparency: e.target.value / 100,
                   });
                 }}

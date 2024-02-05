@@ -42,7 +42,7 @@ export function MenuWithButton(props) {
           {props.items &&
             Object.keys(props.items).map((key, i) => (
               <div
-                key={`menu-with-button-button-${i}`}
+                key={i}
                 onClickCapture={() => {
                   props.items[key]();
                 }}
