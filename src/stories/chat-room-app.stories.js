@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { storiesOf } from "@storybook/react";
 import { HiExternalLink } from "react-icons/hi";
 
 import { ChatRoomApp } from "../components/chat-room-app";
 
-const stories = storiesOf("App Test", module);
+export default {
+  title: "App",
+  component: ChatRoomApp,
+};
 
-stories.add("App", () => {
+export const Default = () => {
   const [user, setUser] = useState(null);
   const [callbackToTrigger, setCallbackToTrigger] = useState(null);
 
@@ -18,21 +20,14 @@ stories.add("App", () => {
 
   return (
     <ChatRoomApp
-      // callbacks={[
-      //   function test(x) {
-      //     console.log(x);
-      //   },
-      // ]}
-      // callbackToTrigger={callbackToTrigger}
       style={{ height: "600px", width: "400px" }}
       headerLinks={[
         <a href="/chat" target="_blank" rel="noreferrer" key="headerlink-1">
           <HiExternalLink />
         </a>,
       ]}
-      onUserChange={(authUser) => {
-        setUser(authUser);
-      }}
+      callbackToTrigger={callbackToTrigger}
+      onUserChange={() => {}}
     />
   );
-});
+};

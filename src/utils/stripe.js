@@ -1,6 +1,11 @@
 import { loadStripe } from "@stripe/stripe-js";
-import { firestore } from "../components/chat-room-app";
-import firebase from "firebase/compat/app";
+import {
+  addDoc,
+  collection,
+  getFirestore,
+  onSnapshot,
+} from "firebase/firestore";
+import { getFunctions, httpsCallable } from "firebase/functions";
 
 export function sendToStripe(
   uid,
@@ -15,67 +20,63 @@ export function sendToStripe(
       returnUrl.searchParams.set("chat-logout", "1");
     }
 
-    firestore
-      .collection("users")
-      .doc(uid)
-      .collection("checkout_sessions")
-      .add({
-        price: priceId, // price Id from your products price in the Stripe Dashboard
-        success_url: returnUrl.href, // return user to this screen on successful purchase
-        cancel_url: window.location.href, // return user to this screen on failed purchase
-        allow_promotion_codes: true,
-        mode:
-          metadata && metadata.recipients && metadata.recipients.length
-            ? "payment"
-            : "subscription",
-        ...(metadata
-          ? {
-              metadata: {
-                userId: uid,
-                ...Object.fromEntries(
-                  Object.entries(metadata).map(([key, value]) => [
-                    key,
-                    JSON.stringify(value),
-                  ])
-                ),
-              },
-              quantity: metadata.recipients ? metadata.recipients.length : 1,
-            }
-          : {}),
-      })
-      .then((docRef) => {
-        // Wait for the checkoutSession to get attached by the extension
-        docRef.onSnapshot(async (snap) => {
-          const { error, sessionId } = snap.data();
-
-          if (error) {
-            // Show an error to your customer and inspect
-            // your Cloud Function logs in the Firebase console.
-            console.error(`An error occurred: ${error.message}`);
-            reject();
+    addDoc(collection(getFirestore(), "users", uid, "checkout_sessions"), {
+      price: priceId, // price Id from your products price in the Stripe Dashboard
+      success_url: returnUrl.href, // return user to this screen on successful purchase
+      cancel_url: window.location.href, // return user to this screen on failed purchase
+      allow_promotion_codes: true,
+      mode:
+        metadata && metadata.recipients && metadata.recipients.length
+          ? "payment"
+          : "subscription",
+      ...(metadata
+        ? {
+            metadata: {
+              userId: uid,
+              ...Object.fromEntries(
+                Object.entries(metadata).map(([key, value]) => [
+                  key,
+                  JSON.stringify(value),
+                ])
+              ),
+            },
+            quantity: metadata.recipients ? metadata.recipients.length : 1,
           }
+        : {}),
+    }).then((docRef) => {
+      // Wait for the checkoutSession to get attached by the extension
+      onSnapshot(docRef, async (snap) => {
+        const { error, sessionId } = snap.data();
 
-          if (sessionId) {
-            // We have a session, let's redirect to Checkout
-            console.log(`Redirecting...`);
-            const stripe = await loadStripe(
-              process.env.REACT_APP_STRIPE_PUBLIC_API_KEY
-            );
+        if (error) {
+          // Show an error to your customer and inspect
+          // your Cloud Function logs in the Firebase console.
+          console.error(`An error occurred: ${error.message}`);
+          reject();
+        }
 
-            await stripe.redirectToCheckout({ sessionId });
-            resolve();
-          }
-        });
+        if (sessionId) {
+          // We have a session, let's redirect to Checkout
+          console.log(`Redirecting...`);
+          const stripe = await loadStripe(
+            process.env.REACT_APP_STRIPE_PUBLIC_API_KEY
+          );
+
+          await stripe.redirectToCheckout({ sessionId });
+          resolve();
+        }
       });
+    });
   });
 }
 
 export async function sendToCustomerPortal() {
   // had to update firebase.app().functions() to firebase.default.functions() and
   // removed the region from the functions call (from stripe firebase extension docs)
-  const functionRef = firebase
-    .functions()
-    .httpsCallable("ext-firestore-stripe-subscriptions-createPortalLink");
+  const functionRef = httpsCallable(
+    getFunctions(),
+    "ext-firestore-stripe-subscriptions-createPortalLink"
+  );
   const { data } = await functionRef({ returnUrl: window.location.origin });
   window.location.assign(data.url);
 }

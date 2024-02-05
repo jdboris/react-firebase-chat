@@ -1,5 +1,10 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+
+const { initializeApp } = require("firebase-admin/app");
+const { getFirestore } = require("firebase-admin/firestore");
+const { HttpsError } = require("firebase-functions/v2/https");
+
 // const { Logging } = require("@google-cloud/logging");
 // const logging = new Logging({
 //   projectId: process.env.GCLOUD_PROJECT,
@@ -7,11 +12,10 @@ const admin = require("firebase-admin");
 
 // Errors: https://firebase.google.com/docs/reference/functions/providers_https_.html#functionserrorcode
 
-admin.initializeApp();
+initializeApp();
 
-const db = admin.firestore();
+const db = getFirestore();
 const OEMBED_PROVIDER_WHITELIST = ["YouTube", "Twitter"];
-const HttpsError = functions.https.HttpsError;
 
 async function getUser(uid) {
   const snapshot = await db.collection("users").doc(uid).get();

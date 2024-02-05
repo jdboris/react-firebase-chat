@@ -1,5 +1,9 @@
 import { Close as CloseIcon } from "@mui/icons-material";
-import firebase from "firebase/compat/app";
+import {
+  signInWithCustomToken,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
+import { getFunctions, httpsCallable } from "firebase/functions";
 import React, { useState } from "react";
 import styles from "../css/chat-room.module.css";
 import { CustomError } from "../utils/errors";
@@ -79,10 +83,10 @@ export function LogInForm(props) {
           }
 
           if (forgotPassword) {
-            const sendPasswordResetEmail = firebase
-              .app()
-              .functions()
-              .httpsCallable("sendPasswordResetEmail");
+            const sendPasswordResetEmail = httpsCallable(
+              getFunctions(),
+              "sendPasswordResetEmail"
+            );
             const result = await sendPasswordResetEmail({
               email: email,
               returnUrl: window.location.href,
@@ -110,7 +114,7 @@ export function LogInForm(props) {
           }
 
           if (isNewUser) {
-            const signUp = firebase.app().functions().httpsCallable("signUp");
+            const signUp = httpsCallable(getFunctions(), "signUp");
             const result = await signUp({
               email: email,
               password: password,
@@ -131,8 +135,7 @@ export function LogInForm(props) {
           }
 
           // NOTE: Must must .catch instead of catch block because of auth bug (https://github.com/firebase/firebase-js-sdk/issues/2101)
-          await auth
-            .signInWithEmailAndPassword(email, password)
+          await signInWithEmailAndPassword(auth, email, password)
             .catch((error) => {
               throw new CustomError(error.message, error);
             })
@@ -170,7 +173,10 @@ export function LogInForm(props) {
       </header>
       <fieldset disabled={loading}>
         {errors.map((error, i) => (
-          <div key={i} className={styles["error"]}>
+          <div
+            key={`log-in-form-error-message-${i}`}
+            className={styles["error"]}
+          >
             {error.message}
           </div>
         ))}
@@ -294,10 +300,7 @@ export function LogInForm(props) {
               setErrors([]);
 
               timeout(10000, async () => {
-                const signUp = firebase
-                  .app()
-                  .functions()
-                  .httpsCallable("signUp");
+                const signUp = httpsCallable(getFunctions(), "signUp");
                 const result = await signUp({ anonymous: true });
                 if (result.data.error) {
                   throw new CustomError(
@@ -306,15 +309,15 @@ export function LogInForm(props) {
                   );
                 }
 
-                await auth
-                  .signInWithCustomToken(result.data.token)
-                  .catch((error) => {
+                await signInWithCustomToken(auth, result.data.token).catch(
+                  (error) => {
                     throw new CustomError(
                       "Something went wrong. Please try again."
                     );
-                  });
+                  }
+                );
 
-                firebase.app().functions().httpsCallable("validateUser")();
+                httpsCallable(getFunctions(), "validateUser")();
 
                 props.requestClose();
               })
