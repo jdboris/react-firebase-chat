@@ -98,7 +98,7 @@ export function UserStyleControls({
                 {[...Array(8).keys()].map((number, i) => {
                   return (
                     <div
-                      key={"premium-" + i}
+                      key={`user-style-controls-font-size-entry-${i}`}
                       className={!premium ? styles["disabled"] : ""}
                       onClickCapture={() => {
                         if (isAnonymous)

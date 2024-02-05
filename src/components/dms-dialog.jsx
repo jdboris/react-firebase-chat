@@ -99,7 +99,7 @@ export function DmsDialog(props) {
                 }
 
                 return (
-                  <li key={i}>
+                  <li key={`conversation-list-entry-${i}`}>
                     <button
                       className={
                         styles["link"] +
@@ -213,7 +213,10 @@ export function DmsDialog(props) {
             }}
           >
             {errors.map((error, i) => (
-              <div key={i} className={styles["error"]}>
+              <div
+                key={`dms-dialog-error-message-${i}`}
+                className={styles["error"]}
+              >
                 {error.message}
               </div>
             ))}

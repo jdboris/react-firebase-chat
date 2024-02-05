@@ -45,7 +45,7 @@ export function ModeratorsDialog(props) {
           {mods &&
             mods.slice(start, end).map((mod, i) => {
               return (
-                <div key={i}>
+                <div key={`moderators-dialog-mod-entry-${i}`}>
                   {mod.username}{" "}
                   <button
                     className={styles["link"]}
@@ -79,7 +79,10 @@ export function ModeratorsDialog(props) {
             }}
           >
             {errors.map((error, i) => (
-              <div key={i} className={styles["error"]}>
+              <div
+                key={`moderators-dialog-error-message-${i}`}
+                className={styles["error"]}
+              >
                 {error.message}
               </div>
             ))}

@@ -37,7 +37,7 @@ export function ModActionLogDialog(props) {
             <>
               {modActions.slice(start, end).map((action, i) => {
                 return (
-                  <div key={i}>
+                  <div key={`mod-action-log-dialog-action-entry-${i}`}>
                     {action.action}
                     <small>{action.date.toDate().toLocaleString()}</small>
                   </div>

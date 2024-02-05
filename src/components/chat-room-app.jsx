@@ -240,8 +240,8 @@ export function ChatRoomApp({
       ? conversationRef.id
           .split(":")
           .filter((e) => e !== authUser.displayName)
-          .map((otherUsername) => (
-            <span>
+          .map((otherUsername, i) => (
+            <span key={`conversation-header-username-badge-${i}`}>
               <UsernameBadge username={otherUsername} />
             </span>
           ))

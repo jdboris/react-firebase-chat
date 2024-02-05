@@ -71,7 +71,9 @@ export function PremiumDialog(props) {
                 });
 
                 return (
-                  <span key={i}>
+                  <span
+                    key={`premium-dialog-subscription-expiration-message-${i}`}
+                  >
                     Your subscription expires {formatter.format(expiration)}
                   </span>
                 );
@@ -251,17 +253,22 @@ export function PremiumDialog(props) {
                       <span className={styles.errors}>
                         {errors
                           .filter((error) => !("field" in error))
-                          .map((error) => (
-                            <span>{error.message}</span>
+                          .map((error, i) => (
+                            <span key={`premium-dialog-error-message-${i}`}>
+                              {error.message}
+                            </span>
                           ))}
                       </span>
                       <ul>
                         {recipients.map((recipient, i) => (
-                          <li key={i}>
+                          <li key={`premium-dialog-recipient-${i}`}>
                             {errors
                               .filter((error) => error.field === i)
-                              .map((error) => (
-                                <span className={styles["error"]}>
+                              .map((error, j) => (
+                                <span
+                                  key={`premium-dialog-recipient-${i}-error-message-${j}`}
+                                  className={styles["error"]}
+                                >
                                   {error.message}
                                 </span>
                               ))}

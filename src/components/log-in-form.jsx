@@ -173,7 +173,10 @@ export function LogInForm(props) {
       </header>
       <fieldset disabled={loading}>
         {errors.map((error, i) => (
-          <div key={i} className={styles["error"]}>
+          <div
+            key={`log-in-form-error-message-${i}`}
+            className={styles["error"]}
+          >
             {error.message}
           </div>
         ))}

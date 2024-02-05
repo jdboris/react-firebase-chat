@@ -117,7 +117,7 @@ export function MessageList({
           [...messages].reverse().map((msg) => (
             <ChatMessage
               // NOTE: MUST use msg.id rather than array index because index will change and force re-render
-              key={`message-${msg.id}`}
+              key={`message-list-message-${msg.id}`}
               setErrors={setErrors}
               setAlerts={setAlerts}
               message={msg}
