@@ -37,7 +37,9 @@ export function OnlineUsersDialog({ open, requestClose, onlineUsers }) {
               namedUsers.slice(start, end).map((user, i) => {
                 return (
                   user.username && (
-                    <li key={`online-${user.username}`}>{user.username}</li>
+                    <li key={`online-users-dialog-user-entry-${i}`}>
+                      {user.username}
+                    </li>
                   )
                 );
               })}

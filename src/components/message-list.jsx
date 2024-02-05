@@ -1,6 +1,16 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import styles from "../css/chat-room.module.css";
 import { ChatMessage } from "./chat-message";
+import {
+  collection,
+  getDocs,
+  getFirestore,
+  limit,
+  orderBy,
+  query,
+  startAfter,
+  where,
+} from "firebase/firestore";
 
 export function MessageList({
   setErrors,
@@ -79,13 +89,16 @@ export function MessageList({
             <button
               onClick={async () => {
                 setPaused(true);
-                const query = messagesRef
-                  .where("isDeleted", "==", false)
-                  .orderBy("createdAt", "desc")
-                  .startAfter(messages[messages.length - 1].createdAt)
-                  .limit(messageCount);
 
-                const snapshot = await query.get();
+                const snapshot = await getDocs(
+                  query(
+                    messagesRef,
+                    where("isDeleted", "==", false),
+                    orderBy("createdAt", "desc"),
+                    startAfter(messages[messages.length - 1].createdAt),
+                    limit(messageCount)
+                  )
+                );
                 const newMessages = snapshot.docs.map((doc) => {
                   return { id: doc.id, ...doc.data() };
                 });
@@ -104,7 +117,7 @@ export function MessageList({
           [...messages].reverse().map((msg) => (
             <ChatMessage
               // NOTE: MUST use msg.id rather than array index because index will change and force re-render
-              key={`message-${msg.id}`}
+              key={`message-list-message-${msg.id}`}
               setErrors={setErrors}
               setAlerts={setAlerts}
               message={msg}
@@ -127,13 +140,15 @@ export function MessageList({
                     setPaused(true);
 
                     // NOTE: limitToLast is broken because of another Firestore bug.
-                    const query = messagesRef
-                      .where("isDeleted", "==", false)
-                      .orderBy("createdAt", "asc")
-                      .startAfter(messages[0].createdAt)
-                      .limit(messageCount);
-
-                    const snapshot = await query.get();
+                    const snapshot = await getDocs(
+                      query(
+                        messagesRef,
+                        where("isDeleted", "==", false),
+                        orderBy("createdAt", "asc"),
+                        startAfter(messages[0].createdAt),
+                        limit(messageCount)
+                      )
+                    );
                     const newMessages = snapshot.docs
                       .map((doc) => {
                         return { id: doc.id, ...doc.data() };
