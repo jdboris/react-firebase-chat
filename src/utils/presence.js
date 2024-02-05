@@ -1,5 +1,24 @@
-import firebase from "firebase/compat/app";
-import "firebase/compat/database";
+import { getAuth, getIdTokenResult } from "firebase/auth";
+import {
+  serverTimestamp as dbServerTimestamp,
+  getDatabase,
+  goOnline,
+  off,
+  onDisconnect,
+  onValue,
+  push,
+  ref,
+  remove,
+  set,
+} from "firebase/database";
+import {
+  deleteDoc,
+  doc,
+  serverTimestamp as firestoreServerTimestamp,
+  getFirestore,
+  onSnapshot,
+  setDoc,
+} from "firebase/firestore";
 
 export function startPresence(uid, username, setIsOnline) {
   // NOTE: This flag is necessary to prevent additional db updates
@@ -14,30 +33,30 @@ export function startPresence(uid, username, setIsOnline) {
 
   const isOfflineForDatabase = {
     isOnline: false,
-    lastChanged: firebase.database.ServerValue.TIMESTAMP,
+    lastChanged: dbServerTimestamp(),
     username,
   };
 
   const isOnlineForDatabase = {
     isOnline: true,
-    lastChanged: firebase.database.ServerValue.TIMESTAMP,
+    lastChanged: dbServerTimestamp(),
     username,
   };
 
   const isOfflineForFirestore = {
     isOnline: false,
-    lastChanged: firebase.firestore.FieldValue.serverTimestamp(),
+    lastChanged: firestoreServerTimestamp(),
     username,
   };
 
   const isOnlineForFirestore = {
     isOnline: true,
-    lastChanged: firebase.firestore.FieldValue.serverTimestamp(),
+    lastChanged: firestoreServerTimestamp(),
     username,
   };
 
   subscribe();
-  firebase.database().goOnline();
+  goOnline(getDatabase());
 
   function startPeriodicUpdate() {
     // Clear the old one
@@ -45,7 +64,7 @@ export function startPresence(uid, username, setIsOnline) {
 
     // Periodically refresh online status
     refreshIntervalId = setInterval(() => {
-      firebase.database().ref(`/userPresences/${uid}`).set(isOnlineForDatabase);
+      set(ref(getDatabase(), `/userPresences/${uid}`), isOnlineForDatabase);
 
       // 50 minutes
     }, 1000 * 60 * 50);
@@ -93,8 +112,11 @@ export function startPresence(uid, username, setIsOnline) {
       //   );
 
       if (isConnectedTimeout === null) {
-        const user = firebase.auth().currentUser;
-        const token = user ? await user.getIdTokenResult(true) : null;
+        const user = getAuth().currentUser;
+
+        const token = user
+          ? await getIdTokenResult(getAuth().currentUser, true)
+          : null;
 
         const expirationTime = token ? Date.parse(token.expirationTime) : null;
         const now = Date.now();
@@ -102,10 +124,7 @@ export function startPresence(uid, username, setIsOnline) {
         // LOGGED IN?
         if (expirationTime) {
           // Set online with current timestamp in case connection is lost after token expires
-          firebase
-            .database()
-            .ref(`/userPresences/${uid}`)
-            .set(isOnlineForDatabase);
+          set(ref(getDatabase(), `/userPresences/${uid}`), isOnlineForDatabase);
 
           isConnectedTimeout = setTimeout(async () => {
             // firebase
@@ -125,7 +144,8 @@ export function startPresence(uid, username, setIsOnline) {
             //   );
 
             // firebase.database().goOffline();
-            await firebase.database().ref(`/userPresences/${uid}`).remove();
+
+            await remove(ref(getDatabase(), `/userPresences/${uid}`));
 
             isConnectedTimeout = null;
 
@@ -152,7 +172,7 @@ export function startPresence(uid, username, setIsOnline) {
           //   );
 
           // firebase.database().goOffline();
-          await firebase.database().ref(`/userPresences/${uid}`).remove();
+          await remove(ref(getDatabase(), `/userPresences/${uid}`));
         }
       }
     }
@@ -179,7 +199,7 @@ export function startPresence(uid, username, setIsOnline) {
         //   );
 
         // FIRESTORE: OFFLINE
-        firebase.firestore().collection("userPresences").doc(uid).delete();
+        deleteDoc(doc(getFirestore(), "userPresences", uid));
 
         // CONNECT DETECTED
       } else {
@@ -210,25 +230,18 @@ export function startPresence(uid, username, setIsOnline) {
           disconnectRef.cancel();
         }
 
-        disconnectRef = firebase
-          .database()
-          .ref(`/userPresences/${uid}`)
-          .onDisconnect();
+        disconnectRef = onDisconnect(
+          ref(getDatabase(), `/userPresences/${uid}`)
+        );
 
         // REALTIME DB: OFFLINE
         await disconnectRef.remove();
 
         // REALTIME DB: ONLINE
-        firebase
-          .database()
-          .ref(`/userPresences/${uid}`)
-          .set(isOnlineForDatabase);
+        set(ref(getDatabase(), `/userPresences/${uid}`), isOnlineForDatabase);
+
         // FIRESTORE: ONLINE
-        firebase
-          .firestore()
-          .collection("userPresences")
-          .doc(uid)
-          .set(isOnlineForFirestore);
+        setDoc(doc(getFirestore(), "userPresences", uid), isOnlineForFirestore);
       }
     }
   }
@@ -240,19 +253,16 @@ export function startPresence(uid, username, setIsOnline) {
     window.addEventListener("blur", onWindowFocusChange);
     window.addEventListener("focus", onWindowFocusChange);
 
-    connectedRef = firebase.database().ref(".info/connected");
+    connectedRef = ref(getDatabase(), ".info/connected");
 
-    uid = uid || firebase.database().ref("/userPresences").push().key;
+    uid = uid || push(ref(getDatabase(), "/userPresences")).key;
 
-    connectedRef
-      // CONNECTION CHANGED...
-      .on("value", onConnectedValueChanged);
+    // CONNECTION CHANGED...
+    onValue(connectedRef, onConnectedValueChanged);
 
-    unsubPresence = firebase
-      .firestore()
-      .collection("userPresences")
-      .doc(uid)
-      .onSnapshot(function (doc) {
+    unsubPresence = onSnapshot(
+      doc(getFirestore(), "userPresences", uid),
+      function (doc) {
         if (isSubscribed) {
           if (doc.data()) {
             const isOnline = doc.data().isOnline;
@@ -276,7 +286,8 @@ export function startPresence(uid, username, setIsOnline) {
             }
           }
         }
-      });
+      }
+    );
   }
 
   // Remove all the listeners
@@ -296,7 +307,7 @@ export function startPresence(uid, username, setIsOnline) {
       clearTimeout(messageTimeout);
       messageTimeout = null;
     }
-    connectedRef.off("value", onConnectedValueChanged);
+    off(connectedRef, "value", onConnectedValueChanged);
     if (unsubPresence) unsubPresence();
     unsubPresence = null;
     if (disconnectRef) await disconnectRef.cancel();
@@ -306,7 +317,7 @@ export function startPresence(uid, username, setIsOnline) {
   // Disconnect without waiting for front-end listeners
   async function disconnect() {
     // NOTE: MUST get the document ref again every time to avoid BUGS
-    await firebase.database().ref(`/userPresences/${uid}`).remove();
+    await remove(ref(getDatabase(), `/userPresences/${uid}`));
     // await firebase.database().goOffline();
   }
 
@@ -315,15 +326,9 @@ export function startPresence(uid, username, setIsOnline) {
       // await firebase.database().goOnline();
       startPeriodicUpdate();
       // Set online with current timestamp in case connection is lost after token expires
-      await firebase
-        .database()
-        .ref(`/userPresences/${uid}`)
-        .set(isOnlineForDatabase);
-      await firebase
-        .firestore()
-        .collection("userPresences")
-        .doc(uid)
-        .set(isOnlineForFirestore);
+      set(ref(getDatabase(), `/userPresences/${uid}`), isOnlineForDatabase);
+
+      setDoc(doc(getFirestore(), "userPresences", uid), isOnlineForFirestore);
     }
   }
 

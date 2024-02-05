@@ -12,6 +12,7 @@ import { MARKUP_SYMBOLS } from "../utils/markdown";
 import { usersRef } from "./chat-room-app";
 import { ColorInput } from "./color-input";
 import { MenuWithButton } from "./menu-with-button";
+import { doc, updateDoc } from "firebase/firestore";
 
 export function UserStyleControls({
   user: { uid, font, fontSize, fontColor, stylesEnabled },
@@ -40,7 +41,8 @@ export function UserStyleControls({
                   new CustomError("Create an account to do that."),
                 ]);
               const newValue = !enabled;
-              usersRef.doc(uid).update({ stylesEnabled: newValue });
+
+              updateDoc(doc(usersRef, uid), { stylesEnabled: newValue });
             }}
           >
             {enabled ? <CloseIcon /> : <AddIcon />}
@@ -63,7 +65,7 @@ export function UserStyleControls({
                       return setErrors([
                         new CustomError("Create an account to do that."),
                       ]);
-                    usersRef.doc(uid).update({ font: fontObj });
+                    updateDoc(doc(usersRef, uid), { font: fontObj });
                   };
 
                   return items;
@@ -85,7 +87,7 @@ export function UserStyleControls({
                       return setErrors([
                         new CustomError("Create an account to do that."),
                       ]);
-                    usersRef.doc(uid).update({
+                    updateDoc(doc(usersRef, uid), {
                       fontSize: 9 + number,
                     });
                   };
@@ -105,7 +107,7 @@ export function UserStyleControls({
                           ]);
                         if (!premium) return setPremiumPromptOpen(true);
 
-                        usersRef.doc(uid).update({
+                        updateDoc(doc(usersRef, uid), {
                           fontSize: 15 + number,
                         });
                       }}
@@ -173,7 +175,7 @@ export function UserStyleControls({
                       return setErrors([
                         new CustomError("Create an account to do that."),
                       ]);
-                    usersRef.doc(uid).update({
+                    updateDoc(doc(usersRef, uid), {
                       fontColor: e.target.value,
                     });
                   }}

@@ -1,9 +1,24 @@
-import "firebase/compat/analytics";
-import firebase from "firebase/compat/app";
-import "firebase/compat/auth";
-import "firebase/compat/firestore";
-import "firebase/compat/functions";
-import "firebase/compat/storage";
+import { getAnalytics } from "firebase/analytics";
+import { connectAuthEmulator, getAuth, signOut } from "firebase/auth";
+import { initializeApp } from "firebase/app";
+import { connectDatabaseEmulator, getDatabase } from "firebase/database";
+import {
+  collection,
+  connectFirestoreEmulator,
+  doc,
+  getDocs,
+  getFirestore,
+  limit,
+  orderBy,
+  query,
+  serverTimestamp,
+} from "firebase/firestore";
+import {
+  connectFunctionsEmulator,
+  getFunctions,
+  httpsCallable,
+} from "firebase/functions";
+import { connectStorageEmulator, getStorage } from "firebase/storage";
 import React, { useEffect, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useCollectionData, useDocument } from "react-firebase-hooks/firestore";
@@ -15,7 +30,7 @@ import { ChatRoom } from "./chat-room";
 
 const useEmulators = process.env.REACT_APP_USE_EMULATORS === "true";
 
-firebase.initializeApp({
+initializeApp({
   name: process.env.REACT_APP_FIREBASE_APP_NAME,
   apiKey: process.env.REACT_APP_API_KEY,
   authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
@@ -30,37 +45,51 @@ firebase.initializeApp({
   measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID,
 });
 
-export const firestore = firebase.firestore();
-export const analytics = firebase.analytics();
-export const functions = firebase.functions();
-export const auth = firebase.auth();
-export const storage = firebase.storage();
+// export const firestore = firebase.firestore();
+export const firestore = getFirestore();
+// export const analytics = firebase.analytics();
+export const analytics = getAnalytics();
+// export const functions = firebase.functions();
+export const functions = getFunctions();
+// export const auth = firebase.auth();
+export const auth = getAuth();
+// export const storage = firebase.storage();
+export const storage = getStorage();
 
-const db = firebase.database();
+// const db = firebase.database();
+const db = getDatabase();
 
 if (window.location.hostname === "localhost" && useEmulators) {
-  auth.useEmulator("http://localhost:9099");
-  firestore.useEmulator("localhost", 8080);
-  // firestore.settings({ host: "localhost:8080", ssl: false });
-  functions.useEmulator("localhost", 5001);
-  // functions.useFunctionsEmulator("http://localhost:5001");
-  db.useEmulator("localhost", 9000);
-  storage.useEmulator("localhost", 9199);
+  // auth.useEmulator("http://localhost:9099");
+  connectAuthEmulator(auth, "http://localhost:9099");
+
+  // firestore.useEmulator("localhost", 8080);
+  connectFirestoreEmulator(firestore, "localhost", 8080);
+
+  // functions.useEmulator("localhost", 5001);
+  connectFunctionsEmulator(functions, "localhost", 5001);
+
+  // db.useEmulator("localhost", 9000);
+  connectDatabaseEmulator(db, "localhost", 9000);
+
+  // storage.useEmulator("localhost", 9199);
+  connectStorageEmulator(storage, "localhost", 9199);
 }
 
-export const conversationsRef = firestore.collection("conversations");
-export const usersRef = firestore.collection("users");
-export const modActionLogRef = firestore.collection("modActionLog");
-export const settingsRef = firestore.collection("settings");
-const messagesRef = firestore.collection("messages");
-const callbacksRef = firestore.collection("callbacks");
-const aggregateMessagesRef = firestore.collection("aggregateMessages");
+export const conversationsRef = collection(firestore, "conversations");
+export const usersRef = collection(firestore, "users");
+export const modActionLogRef = collection(firestore, "modActionLog");
+export const settingsRef = collection(firestore, "settings");
+const messagesRef = collection(firestore, "messages");
+const callbacksRef = collection(firestore, "callbacks");
+const aggregateMessagesRef = collection(firestore, "aggregateMessages");
 
-export const banUser = firebase.functions().httpsCallable("banUser");
-export const unbanUser = firebase.functions().httpsCallable("unbanUser");
-export const getCustomerPortalLink = firebase
-  .functions()
-  .httpsCallable("ext-firestore-stripe-subscriptions-createPortalLink");
+export const banUser = httpsCallable(getFunctions(), "banUser");
+export const unbanUser = httpsCallable(getFunctions(), "unbanUser");
+export const getCustomerPortalLink = httpsCallable(
+  getFunctions(),
+  "ext-firestore-stripe-subscriptions-createPortalLink"
+);
 
 function UsernameBadge({ username }) {
   const [user, setUser] = useState();
@@ -68,9 +97,12 @@ function UsernameBadge({ username }) {
     (async () => {
       setUser(
         (
-          await usersRef
-            .where("lowercaseUsername", "==", username.toLowerCase())
-            .get()
+          await getDocs(
+            query(
+              collection(firestore, "users"),
+              where("lowercaseUsername", "==", username.toLowerCase())
+            )
+          )
         ).docs[0].data()
       );
     })();
@@ -100,14 +132,13 @@ export function ChatRoomApp({
   const [authUser, isLoadingAuth] = useAuthState(auth);
 
   const [callbacksTriggered] = useCollectionData(
-    callbacksRef
-      .orderBy("triggeredAt", "desc")
-      .limit(1)
-      .withConverter(idConverter)
+    query(callbacksRef, orderBy("triggeredAt", "desc"), limit(1)).withConverter(
+      idConverter
+    )
   );
 
   const [userSnapshot, isLoadingUserDoc] = useDocument(
-    authUser ? usersRef.doc(authUser.uid) : null
+    authUser ? doc(usersRef, authUser.uid) : null
   );
 
   // If either is loading or they don't match yet
@@ -147,7 +178,7 @@ export function ChatRoomApp({
   const [alerts, setAlerts] = useState([]);
 
   const logout = async () => {
-    await auth.signOut();
+    await signOut(auth);
     setConversationRef(null);
     setDmMessagesRef(null);
   };
@@ -181,7 +212,7 @@ export function ChatRoomApp({
         callbacksRef.add({
           name: callbackToTrigger.name,
           arguments: callbackToTrigger.arguments,
-          triggeredAt: firebase.firestore.FieldValue.serverTimestamp(),
+          triggeredAt: serverTimestamp(),
         });
       }
     }

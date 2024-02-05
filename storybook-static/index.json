@@ -1,0 +1,1 @@
+{"v":4,"entries":{"app--docs":{"id":"app--docs","title":"App","name":"Docs","importPath":"./src/stories/chat-room-app.stories.js","type":"docs","tags":["docs","autodocs"],"storiesImports":[]},"app--default":{"type":"story","id":"app--default","name":"Default","title":"App","importPath":"./src/stories/chat-room-app.stories.js","tags":["story"]}}}

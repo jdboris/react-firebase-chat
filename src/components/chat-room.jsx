@@ -6,8 +6,21 @@ import {
   VolumeOff as VolumeOffIcon,
   VolumeUp as VolumeUpIcon,
 } from "@mui/icons-material";
-import firebase from "firebase/compat/app";
-import { doc, getDoc, getFirestore, Timestamp } from "firebase/firestore";
+import { getAuth, getIdTokenResult } from "firebase/auth";
+import {
+  Timestamp,
+  collection,
+  doc,
+  getDoc,
+  getFirestore,
+  limit,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc,
+  where,
+} from "firebase/firestore";
 import React, {
   useCallback,
   useEffect,
@@ -22,7 +35,6 @@ import {
 import styles from "../css/chat-room.module.css";
 import { CustomError } from "../utils/errors";
 import { idConverter } from "../utils/firestore";
-import { fonts } from "../utils/fonts";
 import { toggleSelectionMarkup } from "../utils/markdown";
 import { sendMessage as sendMessageCloud } from "../utils/messages";
 import { startPresence } from "../utils/presence";
@@ -32,7 +44,7 @@ import {
   isGiftedPremium,
 } from "../utils/utils";
 import { BanlistDialog } from "./banlist-dialog";
-import { conversationsRef, usersRef } from "./chat-room-app";
+import { firestore } from "./chat-room-app";
 import { DmsDialog } from "./dms-dialog";
 import { EmojiSelector } from "./emoji-selector";
 import { ErrorDialog } from "./error-dialog";
@@ -112,111 +124,111 @@ export function ChatRoom(props) {
     // RESTRICTIONS
     // ------------------------------------------------------------------------------------------------
 
-    {
-      const timeSince = user.createdAt
-        ? Date.now() - user.createdAt.toMillis()
-        : 0;
-      const threeMinutes = 3 * 60 * 1000;
-      const thirtySeconds = 30 * 1000;
-      const timeLeft = user.createdAt
-        ? (user.email == null ? threeMinutes : thirtySeconds) - timeSince
-        : 0;
+    // {
+    //   const timeSince = user.createdAt
+    //     ? Date.now() - user.createdAt.toMillis()
+    //     : 0;
+    //   const threeMinutes = 3 * 60 * 1000;
+    //   const thirtySeconds = 30 * 1000;
+    //   const timeLeft = user.createdAt
+    //     ? (user.email == null ? threeMinutes : thirtySeconds) - timeSince
+    //     : 0;
 
-      // Prevent posting for the first minute
-      if (timeLeft > 0) {
-        throw new CustomError(
-          `Please wait a little longer (${Math.ceil(
-            timeLeft / 1000
-          )}s) before posting, or make an account.`,
-          {
-            duration: timeLeft,
-          }
-        );
-      }
-    }
+    //   // Prevent posting for the first minute
+    //   if (timeLeft > 0) {
+    //     throw new CustomError(
+    //       `Please wait a little longer (${Math.ceil(
+    //         timeLeft / 1000
+    //       )}s) before posting, or make an account.`,
+    //       {
+    //         duration: timeLeft,
+    //       }
+    //     );
+    //   }
+    // }
 
-    {
-      const timeSince = timestamps[0] ? Date.now() - timestamps[0] : 0;
-      const timeLeft = timestamps[0] ? 20000 - timeSince : 0;
+    // {
+    //   const timeSince = timestamps[0] ? Date.now() - timestamps[0] : 0;
+    //   const timeLeft = timestamps[0] ? 20000 - timeSince : 0;
 
-      // Spam limit (1 posts in 20 seconds) for anons
-      if (user.email == null && timeLeft > 0) {
-        throw new CustomError(
-          `Posting too often. Please wait (${Math.ceil(
-            timeLeft / 1000
-          )}s remaining), or make an account to raise your limit.`,
-          {
-            duration: timeLeft,
-          }
-        );
-      }
-    }
+    //   // Spam limit (1 posts in 20 seconds) for anons
+    //   if (user.email == null && timeLeft > 0) {
+    //     throw new CustomError(
+    //       `Posting too often. Please wait (${Math.ceil(
+    //         timeLeft / 1000
+    //       )}s remaining), or make an account to raise your limit.`,
+    //       {
+    //         duration: timeLeft,
+    //       }
+    //     );
+    //   }
+    // }
 
-    {
-      const timeSince = timestamps[3] ? Date.now() - timestamps[3] : 0;
-      const timeLeft = timestamps[3] ? 3000 - timeSince : 0;
+    // {
+    //   const timeSince = timestamps[3] ? Date.now() - timestamps[3] : 0;
+    //   const timeLeft = timestamps[3] ? 3000 - timeSince : 0;
 
-      // Spam limit (3 posts in 3 seconds)
-      if (timeLeft > 0) {
-        throw new CustomError(
-          `Posting too often. Please wait (${Math.ceil(
-            timeLeft / 1000
-          )}s remaining)...`,
-          {
-            duration: timeLeft,
-          }
-        );
-      }
-    }
+    //   // Spam limit (3 posts in 3 seconds)
+    //   if (timeLeft > 0) {
+    //     throw new CustomError(
+    //       `Posting too often. Please wait (${Math.ceil(
+    //         timeLeft / 1000
+    //       )}s remaining)...`,
+    //       {
+    //         duration: timeLeft,
+    //       }
+    //     );
+    //   }
+    // }
 
-    // Restrict new users, to cut down on spam by throwaway accounts...
-    {
-      const presence = onlineUsers.find(
-        (onlineUser) => onlineUser.username === user.username
-      );
-      const timeSinceLogin =
-        presence && presence.lastChanged
-          ? Date.now() - presence.lastChanged.toMillis()
-          : 0;
+    // // Restrict new users, to cut down on spam by throwaway accounts...
+    // {
+    //   const presence = onlineUsers.find(
+    //     (onlineUser) => onlineUser.username === user.username
+    //   );
+    //   const timeSinceLogin =
+    //     presence && presence.lastChanged
+    //       ? Date.now() - presence.lastChanged.toMillis()
+    //       : 0;
 
-      const timeSinceCreated = user.createdAt
-        ? Date.now() - user.createdAt.toMillis()
-        : 0;
+    //   const timeSinceCreated = user.createdAt
+    //     ? Date.now() - user.createdAt.toMillis()
+    //     : 0;
 
-      const thirtyDays = 1000 * 60 * 60 * 24 * 30;
-      const fiveMinutes = 1000 * 60 * 5;
+    //   const thirtyDays = 1000 * 60 * 60 * 24 * 30;
+    //   const fiveMinutes = 1000 * 60 * 5;
 
-      isNewUser = !user.messageCount || user.messageCount < 10;
+    //   isNewUser = !user.messageCount || user.messageCount < 10;
 
-      // If the user is new (<30 days) OR has been online for less than 5 minutes, AND has less than 10 messages sent
-      if (
-        (timeSinceCreated < thirtyDays || timeSinceLogin < fiveMinutes) &&
-        isNewUser
-      ) {
-        const timeSinceLastPost = timestamps[0]
-          ? Date.now() - timestamps[0]
-          : 0;
-        // Spam limit (1 posts in 20 seconds)
-        const timeLeft = timestamps[0] ? 20000 - timeSinceLastPost : 0;
+    //   // If the user is new (<30 days) OR has been online for less than 5 minutes, AND has less than 10 messages sent
+    //   if (
+    //     (timeSinceCreated < thirtyDays || timeSinceLogin < fiveMinutes) &&
+    //     isNewUser
+    //   ) {
+    //     const timeSinceLastPost = timestamps[0]
+    //       ? Date.now() - timestamps[0]
+    //       : 0;
+    //     // Spam limit (1 posts in 20 seconds)
+    //     const timeLeft = timestamps[0] ? 20000 - timeSinceLastPost : 0;
 
-        if (timeLeft > 0) {
-          throw new CustomError(
-            `Account temporarily restricted. Please wait (${Math.ceil(
-              timeLeft / 1000
-            )}s) to post again...`,
-            {
-              duration: timeLeft,
-            }
-          );
-        }
+    //     if (timeLeft > 0) {
+    //       throw new CustomError(
+    //         `Account temporarily restricted. Please wait (${Math.ceil(
+    //           timeLeft / 1000
+    //         )}s) to post again...`,
+    //         {
+    //           duration: timeLeft,
+    //         }
+    //       );
+    //     }
 
-        if (text.length > 100) {
-          throw new CustomError(
-            `Account temporarily restricted. Post length limit (100 characters) exceeded.`
-          );
-        }
-      }
-    }
+    //     if (text.length > 100) {
+    //       throw new CustomError(
+    //         `Account temporarily restricted. Post length limit (100 characters) exceeded.`
+    //       );
+    //     }
+    //   }
+    // }
     // ------------------------------------------------------------------------------------------------
 
     try {
@@ -270,11 +282,12 @@ export function ChatRoom(props) {
 
   const [dmData] = useCollectionData(
     props.dms
-      ? messagesRef
-          .limit(25)
-          .orderBy("createdAt", "desc")
-          .where("isDeleted", "==", false)
-          .withConverter(idConverter)
+      ? query(
+          collection(getFirestore(), "messages"),
+          limit(25),
+          orderBy("createdAt", "desc"),
+          where("isDeleted", "==", false)
+        ).withConverter(idConverter)
       : null
   );
 
@@ -395,17 +408,19 @@ export function ChatRoom(props) {
   }, [onlineUsers !== null && onlineUsers.length >= DELAY_MODE_USER_COUNT]);
 
   useEffect(() => {
-    const unsubOnlineUsers = firebase
-      .firestore()
-      .collection("userPresences")
-      .where("isOnline", "==", true)
-      .onSnapshot(function (snapshot) {
+    const unsubOnlineUsers = onSnapshot(
+      query(
+        collection(firestore, "userPresences"),
+        where("isOnline", "==", true)
+      ),
+      function (snapshot) {
         setOnlineUsers(
           snapshot.docs.map((doc) => {
             return doc.data();
           })
         );
-      });
+      }
+    );
 
     return () => {
       unsubOnlineUsers();
@@ -448,7 +463,7 @@ export function ChatRoom(props) {
       }
 
       if (user && username) {
-        const idTokenResult = await user.auth.getIdTokenResult();
+        const idTokenResult = await getIdTokenResult(getAuth().currentUser);
         setPremium(
           idTokenResult.claims.stripeRole === "premium" || isGiftedPremium(user)
         );
@@ -472,12 +487,13 @@ export function ChatRoom(props) {
       return;
     }
     async function markMessagesRead() {
-      await conversationRef.set(
+      await setDoc(
+        conversationRef,
         {
           // NOTE: Required for marking messages read
           users: {
             [userId]: {
-              lastReadAt: firebase.firestore.FieldValue.serverTimestamp(),
+              lastReadAt: serverTimestamp(),
               // lastReadAt: new firebase.firestore.Timestamp(1726757369, 337000000),
             },
           },
@@ -491,14 +507,14 @@ export function ChatRoom(props) {
 
   const mentionUser = useCallback(
     (targetUsername) => {
+      const selection = getSelectionText();
+
       setMessageValue(
         messageValue +
           " @" +
           targetUsername +
-          " \n" +
-          "> " +
-          getSelectionText() +
-          "\n"
+          (selection.trim() ? " \n" + "> " + selection + "\n" : "") +
+          " "
       );
 
       messageInput.current.focus();
@@ -822,6 +838,7 @@ export function ChatRoom(props) {
           photoUrl={photoUrl}
           setPhotoUrl={setPhotoUrl}
           isVerified={user.emailVerified}
+          isAnonymous={user.email == null}
         />
       )}
 

@@ -1,17 +1,25 @@
 import { Close as CloseIcon } from "@mui/icons-material";
-import firebase from "firebase/compat/app";
+import {
+  arrayRemove,
+  arrayUnion,
+  doc,
+  getFirestore,
+  setDoc,
+  updateDoc,
+} from "firebase/firestore";
 import { default as React, useState } from "react";
 import { useDocumentData } from "react-firebase-hooks/firestore";
 import ReactPaginate from "react-paginate";
 import styles from "../css/chat-room.module.css";
 import paginationStyles from "../css/pagination-controls.module.css";
 import { CustomError } from "../utils/errors";
-import { settingsRef } from "./chat-room-app";
 
 export function FilteredWordsDialog(props) {
   const [word, setWord] = useState("");
   const [errors, setErrors] = useState([]);
-  const query = props.open ? settingsRef.doc("filteredWords") : null;
+  const query = props.open
+    ? doc(getFirestore(), "settings", "filteredWords")
+    : null;
   const [filteredWords] = useDocumentData(query);
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;
@@ -45,22 +53,28 @@ export function FilteredWordsDialog(props) {
                       const newWords = [...filteredWords.list];
                       newWords.splice(newWords.indexOf(word), 1);
 
-                      settingsRef.doc("filteredWords").update({
-                        list: firebase.firestore.FieldValue.arrayRemove(word),
-                        regex: newWords.length
-                          ? new RegExp(
-                              newWords
-                                // Escape special characters
-                                .map((s) =>
-                                  s.replace(/[()[\]{}*+?^$|#.,\\\s-]/g, "\\$&")
-                                )
-                                // Sort for maximal munch
-                                .sort((a, b) => b.length - a.length)
-                                .join("|"),
-                              "gi"
-                            ).source
-                          : null,
-                      });
+                      updateDoc(
+                        doc(getFirestore(), "settings", "filteredWords"),
+                        {
+                          list: arrayRemove(word),
+                          regex: newWords.length
+                            ? new RegExp(
+                                newWords
+                                  // Escape special characters
+                                  .map((s) =>
+                                    s.replace(
+                                      /[()[\]{}*+?^$|#.,\\\s-]/g,
+                                      "\\$&"
+                                    )
+                                  )
+                                  // Sort for maximal munch
+                                  .sort((a, b) => b.length - a.length)
+                                  .join("|"),
+                                "gi"
+                              ).source
+                            : null,
+                        }
+                      );
                     }}
                   >
                     remove
@@ -77,9 +91,11 @@ export function FilteredWordsDialog(props) {
                 return;
               }
               const list = filteredWords ? filteredWords.list : [];
-              settingsRef.doc("filteredWords").set(
+
+              setDoc(
+                doc(getFirestore(), "settings", "filteredWords"),
                 {
-                  list: firebase.firestore.FieldValue.arrayUnion(word),
+                  list: arrayUnion(word),
                   regex: new RegExp(
                     [...new Set([...list, word])]
                       // Escape special characters
@@ -92,6 +108,7 @@ export function FilteredWordsDialog(props) {
                 },
                 { merge: true }
               );
+
               setErrors([]);
             }}
           >

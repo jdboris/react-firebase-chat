@@ -1,5 +1,5 @@
 import { Block as BlockIcon, Person as PersonIcon } from "@mui/icons-material";
-import firebase from "firebase/compat/app";
+import { getFunctions, httpsCallable } from "firebase/functions";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown, { uriTransformer } from "react-markdown";
 import rehypeRaw from "rehype-raw";
@@ -54,9 +54,10 @@ function Link({ href, isEmbedDisabled }) {
           </a>
         );
 
-        const validateImageEmbedUrl = firebase
-          .functions()
-          .httpsCallable("validateImageEmbedUrl");
+        const validateImageEmbedUrl = httpsCallable(
+          getFunctions(),
+          "validateImageEmbedUrl"
+        );
         try {
           await validateImageEmbedUrl(url);
         } catch (e) {
@@ -97,7 +98,7 @@ function Link({ href, isEmbedDisabled }) {
           </a>
         );
 
-        const getEmbed = firebase.functions().httpsCallable("getEmbed");
+        const getEmbed = httpsCallable(getFunctions(), "getEmbed");
         const result = await getEmbed({ url });
 
         if (result.data.html) {

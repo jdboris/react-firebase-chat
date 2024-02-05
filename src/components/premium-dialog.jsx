@@ -10,6 +10,14 @@ import { CustomError } from "../utils/errors";
 import { sendToCustomerPortal, sendToStripe } from "../utils/stripe";
 import { timeout } from "../utils/utils";
 import { firestore } from "./chat-room-app";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+} from "firebase/firestore";
 
 export function PremiumDialog(props) {
   const { isAnonymous, user } = props;
@@ -19,14 +27,14 @@ export function PremiumDialog(props) {
   const [errors, setErrors] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const query = firestore
-    .collection("users")
-    .doc(user.uid)
-    .collection("subscriptions")
-    .where("status", "==", "active")
-    .where("role", "==", "premium");
+  const [normalSubscriptions] = useCollectionData(
+    query(
+      collection(firestore, "users", user.uid, "subscriptions"),
+      where("status", "==", "active"),
+      where("role", "==", "premium")
+    )
+  );
 
-  const [normalSubscriptions] = useCollectionData(query);
   const subscriptions = [
     ...(normalSubscriptions ? normalSubscriptions : []),
     ...(user.giftedPremiumEnd && user.giftedPremiumEnd.toDate() > new Date()
@@ -142,14 +150,17 @@ export function PremiumDialog(props) {
                           break;
                         }
 
-                        const snapshot = await firestore
-                          .collection("users")
-                          .where(
-                            "lowercaseUsername",
-                            "==",
-                            recipients[i].toLowerCase()
+                        const snapshot = await getDocs(
+                          query(
+                            collection(firestore, "users"),
+                            where(
+                              "lowercaseUsername",
+                              "==",
+                              recipients[i].toLowerCase()
+                            )
                           )
-                          .get();
+                        );
+
                         if (!snapshot.docs.length) {
                           errors.push(
                             new CustomError("User not found.", { field: i })
