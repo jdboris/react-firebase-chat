@@ -1,5 +1,6 @@
 import { Close as CloseIcon } from "@mui/icons-material";
-import firebase from "firebase/compat/app";
+import { collection, getFirestore, where } from "firebase/firestore";
+import { getFunctions, httpsCallable } from "firebase/functions";
 import { default as React, useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import ReactPaginate from "react-paginate";
@@ -7,19 +8,18 @@ import styles from "../css/chat-room.module.css";
 import paginationStyles from "../css/pagination-controls.module.css";
 import { CustomError } from "../utils/errors";
 import { idConverter } from "../utils/firestore";
-import { usersRef } from "./chat-room-app";
 
 export function ModeratorsDialog(props) {
   const [username, setUsername] = useState("");
   const [errors, setErrors] = useState([]);
-  const addModerator = firebase.functions().httpsCallable("addModerator");
-  const removeModerator = firebase.functions().httpsCallable("removeModerator");
+  const addModerator = httpsCallable(getFunctions(), "addModerator");
+  const removeModerator = httpsCallable(getFunctions(), "removeModerator");
 
   let query = props.open
-    ? usersRef
-        .orderBy("lowercaseUsername")
-        .where("isModerator", "==", true)
-        .withConverter(idConverter)
+    ? query(
+        collection(getFirestore(), "users"),
+        where("isModerator", "==", true)
+      ).withConverter(idConverter)
     : null;
 
   const [mods] = useCollectionData(query);

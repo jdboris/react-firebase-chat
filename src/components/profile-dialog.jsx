@@ -3,7 +3,8 @@ import {
   Create as PencilIcon,
   Person as PersonIcon,
 } from "@mui/icons-material";
-import firebase from "firebase/compat/app";
+import { updateProfile } from "firebase/auth";
+import { getFunctions, httpsCallable } from "firebase/functions";
 import { default as React, useState } from "react";
 import styles from "../css/chat-room.module.css";
 import { CustomError } from "../utils/errors";
@@ -20,6 +21,7 @@ export function ProfileDialog(props) {
     photoUrl,
     setPhotoUrl,
     isVerified,
+    isAnonymous,
   } = props;
   const [loadingImg, setLoadingImg] = useState(false);
   const [loadingEmail, setLoadingEmail] = useState(false);
@@ -59,7 +61,7 @@ export function ProfileDialog(props) {
                   if (!url) {
                     throw new CustomError("Error uploading file.");
                   }
-                  await auth.currentUser.updateProfile({ photoURL: url });
+                  await updateProfile(auth.currentUser, { photoURL: url });
                   setPhotoUrl(url);
                 })
                   .catch((error) => {
@@ -72,7 +74,7 @@ export function ProfileDialog(props) {
             />
           </label>
 
-          {!isVerified && (
+          {!isAnonymous && !isVerified && (
             <button
               className={loadingEmail ? styles["loading"] : ""}
               onClick={(e) => {
@@ -82,10 +84,10 @@ export function ProfileDialog(props) {
                 setLoadingEmail(true);
 
                 timeout(5000, async () => {
-                  const resendVerificationEmail = firebase
-                    .app()
-                    .functions()
-                    .httpsCallable("resendVerificationEmail");
+                  const resendVerificationEmail = httpsCallable(
+                    getFunctions(),
+                    "resendVerificationEmail"
+                  );
 
                   const result = await resendVerificationEmail({
                     returnUrl: window.location.href,

@@ -16,11 +16,12 @@ import { v4 as uuid } from "uuid";
 import { firestore } from "../components/chat-room-app";
 import { CustomError } from "./errors";
 import { isGiftedPremium } from "./utils";
+import { getAuth, getIdTokenResult } from "firebase/auth";
 
 export async function sendMessage(user, data, messages) {
   const db = getFirestore();
 
-  if (!user.auth || !user) {
+  if (!user || !user.auth) {
     throw new CustomError("Must be logged in.");
   }
 
@@ -41,7 +42,7 @@ export async function sendMessage(user, data, messages) {
   // NOTE: Escape the > character when not followed by whitespace, so it won't be rendered as a blockquote
   data.text = data.text.replace(/>(?!\s)/g, "\\$&");
 
-  const idTokenResult = await user.auth.getIdTokenResult();
+  const idTokenResult = await getIdTokenResult(getAuth().currentUser);
 
   // const timestamp = new Date();
   const timestamp = serverTimestamp();
@@ -105,6 +106,31 @@ export async function sendMessage(user, data, messages) {
     const id = uuid();
     const BUFFER = 10;
 
+    // console.log({
+    //   // CREATE
+    //   [`list.${id}`]: { ...contents, id },
+    //   lastCreated: { ...contents, id },
+    //   // DELETE
+    //   ...(messages.length > 25 + BUFFER && {
+    //     ...messages
+    //       // Get the messages beyond the 25-message limit...
+    //       .slice(-(messages.length - (25 + BUFFER)))
+    //       // ...change them to "delete" sentinels.
+    //       .reduce(
+    //         (list, message) => ({
+    //           ...list,
+    //           [`list.${message.id}`]: deleteField(),
+    //         }),
+    //         {}
+    //       ),
+    //     lastDeleted: Object.fromEntries(
+    //       messages
+    //         .slice(-(messages.length - (25 + BUFFER)))
+    //         .map((message) => [message.id, message])
+    //     ),
+    //   }),
+    // });
+
     updateDoc(doc(db, `aggregateMessages/last25`), {
       // CREATE
       [`list.${id}`]: { ...contents, id },
@@ -129,6 +155,8 @@ export async function sendMessage(user, data, messages) {
         ),
       }),
     });
+
+    // console.log(contents);
 
     setDoc(doc(db, `messages/${id}`), contents);
   }
