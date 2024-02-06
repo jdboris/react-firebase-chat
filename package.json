@@ -13,9 +13,6 @@
       "require": "./dist/index.umd.cjs"
     }
   },
-  "sideEffects": [
-    "style.css"
-  ],
   "scripts": {
     "emulators": "firebase emulators:start --import=./exported-dev-data --export-on-exit=./exported-dev-data",
     "dev": "vite",
@@ -27,11 +24,11 @@
     "deploy-functions": "firebase deploy --only functions",
     "delete-modules-bash": "bash -c 'rm -rf node_modules'",
     "delete-modules": "npx -y rimraf node_modules",
-    "npm-clear-cache": "npm cache clean --force"
+    "npm-clear-cache": "npm cache clean --force",
+    "clean": "bash -c 'rm package-lock.json' & npm run delete-modules & npm run npm-clear-cache"
   },
   "dependencies": {
     "@emotion/styled": "^11.11.0",
-    "@jdboris/react-firebase-chat": "file:../@jdboris/react-firebase-chat",
     "@mui/icons-material": "^5.15.7",
     "@stripe/stripe-js": "^1.17.1",
     "caret-pos": "^2.0.0",
