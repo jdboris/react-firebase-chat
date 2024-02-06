@@ -326,7 +326,7 @@ export function ChatRoom(props) {
       // Below the delay mode user threshold
       if (onlineUsers.length < DELAY_MODE_USER_COUNT) {
         setDelayedMessagesData(null);
-        return;
+        return () => {};
       }
 
       const readMessages = async (delay, onlineUsers) => {
@@ -429,14 +429,14 @@ export function ChatRoom(props) {
   }, []);
 
   useEffect(() => {
-    if (isLoadingUser || isLoadingPresence) return true;
+    if (isLoadingUser || isLoadingPresence) return () => {};
 
     // SAME USER
     if (
       presence &&
       (presence.uid == userId || (!userId && !presence.username))
     ) {
-      return true;
+      return () => {};
     }
 
     setLoadingPresence(true);
@@ -477,7 +477,7 @@ export function ChatRoom(props) {
   }, [userId, isLoadingUser, isLoadingPresence]);
 
   useEffect(() => {
-    if (!selection) return;
+    if (!selection) return () => {};
     const { start, end } = selection;
     messageInput.current.focus();
     messageInput.current.setSelectionRange(start, end);
@@ -485,7 +485,7 @@ export function ChatRoom(props) {
 
   useEffect(() => {
     if (!props.dms) {
-      return;
+      return () => {};
     }
     async function markMessagesRead() {
       await setDoc(

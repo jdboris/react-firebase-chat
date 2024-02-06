@@ -54,9 +54,9 @@ export function LogInForm(props) {
             const oldLink = new URL(passwordResetLink);
 
             let link = new URL(
-              process.env.REACT_APP_FIREBASE_PASSWORD_RESET_URL
+              import.meta.env.VITE_FIREBASE_PASSWORD_RESET_URL
             );
-            link.searchParams.set("key", process.env.REACT_APP_API_KEY);
+            link.searchParams.set("key", import.meta.env.VITE_API_KEY);
 
             const response = await fetch(link, {
               method: "POST",

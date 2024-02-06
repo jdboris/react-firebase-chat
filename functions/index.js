@@ -7,7 +7,7 @@ const { HttpsError } = require("firebase-functions/v2/https");
 
 // const { Logging } = require("@google-cloud/logging");
 // const logging = new Logging({
-//   projectId: process.env.GCLOUD_PROJECT,
+//   projectId: import.meta.env.GCLOUD_PROJECT,
 // });
 
 // Errors: https://firebase.google.com/docs/reference/functions/providers_https_.html#functionserrorcode

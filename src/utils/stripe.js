@@ -59,7 +59,7 @@ export function sendToStripe(
           // We have a session, let's redirect to Checkout
           console.log(`Redirecting...`);
           const stripe = await loadStripe(
-            process.env.REACT_APP_STRIPE_PUBLIC_API_KEY
+            import.meta.env.VITE_STRIPE_PUBLIC_API_KEY
           );
 
           await stripe.redirectToCheckout({ sessionId });

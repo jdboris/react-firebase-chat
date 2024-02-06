@@ -211,8 +211,8 @@ export function PremiumDialog(props) {
                       name="period"
                       value={
                         isGifting
-                          ? process.env.REACT_APP_STRIPE_GIFT_3_MONTHS_PRICE_ID
-                          : process.env.REACT_APP_STRIPE_3_MONTH_PRICE_ID
+                          ? import.meta.env.VITE_STRIPE_GIFT_3_MONTHS_PRICE_ID
+                          : import.meta.env.VITE_STRIPE_3_MONTH_PRICE_ID
                       }
                       onChange={() => setPeriod(3)}
                       defaultChecked
@@ -225,8 +225,8 @@ export function PremiumDialog(props) {
                       name="period"
                       value={
                         isGifting
-                          ? process.env.REACT_APP_STRIPE_GIFT_6_MONTHS_PRICE_ID
-                          : process.env.REACT_APP_STRIPE_6_MONTH_PRICE_ID
+                          ? import.meta.env.VITE_STRIPE_GIFT_6_MONTHS_PRICE_ID
+                          : import.meta.env.VITE_STRIPE_6_MONTH_PRICE_ID
                       }
                       onChange={() => setPeriod(6)}
                     />{" "}
@@ -238,8 +238,8 @@ export function PremiumDialog(props) {
                       name="period"
                       value={
                         isGifting
-                          ? process.env.REACT_APP_STRIPE_GIFT_12_MONTHS_PRICE_ID
-                          : process.env.REACT_APP_STRIPE_12_MONTH_PRICE_ID
+                          ? import.meta.env.VITE_STRIPE_GIFT_12_MONTHS_PRICE_ID
+                          : import.meta.env.VITE_STRIPE_12_MONTH_PRICE_ID
                       }
                       onChange={() => setPeriod(12)}
                     />{" "}

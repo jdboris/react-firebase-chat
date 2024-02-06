@@ -1,1 +1,1 @@
-export * from "./components/chat-room-app";
+export { default } from "./components/chat-room-app.jsx";
