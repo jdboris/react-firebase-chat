@@ -20,7 +20,7 @@ import {
   httpsCallable,
 } from "firebase/functions";
 import { connectStorageEmulator, getStorage } from "firebase/storage";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useCollectionData, useDocument } from "react-firebase-hooks/firestore";
 import styles from "../css/chat-room.module.css";
@@ -29,21 +29,21 @@ import { setQueryParam } from "../utils/utils";
 import { AlertDialog } from "./alert-dialog";
 import { ChatRoom } from "./chat-room";
 
-const useEmulators = process.env.REACT_APP_USE_EMULATORS === "true";
+const useEmulators = import.meta.env.VITE_USE_EMULATORS === "true";
 
 initializeApp({
-  name: process.env.REACT_APP_FIREBASE_APP_NAME,
-  apiKey: process.env.REACT_APP_API_KEY,
-  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  name: import.meta.env.VITE_FIREBASE_APP_NAME,
+  apiKey: import.meta.env.VITE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   databaseURL:
     window.location.hostname === "localhost" && useEmulators
-      ? process.env.REACT_APP_FIREBASE_LOCAL_DATABASE_URL
-      : process.env.REACT_APP_FIREBASE_DATABASE_URL, // Realtime Database
-  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGE_SENDER_ID,
-  appId: process.env.REACT_APP_FIREBASE_APP_ID,
-  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID,
+      ? import.meta.env.VITE_FIREBASE_LOCAL_DATABASE_URL
+      : import.meta.env.VITE_FIREBASE_DATABASE_URL, // Realtime Database
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGE_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 });
 
 // export const firestore = firebase.firestore();
@@ -122,7 +122,7 @@ function UsernameBadge({ username }) {
   );
 }
 
-export function ChatRoomApp({
+function ChatRoomApp({
   className,
   onUserChange,
   callbackToTrigger,
