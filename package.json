@@ -1,6 +1,6 @@
 {
   "name": "@jdboris/react-firebase-chat",
-  "version": "1.32.1",
+  "version": "1.33.0",
   "type": "module",
   "files": [
     "dist"
