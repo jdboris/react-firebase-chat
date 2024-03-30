@@ -3,6 +3,7 @@ import { connectAuthEmulator, getAuth, signOut } from "firebase/auth";
 import { initializeApp } from "firebase/app";
 import { connectDatabaseEmulator, getDatabase } from "firebase/database";
 import {
+  addDoc,
   collection,
   connectFirestoreEmulator,
   doc,
@@ -31,6 +32,7 @@ import { ChatRoom } from "./chat-room";
 
 const useEmulators = import.meta.env.VITE_USE_EMULATORS === "true";
 
+// TODO: Investigate every time a message is sent on the site, this error happens: "Firebase: No Firebase App '[DEFAULT]' has been created - call initializeApp() first (app/no-app)."
 initializeApp({
   name: import.meta.env.VITE_FIREBASE_APP_NAME,
   apiKey: import.meta.env.VITE_API_KEY,
@@ -67,8 +69,8 @@ if (window.location.hostname === "localhost" && useEmulators) {
   // firestore.useEmulator("localhost", 8080);
   connectFirestoreEmulator(firestore, "localhost", 8080);
 
-  // functions.useEmulator("localhost", 5001);
-  connectFunctionsEmulator(functions, "localhost", 5001);
+  // functions.useEmulator("localhost", 5000);
+  connectFunctionsEmulator(functions, "localhost", 5000);
 
   // db.useEmulator("localhost", 9000);
   connectDatabaseEmulator(db, "localhost", 9000);
@@ -210,7 +212,7 @@ function ChatRoomApp({
     if (callbackToTrigger && callbacks) {
       if (callbackToTrigger.name in callbacks) {
         // TODO: Add doc to callbacks collection, to be called on all clients
-        callbacksRef.add({
+        addDoc(callbacksRef, {
           name: callbackToTrigger.name,
           arguments: callbackToTrigger.arguments,
           triggeredAt: serverTimestamp(),

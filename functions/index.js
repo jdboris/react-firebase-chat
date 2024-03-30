@@ -2,7 +2,7 @@ const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 
 const { initializeApp } = require("firebase-admin/app");
-const { getFirestore } = require("firebase-admin/firestore");
+const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const { HttpsError } = require("firebase-functions/v2/https");
 
 // const { Logging } = require("@google-cloud/logging");
@@ -70,10 +70,7 @@ async function markUserBanned(username) {
     user.ipAddresses.forEach(async (ip) => {
       await db
         .doc(`bannedIps/${ip}`)
-        .set(
-          { bannedAt: admin.firestore.FieldValue.serverTimestamp() },
-          { merge: true }
-        );
+        .set({ bannedAt: FieldValue.serverTimestamp() }, { merge: true });
     });
 }
 
@@ -99,7 +96,7 @@ exports.banUser = functions.https.onCall(async (username, context) => {
   await db.collection("modActionLog").add({
     uid: context.auth.uid,
     action: user.username + " banned " + username,
-    date: admin.firestore.FieldValue.serverTimestamp(),
+    date: FieldValue.serverTimestamp(),
   });
 
   return {
@@ -158,7 +155,7 @@ exports.unbanUser = functions.https.onCall(async (username, context) => {
   await db.collection("modActionLog").add({
     uid: context.auth.uid,
     action: user.username + " unbanned " + username,
-    date: admin.firestore.FieldValue.serverTimestamp(),
+    date: FieldValue.serverTimestamp(),
   });
 
   return {
@@ -219,7 +216,7 @@ exports.addModerator = functions.https.onCall(async (username, context) => {
   await db.collection("modActionLog").add({
     uid: context.auth.uid,
     action: user.username + " modded " + username,
-    date: admin.firestore.FieldValue.serverTimestamp(),
+    date: FieldValue.serverTimestamp(),
   });
 
   return {
@@ -276,7 +273,7 @@ exports.removeModerator = functions.https.onCall(async (username, context) => {
   await db.collection("modActionLog").add({
     uid: context.auth.uid,
     action: user.username + " unmodded " + username,
-    date: admin.firestore.FieldValue.serverTimestamp(),
+    date: FieldValue.serverTimestamp(),
   });
 
   return {
@@ -373,7 +370,7 @@ exports.removeModerator = functions.https.onCall(async (username, context) => {
 //   // NOTE: Escape the > character because remark-gfm sanitizes it
 //   data.text = data.text.replace(/[>]/g, "\\$&");
 
-//   const timestamp = admin.firestore.FieldValue.serverTimestamp();
+//   const timestamp = FieldValue.serverTimestamp();
 
 //   const contents = {
 //     ...data,
@@ -554,7 +551,7 @@ exports.signUp = functions.https.onCall(async (data, context) => {
       isModerator: false,
       isAdmin: false,
       isCallbacker: false,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
       ...(data.anonymous ? { anonSuffix: anonSuffix } : {}),
 
       nameColor: "#000000",
@@ -877,7 +874,7 @@ exports.onUserStatusChanged = functions.database
 
 // exports.getOembedProviders = functions.https.onCall((data, context) => {
 async function getOembedProviders() {
-  const fetch = require("node-fetch");
+  // const fetch = require("node-fetch");
   return fetch("https://oembed.com/providers.json")
     .then((response) => {
       if (!response.ok) {
@@ -913,7 +910,7 @@ function escapeRegExExceptStar(string) {
 }
 
 exports.getEmbed = functions.https.onCall(async (data, context) => {
-  const fetch = require("node-fetch");
+  // const fetch = require("node-fetch");
   if (!context.auth || !context.auth.uid) {
     throw new HttpsError("unauthenticated", "Must be logged in.");
   }
@@ -937,7 +934,7 @@ exports.getEmbed = functions.https.onCall(async (data, context) => {
         .doc("oembed")
         .set({
           ...settings,
-          lastProviderUpdate: admin.firestore.FieldValue.serverTimestamp(),
+          lastProviderUpdate: FieldValue.serverTimestamp(),
         });
     }
   }
@@ -988,12 +985,12 @@ exports.getEmbed = functions.https.onCall(async (data, context) => {
 exports.validateImageEmbedUrl = functions.https.onCall(async (url, context) => {
   //                     10 MB
   const sizeLimit = 10 * 1000 * 1000;
-  const fetch = require("node-fetch");
+  // const fetch = require("node-fetch");
   if (!context.auth || !context.auth.uid) {
     throw new HttpsError("unauthenticated", "Must be logged in.");
   }
 
-  const response = await fetch(url);
+  const response = await fetch(url, { method: "HEAD" });
   const contentLength = +response.headers.get("Content-Length");
   const contentType = response.headers.get("Content-Type");
 
@@ -1078,7 +1075,7 @@ exports.uploadFile = functions.https.onCall(async (data, context) => {
 
   // NOTE: https://github.com/firebase/firebase-functions/issues/264#issuecomment-565200194
   const clientId = functions.config().imgur.client_id;
-  const fetch = require("node-fetch");
+  // const fetch = require("node-fetch");
 
   const response = await fetch("https://api.imgur.com/3/image", {
     method: "POST",

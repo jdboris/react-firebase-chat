@@ -36,6 +36,7 @@ export default defineConfig({
         {
           format: "es",
           intro: 'import "./style.css";',
+          dir: "./dist/index.mjs",
         },
       ],
     },

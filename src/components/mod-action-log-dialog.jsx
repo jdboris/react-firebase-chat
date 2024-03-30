@@ -1,5 +1,5 @@
 import { Close as CloseIcon } from "@mui/icons-material";
-import { collection, getFirestore, orderBy } from "firebase/firestore";
+import { collection, getFirestore, orderBy, query } from "firebase/firestore";
 import React, { useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import ReactPaginate from "react-paginate";

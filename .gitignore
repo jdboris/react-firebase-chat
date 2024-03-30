@@ -36,7 +36,7 @@ lerna-debug.log*
 
 # misc
 .DS_Store
-.env.*
+.env*
 /?
 firebase-export*
 exported-dev-data
