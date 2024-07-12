@@ -302,8 +302,7 @@ export function ChatRoom(props) {
     }
 
     const entries = Object.entries(
-      (delayedMessagesData && delayedMessagesData.list) ||
-        (realtimeMessagesData && realtimeMessagesData.list)
+      delayedMessagesData?.list || realtimeMessagesData?.list || {}
     ).sort(
       (a, b) =>
         // NOTE: Default to current time in case there's no `createdAt` yet

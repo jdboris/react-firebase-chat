@@ -131,30 +131,34 @@ export async function sendMessage(user, data, messages) {
     //   }),
     // });
 
-    updateDoc(doc(db, `aggregateMessages/last25`), {
-      // CREATE
-      [`list.${id}`]: { ...contents, id },
-      lastCreated: { ...contents, id },
-      // DELETE
-      ...(messages.length > 25 + BUFFER && {
-        ...messages
-          // Get the messages beyond the 25-message limit...
-          .slice(-(messages.length - (25 + BUFFER)))
-          // ...change them to "delete" sentinels.
-          .reduce(
-            (list, message) => ({
-              ...list,
-              [`list.${message.id}`]: deleteField(),
-            }),
-            {}
-          ),
-        lastDeleted: Object.fromEntries(
-          messages
+    setDoc(
+      doc(db, `aggregateMessages/last25`),
+      {
+        // CREATE
+        [`list.${id}`]: { ...contents, id },
+        lastCreated: { ...contents, id },
+        // DELETE
+        ...(messages.length > 25 + BUFFER && {
+          ...messages
+            // Get the messages beyond the 25-message limit...
             .slice(-(messages.length - (25 + BUFFER)))
-            .map((message) => [message.id, message])
-        ),
-      }),
-    });
+            // ...change them to "delete" sentinels.
+            .reduce(
+              (list, message) => ({
+                ...list,
+                [`list.${message.id}`]: deleteField(),
+              }),
+              {}
+            ),
+          lastDeleted: Object.fromEntries(
+            messages
+              .slice(-(messages.length - (25 + BUFFER)))
+              .map((message) => [message.id, message])
+          ),
+        }),
+      },
+      { merge: true, mergeFields: ["list"] }
+    );
 
     // console.log(contents);
 

@@ -1,5 +1,5 @@
 import { Close as CloseIcon } from "@mui/icons-material";
-import { collection, getFirestore, where } from "firebase/firestore";
+import { collection, getFirestore, query, where } from "firebase/firestore";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { default as React, useState } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
@@ -15,14 +15,14 @@ export function ModeratorsDialog(props) {
   const addModerator = httpsCallable(getFunctions(), "addModerator");
   const removeModerator = httpsCallable(getFunctions(), "removeModerator");
 
-  let query = props.open
-    ? query(
-        collection(getFirestore(), "users"),
-        where("isModerator", "==", true)
-      ).withConverter(idConverter)
-    : null;
-
-  const [mods] = useCollectionData(query);
+  const [mods] = useCollectionData(
+    props.open
+      ? query(
+          collection(getFirestore(), "users"),
+          where("isModerator", "==", true)
+        ).withConverter(idConverter)
+      : null
+  );
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;
   const start = (page - 1) * itemsPerPage;
