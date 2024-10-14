@@ -14,7 +14,7 @@
     }
   },
   "scripts": {
-    "emulators": "firebase emulators:start --import=./exported-dev-data --export-on-exit=./exported-dev-data",
+    "emulators": "cd firebase && firebase emulators:start --import=./exported-dev-data --export-on-exit=./exported-dev-data",
     "dev": "vite",
     "build": "npx vite build",
     "prepublishOnly": "npm run build",
