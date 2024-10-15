@@ -14,6 +14,7 @@ import { timeout } from "../utils/utils";
 import { UserSelect } from "./user-select/user-select";
 import userSelectCss from "./user-select/user-select.module.css";
 
+// eslint-disable-next-line
 export const MessageInputForm = React.forwardRef(
   (
     {

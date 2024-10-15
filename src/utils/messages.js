@@ -106,59 +106,65 @@ export async function sendMessage(user, data, messages) {
     const id = uuid();
     const BUFFER = 10;
 
-    // console.log({
-    //   // CREATE
-    //   [`list.${id}`]: { ...contents, id },
-    //   lastCreated: { ...contents, id },
-    //   // DELETE
-    //   ...(messages.length > 25 + BUFFER && {
-    //     ...messages
-    //       // Get the messages beyond the 25-message limit...
-    //       .slice(-(messages.length - (25 + BUFFER)))
-    //       // ...change them to "delete" sentinels.
-    //       .reduce(
-    //         (list, message) => ({
-    //           ...list,
-    //           [`list.${message.id}`]: deleteField(),
-    //         }),
-    //         {}
-    //       ),
-    //     lastDeleted: Object.fromEntries(
-    //       messages
+    // setDoc(
+    //   doc(db, `aggregateMessages/last25`),
+    //   {
+    //     // CREATE
+    //     [`list.${id}`]: { ...contents, id },
+    //     lastCreated: { ...contents, id },
+    //     // DELETE
+    //     ...(messages.length > 25 + BUFFER && {
+    //       ...messages
+    //         // Get the messages beyond the 25-message limit...
     //         .slice(-(messages.length - (25 + BUFFER)))
-    //         .map((message) => [message.id, message])
-    //     ),
-    //   }),
-    // });
+    //         // ...change them to "delete" sentinels.
+    //         .reduce(
+    //           (list, message) => ({
+    //             ...list,
+    //             [`list.${message.id}`]: deleteField(),
+    //           }),
+    //           {}
+    //         ),
+    //       lastDeleted: Object.fromEntries(
+    //         messages
+    //           .slice(-(messages.length - (25 + BUFFER)))
+    //           .map((message) => [message.id, message])
+    //       ),
+    //     }),
+    //   },
+    //   { merge: true, mergeFields: ["list"] }
+    // );
 
-    setDoc(
-      doc(db, `aggregateMessages/last25`),
-      {
-        // CREATE
-        [`list.${id}`]: { ...contents, id },
-        lastCreated: { ...contents, id },
-        // DELETE
-        ...(messages.length > 25 + BUFFER && {
-          ...messages
-            // Get the messages beyond the 25-message limit...
+    const docRef = doc(db, `aggregateMessages/last25`);
+    const docSnapshot = await getDoc(docRef);
+
+    const docData = {
+      // Create or update the message in the list
+      [`list.${id}`]: { ...contents, id },
+      lastCreated: { ...contents, id },
+      ...(messages.length > 25 + BUFFER && {
+        ...messages.slice(-(messages.length - (25 + BUFFER))).reduce(
+          (list, message) => ({
+            ...list,
+            [`list.${message.id}`]: deleteField(),
+          }),
+          {}
+        ),
+        lastDeleted: Object.fromEntries(
+          messages
             .slice(-(messages.length - (25 + BUFFER)))
-            // ...change them to "delete" sentinels.
-            .reduce(
-              (list, message) => ({
-                ...list,
-                [`list.${message.id}`]: deleteField(),
-              }),
-              {}
-            ),
-          lastDeleted: Object.fromEntries(
-            messages
-              .slice(-(messages.length - (25 + BUFFER)))
-              .map((message) => [message.id, message])
-          ),
-        }),
-      },
-      { merge: true, mergeFields: ["list"] }
-    );
+            .map((message) => [message.id, message])
+        ),
+      }),
+    };
+
+    if (docSnapshot.exists()) {
+      // If document exists, use updateDoc
+      await updateDoc(docRef, docData);
+    } else {
+      // If document doesn't exist, use setDoc to create it
+      await setDoc(docRef, docData);
+    }
 
     // console.log(contents);
 
