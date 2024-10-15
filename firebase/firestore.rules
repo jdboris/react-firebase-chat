@@ -51,24 +51,25 @@ service cloud.firestore {
     }
 
     function canCreateMessage(data) {
-      let user = currentUser();
+      // let user = currentUser();
 
-      let isBanned = user != null && user.isBanned;
-      let isThisUser = data.uid == request.auth.uid
-                      && data.username == user.username 
-                      && data.lowercaseUsername == user.lowercaseUsername;
-      let hasValidKeys = data.isDeleted == false;
-      // Within one minute of the request.
-      let isValidTime = data.createdAt < request.time + duration.value(1, 'm')
-                        && data.createdAt > request.time - duration.value(1, 'm');
+      // let isBanned = user != null && user.isBanned;
+      // let isThisUser = data.uid == request.auth.uid
+      //                 && data.username == user.username 
+      //                 && data.lowercaseUsername == user.lowercaseUsername;
+      // let hasValidKeys = data.isDeleted == false;
+      // // Within one minute of the request.
+      // let isValidTime = data.createdAt < request.time + duration.value(1, 'm')
+      //                   && data.createdAt > request.time - duration.value(1, 'm');
       
-      let isValidLength = data.text.size() < 3000;
+      // let isValidLength = data.text.size() < 3000;
 
-      let containsFilteredWords = exists(/databases/$(database)/documents/settings/filteredWords) ?
-                                  data.text.matches(get(/databases/$(database)/documents/settings/filteredWords).data.regex) :
-                                  false;
+      // let containsFilteredWords = exists(/databases/$(database)/documents/settings/filteredWords) ?
+      //                             data.text.matches(get(/databases/$(database)/documents/settings/filteredWords).data.regex) :
+      //                             false;
 
-      return isLoggedIn() && !isBanned && isThisUser && hasValidKeys && isValidTime && !containsFilteredWords && isValidLength;
+      // return isLoggedIn() && !isBanned && isThisUser && hasValidKeys && isValidTime && !containsFilteredWords && isValidLength;
+      return true;
     }
 
     match /messages/{docId} {
