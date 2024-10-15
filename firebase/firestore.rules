@@ -51,25 +51,24 @@ service cloud.firestore {
     }
 
     function canCreateMessage(data) {
-      // let user = currentUser();
+      let user = currentUser();
 
-      // let isBanned = user != null && user.isBanned;
-      // let isThisUser = data.uid == request.auth.uid
-      //                 && data.username == user.username 
-      //                 && data.lowercaseUsername == user.lowercaseUsername;
-      // let hasValidKeys = data.isDeleted == false;
-      // // Within one minute of the request.
-      // let isValidTime = data.createdAt < request.time + duration.value(1, 'm')
-      //                   && data.createdAt > request.time - duration.value(1, 'm');
+      let isBanned = user != null && user.isBanned;
+      let isThisUser = data.uid == request.auth.uid
+                      && data.username == user.username 
+                      && data.lowercaseUsername == user.lowercaseUsername;
+      let hasValidKeys = data.isDeleted == false;
+      // Within one minute of the request.
+      let isValidTime = data.createdAt < request.time + duration.value(1, 'm')
+                        && data.createdAt > request.time - duration.value(1, 'm');
       
-      // let isValidLength = data.text.size() < 3000;
+      let isValidLength = data.text.size() < 3000;
 
-      // let containsFilteredWords = exists(/databases/$(database)/documents/settings/filteredWords) ?
-      //                             data.text.matches(get(/databases/$(database)/documents/settings/filteredWords).data.regex) :
-      //                             false;
+      let containsFilteredWords = exists(/databases/$(database)/documents/settings/filteredWords) ?
+                                  data.text.matches(get(/databases/$(database)/documents/settings/filteredWords).data.regex) :
+                                  false;
 
-      // return isLoggedIn() && !isBanned && isThisUser && hasValidKeys && isValidTime && !containsFilteredWords && isValidLength;
-      return true;
+      return isLoggedIn() && !isBanned && isThisUser && hasValidKeys && isValidTime && !containsFilteredWords && isValidLength;
     }
 
     match /messages/{docId} {
@@ -83,45 +82,43 @@ service cloud.firestore {
 
     function canUpdateAggregateMessages(){
       
-      // let data = request.resource.data;
-      // let listAfter = (data.list);
-      // let newMessage = data.get("lastCreated", null);
-      // let deletedMessages = data.get("lastDeleted", null);
-      // let diff = (listAfter.diff(resource.data.list));
+      let data = request.resource.data;
+      let listAfter = (data.list);
+      let newMessage = data.get("lastCreated", null);
+      let deletedMessages = data.get("lastDeleted", null);
+      let diff = (listAfter.diff(resource.data.list));
 
-      // let isCreate = 
-      //   // THIS IS A CREATE IF...
-      //   // ...1 new message in list...
-      //   ((diff.addedKeys().size() == 1 )
-      //   // ...AND 1 new message (new "lastCreated")...
-      //   && (newMessage != null)
-      //   // ...AND promised new message is only new one...
-      //   && (diff.addedKeys().hasOnly([newMessage.id])));
+      let isCreate = 
+        // THIS IS A CREATE IF...
+        // ...1 new message in list...
+        ((diff.addedKeys().size() == 1 )
+        // ...AND 1 new message (new "lastCreated")...
+        && (newMessage != null)
+        // ...AND promised new message is only new one...
+        && (diff.addedKeys().hasOnly([newMessage.id])));
 
-      // let isDelete = 
-      //   // THIS IS A DELETE IF...
-      //   // ...any messages removed...
-      //   ((diff.removedKeys().size() > 0)
-      //   // ...AND there are deleted messages (new "lastDeleted")...
-      //   && (deletedMessages != null)
-      //   // ...AND promised deleted messages are the only ones deleted...
-      //   && (diff.removedKeys().hasOnly(deletedMessages.keys())));
+      let isDelete = 
+        // THIS IS A DELETE IF...
+        // ...any messages removed...
+        ((diff.removedKeys().size() > 0)
+        // ...AND there are deleted messages (new "lastDeleted")...
+        && (deletedMessages != null)
+        // ...AND promised deleted messages are the only ones deleted...
+        && (diff.removedKeys().hasOnly(deletedMessages.keys())));
       
-      // let isInvalid = 
-      //   // THIS OPERATION IS INVALID IF...
-      //   // ...it is not a delete AND not a create...
-      //   (!isDelete && !isCreate) 
-      //   // ...OR it is a delete AND not a create (AND not a mod)...
-      //   || (isDelete && !isCreate && !(isModerator() || isAdmin())) 
-      //   // ...OR creating more than 1 message...
-      //   || (diff.addedKeys().size() > 1)
-      //   // ...OR deleting more than allowed...
-      //   || (isDelete && diff.unchangedKeys().size() < 25 && !(isModerator() || isAdmin()))
-      //   || (isCreate && !canCreateMessage(newMessage));
+      let isInvalid = 
+        // THIS OPERATION IS INVALID IF...
+        // ...it is not a delete AND not a create...
+        (!isDelete && !isCreate) 
+        // ...OR it is a delete AND not a create (AND not a mod)...
+        || (isDelete && !isCreate && !(isModerator() || isAdmin())) 
+        // ...OR creating more than 1 message...
+        || (diff.addedKeys().size() > 1)
+        // ...OR deleting more than allowed...
+        || (isDelete && diff.unchangedKeys().size() < 25 && !(isModerator() || isAdmin()))
+        || (isCreate && !canCreateMessage(newMessage));
 
-      // return (!isInvalid);
-
-      return true;
+      return (!isInvalid);
     }
   
     match /aggregateMessages/{docId} {
