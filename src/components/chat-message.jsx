@@ -279,6 +279,10 @@ export function ChatMessage(props) {
                 components={{
                   // NOTE: Must overwrite the built-in renderer to ensure the text of the link is the URL
                   a: (props) => {
+                    if (!props.href) {
+                      return <>{props.children}</>;
+                    }
+
                     if (
                       props.href.trim() == "http://www" ||
                       props.href.trim() == "https://www"
@@ -327,12 +331,24 @@ export function ChatMessage(props) {
                   "blockquote",
                 ]}
                 transformLinkUri={(href, children, title) => {
+                  try {
+                    new URL(href);
+                  } catch (error) {
+                    return false;
+                  }
+
                   const url = new URL(href);
                   url.protocol =
                     url.protocol === "http:" ? "https:" : url.protocol;
                   return uriTransformer(url.href);
                 }}
                 transformImageUri={(href, children, title) => {
+                  try {
+                    new URL(href);
+                  } catch (error) {
+                    return false;
+                  }
+
                   const url = new URL(href);
                   url.protocol =
                     url.protocol === "http:" ? "https:" : url.protocol;

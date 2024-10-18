@@ -56,6 +56,12 @@ export function setQueryParam(key, value) {
 }
 
 export function isImageUrl(urlString) {
+  try {
+    new URL(urlString);
+  } catch (error) {
+    return false;
+  }
+
   const url = new URL(urlString);
   return SUPPORTED_IMAGE_EXTENSIONS.includes(
     url.pathname.split(".").pop().toLocaleLowerCase()
