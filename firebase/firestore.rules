@@ -83,10 +83,10 @@ service cloud.firestore {
     function canUpdateAggregateMessages(){
       
       let data = request.resource.data;
-      let listAfter = (data.list);
+      let listAfter = "list" in data ? data.list : {};
       let newMessage = data.get("lastCreated", null);
       let deletedMessages = data.get("lastDeleted", null);
-      let diff = (listAfter.diff(resource.data.list));
+      let diff = "list" in resource.data ? listAfter.diff(resource.data.list) : listAfter.diff({});
 
       let isCreate = 
         // THIS IS A CREATE IF...

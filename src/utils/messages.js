@@ -135,12 +135,8 @@ export async function sendMessage(user, data, messages) {
     //   { merge: true, mergeFields: ["list"] }
     // );
 
-    const docRef = doc(db, `aggregateMessages/last25`);
-    const docSnapshot = await getDoc(docRef);
-
     const docData = {
-      // Create or update the message in the list
-      [`list.${id}`]: { ...contents, id },
+      list: { [id]: { ...contents, id } },
       lastCreated: { ...contents, id },
       ...(messages.length > 25 + BUFFER && {
         ...messages.slice(-(messages.length - (25 + BUFFER))).reduce(
@@ -158,15 +154,10 @@ export async function sendMessage(user, data, messages) {
       }),
     };
 
-    if (docSnapshot.exists()) {
-      // If document exists, use updateDoc
-      await updateDoc(docRef, docData);
-    } else {
-      // If document doesn't exist, use setDoc to create it
-      await setDoc(docRef, docData);
-    }
-
-    // console.log(contents);
+    await setDoc(doc(db, `aggregateMessages/last25`), docData, {
+      merge: true,
+      mergeFields: "list",
+    });
 
     setDoc(doc(db, `messages/${id}`), contents);
   }
