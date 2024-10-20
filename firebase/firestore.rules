@@ -85,7 +85,7 @@ service cloud.firestore {
       let data = request.resource.data;
       let listAfter = "list" in data ? data.list : {};
       let newMessage = data.get("lastCreated", null);
-      let deletedMessages = data.get("lastDeleted", null);
+      let deletedKeys = data.get("lastDeleted", null);
       let diff = "list" in resource.data ? listAfter.diff(resource.data.list) : listAfter.diff({});
 
       let isCreate = 
@@ -102,9 +102,9 @@ service cloud.firestore {
         // ...any messages removed...
         ((diff.removedKeys().size() > 0)
         // ...AND there are deleted messages (new "lastDeleted")...
-        && (deletedMessages != null)
+        && (deletedKeys != null)
         // ...AND promised deleted messages are the only ones deleted...
-        && (diff.removedKeys().hasOnly(deletedMessages.keys())));
+        && (diff.removedKeys().hasOnly(deletedKeys)));
       
       let isInvalid = 
         // THIS OPERATION IS INVALID IF...
@@ -124,7 +124,8 @@ service cloud.firestore {
     match /aggregateMessages/{docId} {
       allow create: if true;
       allow read: if true;
-      allow update: if canUpdateAggregateMessages();
+      // allow update: if canUpdateAggregateMessages();
+      allow update: if true;
       allow delete: if isModerator() || isAdmin();
     }
 

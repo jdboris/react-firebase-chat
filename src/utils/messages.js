@@ -136,27 +136,28 @@ export async function sendMessage(user, data, messages) {
     // );
 
     const docData = {
-      list: { [id]: { ...contents, id } },
-      lastCreated: { ...contents, id },
-      ...(messages.length > 25 + BUFFER && {
-        ...messages.slice(-(messages.length - (25 + BUFFER))).reduce(
+      list: {
+        [id]: { ...contents, id },
+
+        ...messages.slice(25 + BUFFER).reduce(
           (list, message) => ({
             ...list,
-            [`list.${message.id}`]: deleteField(),
+            [message.id]: deleteField(),
           }),
           {}
         ),
-        lastDeleted: Object.fromEntries(
-          messages
-            .slice(-(messages.length - (25 + BUFFER)))
-            .map((message) => [message.id, message])
-        ),
+      },
+
+      lastCreated: { ...contents, id },
+
+      ...(messages.length > 25 + BUFFER && {
+        lastDeleted: messages.slice(25 + BUFFER).map((message) => message.id),
       }),
     };
 
     await setDoc(doc(db, `aggregateMessages/last25`), docData, {
       merge: true,
-      mergeFields: "list",
+      mergeFields: ["list", "lastDeleted"],
     });
 
     setDoc(doc(db, `messages/${id}`), contents);
@@ -190,7 +191,7 @@ async function filterWords(text) {
 export async function deleteMessage(message) {
   updateDoc(doc(getFirestore(), "aggregateMessages/last25"), {
     [`list.${message.id}`]: deleteField(),
-    lastDeleted: { [message.id]: message },
+    lastDeleted: [message.id],
   });
 
   updateDoc(doc(getFirestore(), `messages/${message.id}`), {
