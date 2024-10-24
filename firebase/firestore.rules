@@ -74,10 +74,11 @@ service cloud.firestore {
     match /messages/{docId} {
       allow create: if canCreateMessage(request.resource.data);
       allow read: if resource.data.isDeleted == false || (isLoggedIn() && (isModerator() || isAdmin()));
-      allow update: if (isModerator() || isAdmin()) && 
-                      // If the request only has the isDeleted field
-                      // https://firebase.google.com/docs/firestore/security/rules-fields#allowing_only_certain_fields_to_be_changed
-                      affectedKeys().hasOnly(["isDeleted"]);
+      allow update: if (isModerator() || isAdmin())
+                    // If the request only has the isDeleted field
+                    // https://firebase.google.com/docs/firestore/security/rules-fields#allowing_only_certain_fields_to_be_changed
+                    && (affectedKeys().size() == 0 || affectedKeys().hasOnly(["isDeleted"]));
+                      
     }
 
     function canUpdateAggregateMessages(){
@@ -124,8 +125,7 @@ service cloud.firestore {
     match /aggregateMessages/{docId} {
       allow create: if true;
       allow read: if true;
-      // allow update: if canUpdateAggregateMessages();
-      allow update: if true;
+      allow update: if canUpdateAggregateMessages();
       allow delete: if isModerator() || isAdmin();
     }
 

@@ -160,7 +160,7 @@ export async function sendMessage(user, data, messages) {
       mergeFields: ["list", "lastDeleted"],
     });
 
-    setDoc(doc(db, `messages/${id}`), contents);
+    await setDoc(doc(db, `messages/${id}`), contents);
   }
 
   if (user.email) {
