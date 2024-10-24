@@ -132,11 +132,12 @@ blockquote {
   color: white;
   padding: 0.2em 0.5em;
   /* NOTE: Compensate for weird inaccurate padding in Chrome */
-  padding-bottom: 0.3em;
+  padding-top: 0.3em;
   border-radius: 1em;
   font-weight: bold;
   cursor: default;
   margin: 0.3em;
+  line-height: 1;
 }
 
 .loading-placeholder,
@@ -834,11 +835,16 @@ li {
   display: flex;
   align-items: flex-start;
   background: white;
-  border-top: 1px solid;
   font-size: 0.9rem;
   padding: 0 5px;
+  gap: 5px;
   background-size: 30% auto;
   z-index: 0;
+}
+
+.message-body {
+  display: flex;
+  flex-direction: column;
 }
 
 .messages-section.stick-to-bottom .message {
@@ -878,9 +884,6 @@ li {
 }
 
 .message-contents {
-  margin-left: 5px;
-  padding-top: 15px;
-  padding-bottom: 5px;
   width: 100%;
   max-height: 300px;
   overflow: hidden;
@@ -931,7 +934,6 @@ li {
 
 .message > div {
   position: relative;
-  margin-left: 5px;
   display: flex;
   width: 100%;
   height: 100%;
@@ -985,12 +987,11 @@ li {
 }
 
 .message-details {
-  position: absolute;
   display: flex;
-  top: 0px;
-  right: 0px;
+  justify-content: space-between;
+  align-items: center;
   font-size: 0.75rem;
-  padding: 5px;
+  min-height: 15px;
 }
 .message-details svg {
   width: 75%;
@@ -1001,6 +1002,8 @@ li {
   /* width: 100%; */
   opacity: 0.7;
   font-size: 0.7em;
+  margin-right: auto;
+  align-self: flex-end;
 }
 
 .message-details > * {

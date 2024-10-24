@@ -252,7 +252,81 @@ export function ChatMessage(props) {
       {isNewUser && currentUser && currentUser.isModerator && (
         <small className={styles["badge"]}>New</small>
       )}
-      <div className={expanded ? styles["expanded"] : ""}>
+      <div
+        className={`${styles["message-body"]} ${
+          expanded ? styles["expanded"] : ""
+        }`}
+      >
+        <span className={styles["message-details"]}>
+          <span className={styles["message-timestamp"]}>
+            {createdAt &&
+              createdAtDate.toLocaleString(
+                "en-US",
+                !(
+                  createdAtDate.getMonth() == date.getMonth() &&
+                  createdAtDate.getDate() == date.getDate() &&
+                  createdAtDate.getYear() == date.getYear()
+                )
+                  ? {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                      hour12: true,
+                    }
+                  : {
+                      timeStyle: "short",
+                      hour12: true,
+                    }
+              )}
+          </span>
+          {currentUser && currentUser.isModerator && (
+            <button
+              onClick={() => {
+                setConfirmModal({
+                  message: (
+                    <>
+                      Ban user {username}? <br />
+                      <small>
+                        This will also ban all accounts that have been accessed
+                        by any IP addresses associated with {username}.
+                      </small>
+                    </>
+                  ),
+                  Ban: () => {
+                    timeout(5000, async () => {
+                      const result = await banUser(username);
+                      props.setAlerts([result.data.message]);
+                    }).catch((error) => {
+                      props.setErrors([new CustomError(error.message, error)]);
+                    });
+                    setConfirmModal(null);
+                  },
+                  Cancel: () => {
+                    setConfirmModal(null);
+                  },
+                });
+              }}
+              // NOTE: Must stop propagation so clicking a link won't @ the poster
+              onMouseUp={(e) => {
+                e.stopPropagation();
+              }}
+            >
+              <BlockIcon />
+            </button>
+          )}
+
+          {currentUser && currentUser.isModerator && (
+            <button
+              onClick={() => deleteMessage(props.message)}
+              // NOTE: Must stop propagation so clicking a link won't @ the poster
+              onMouseUp={(e) => {
+                e.stopPropagation();
+              }}
+            >
+              X
+            </button>
+          )}
+        </span>
+
         <span
           ref={messageContents}
           className={styles["message-contents"]}
@@ -385,75 +459,6 @@ export function ChatMessage(props) {
             </div>
           ))}
       </div>
-      <span className={styles["message-details"]}>
-        <span className={styles["message-timestamp"]}>
-          {createdAt &&
-            createdAtDate.toLocaleString(
-              "en-US",
-              !(
-                createdAtDate.getMonth() == date.getMonth() &&
-                createdAtDate.getDate() == date.getDate() &&
-                createdAtDate.getYear() == date.getYear()
-              )
-                ? {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                    hour12: true,
-                  }
-                : {
-                    timeStyle: "short",
-                    hour12: true,
-                  }
-            )}
-        </span>
-        {currentUser && currentUser.isModerator && (
-          <button
-            onClick={() => {
-              setConfirmModal({
-                message: (
-                  <>
-                    Ban user {username}? <br />
-                    <small>
-                      This will also ban all accounts that have been accessed by
-                      any IP addresses associated with {username}.
-                    </small>
-                  </>
-                ),
-                Ban: () => {
-                  timeout(5000, async () => {
-                    const result = await banUser(username);
-                    props.setAlerts([result.data.message]);
-                  }).catch((error) => {
-                    props.setErrors([new CustomError(error.message, error)]);
-                  });
-                  setConfirmModal(null);
-                },
-                Cancel: () => {
-                  setConfirmModal(null);
-                },
-              });
-            }}
-            // NOTE: Must stop propagation so clicking a link won't @ the poster
-            onMouseUp={(e) => {
-              e.stopPropagation();
-            }}
-          >
-            <BlockIcon />
-          </button>
-        )}
-
-        {currentUser && currentUser.isModerator && (
-          <button
-            onClick={() => deleteMessage(props.message)}
-            // NOTE: Must stop propagation so clicking a link won't @ the poster
-            onMouseUp={(e) => {
-              e.stopPropagation();
-            }}
-          >
-            X
-          </button>
-        )}
-      </span>
     </div>
   );
 }
