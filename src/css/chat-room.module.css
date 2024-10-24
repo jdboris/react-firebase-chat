@@ -836,7 +836,7 @@ li {
   align-items: flex-start;
   background: white;
   font-size: 0.9rem;
-  padding: 0 5px;
+  padding: 5px;
   gap: 5px;
   background-size: 30% auto;
   z-index: 0;
