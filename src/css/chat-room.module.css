@@ -1005,6 +1005,10 @@ li {
   font-size: 0.7em;
   margin-right: auto;
   align-self: flex-end;
+
+  mix-blend-mode: difference;
+  color: white;
+  background: black;
 }
 
 .message-details > * {
