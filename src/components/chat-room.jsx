@@ -50,6 +50,7 @@ import { EmojiSelector } from "./emoji-selector";
 import { ErrorDialog } from "./error-dialog";
 import { FileUploadOverlay } from "./file-upload-overlay";
 import { FilteredWordsDialog } from "./filtered-words-dialog";
+import { GifSelector } from "./gif-selector";
 import { LogInForm } from "./log-in-form";
 import { MenuWithButton } from "./menu-with-button";
 import { MessageInputForm } from "./message-input-form";
@@ -99,6 +100,7 @@ export function ChatRoom(props) {
 
   const [menuOpenKey, setMenuOpenKey] = useState(0);
   const [isEmojisOpen, setEmojisOpen] = useState(false);
+  const [isGifsOpen, setGifsOpen] = useState(false);
   const [isFormatOpen, setFormatOpen] = useState(false);
   const [isStyleEditorOpen, setStyleEditorOpen] = useState(false);
   const [isProfileOpen, setProfileOpen] = useState(false);
@@ -464,6 +466,7 @@ export function ChatRoom(props) {
 
       if (user && username) {
         const idTokenResult = await getIdTokenResult(getAuth().currentUser);
+        // NOTE: stripeRole custom claim is set by the "Run Payments with Stripe" extension configured in Firebase console
         setPremium(
           idTokenResult.claims.stripeRole === "premium" || isGiftedPremium(user)
         );
@@ -612,6 +615,14 @@ export function ChatRoom(props) {
         }}
         isEmojisOpen={isEmojisOpen}
         setEmojisOpen={setEmojisOpen}
+        isGifsOpen={isGifsOpen && premium}
+        onOpenGifs={() => {
+          if (!premium) {
+            setPremiumPromptOpen(true);
+            return;
+          }
+          setGifsOpen(!isGifsOpen);
+        }}
         isFormatOpen={isFormatOpen}
         setFormatOpen={setFormatOpen}
         userId={userId}
@@ -827,6 +838,22 @@ export function ChatRoom(props) {
         </div>
       </div>
 
+      {user && premium && isGifsOpen && (
+        <GifSelector
+          requestClose={() => {
+            setGifsOpen(false);
+            messageInput.current.focus();
+          }}
+          onSelect={(gif) => {
+            const input = messageInput.current;
+            input.focus();
+            insertIntoInput(" " + gif.gifUrl + " ", input);
+            setMessageValue(input.value);
+            setGifsOpen(false);
+          }}
+        />
+      )}
+
       {user && (
         <ProfileDialog
           open={isProfileOpen}
@@ -858,7 +885,11 @@ export function ChatRoom(props) {
               className={styles["link"]}
               onClick={() => {
                 setPremiumPromptOpen(false);
-                setPremiumOpen(true);
+                if (user) {
+                  setPremiumOpen(true);
+                } else {
+                  setLoginOpen(true);
+                }
               }}
             >
               Upgrade now!

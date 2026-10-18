@@ -1,5 +1,6 @@
 import {
   CameraAlt as CameraIcon,
+  GifBox as GifIcon,
   SentimentVerySatisfied as SmileIcon,
   TextFormat as TextFormatIcon,
 } from "@mui/icons-material";
@@ -302,6 +303,18 @@ export const MessageInputForm = React.forwardRef(
             />
           )}
         </div>
+        <button
+          type="button"
+          className={styles["gif-button"]}
+          title={props.premium ? "Search GIFs" : "Search GIFs (Premium)"}
+          aria-label="Search GIFs"
+          aria-haspopup="dialog"
+          aria-expanded={props.isGifsOpen}
+          onFocus={(event) => event.stopPropagation()}
+          onClick={props.onOpenGifs}
+        >
+          <GifIcon />
+        </button>
         <SmileIcon
           className={
             styles["pointer"] +

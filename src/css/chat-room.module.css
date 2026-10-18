@@ -654,6 +654,16 @@ svg.gavel-icon {
   background-color: rgb(56, 56, 143);
 }
 
+.message-form button.gif-button {
+  width: auto;
+  flex-shrink: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: black;
+  color: inherit;
+}
+
 .message-form svg {
   /* NOTE: Placeholder */
   border: 1px solid black;

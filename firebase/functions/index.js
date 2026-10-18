@@ -1016,6 +1016,111 @@ exports.validateImageEmbedUrl = functions.https.onCall(async (url, context) => {
   return true;
 });
 
+exports.searchGifs = functions
+  .runWith({ secrets: ["GIFS_API_KEY"] })
+  .https.onCall(async (data, context) => {
+    if (!context.auth) {
+      throw new HttpsError("unauthenticated", "Must be logged in.");
+    }
+    const user = await getUser(context.auth.uid);
+    if (!user || user.isBanned) {
+      throw new HttpsError(
+        "permission-denied",
+        "GIF search is not available for this account."
+      );
+    }
+    if (context.auth.token.stripeRole !== "premium" && !isGiftedPremium(user)) {
+      throw new HttpsError("permission-denied", "Upgrade to Premium to search GIFs.");
+    }
+
+    const { query = "", offset = 0, rankingVersion } = data || {};
+    if (
+      typeof query !== "string" || query.length > 200 ||
+      !Number.isInteger(offset) || offset < 0 || offset > 20000 ||
+      (rankingVersion != null &&
+        (typeof rankingVersion !== "string" || rankingVersion.length > 100))
+    ) {
+      throw new HttpsError("invalid-argument", "Invalid GIF search.");
+    }
+    if (!process.env.GIFS_API_KEY) {
+      throw new HttpsError(
+        "failed-precondition",
+        "GIF search has not been configured yet."
+      );
+    }
+
+    const url = new URL("https://gifs.so/api/rest/gifs");
+    url.searchParams.set("query", query.trim());
+    url.searchParams.set("limit", "24");
+    url.searchParams.set("offset", String(offset));
+    if (rankingVersion) url.searchParams.set("rankingVersion", rankingVersion);
+
+    try {
+      const response = await fetch(url, {
+        headers: { "x-api-key": process.env.GIFS_API_KEY },
+        signal: AbortSignal.timeout(10000),
+      });
+      if (response.status === 429) {
+        throw new HttpsError(
+          "resource-exhausted",
+          "GIF search limit reached. Please wait a minute before trying again."
+        );
+      }
+      if (!response.ok) {
+        throw new HttpsError(
+          "unavailable",
+          "GIF search is temporarily unavailable. Please try again later."
+        );
+      }
+
+      const result = await response.json();
+      if (
+        !Array.isArray(result.items) || !Array.isArray(result.sponsors) ||
+        (result.nextOffset !== null &&
+          (!Number.isInteger(result.nextOffset) ||
+            result.nextOffset <= offset || result.nextOffset > 20000))
+      ) {
+        throw new HttpsError("unavailable", "GIF search returned an invalid response.");
+      }
+      const isHttpsUrl = (value) => {
+        try {
+          return typeof value === "string" && new URL(value).protocol === "https:";
+        } catch {
+          return false;
+        }
+      };
+      return {
+        items: result.items
+          .filter((item) =>
+            typeof item.id === "string" && typeof item.title === "string" &&
+            isHttpsUrl(item.gifUrl) && isHttpsUrl(item.thumbnailUrl)
+          )
+          .map(({ id, title, description, gifUrl, thumbnailUrl }) => ({
+            id,
+            title,
+            description: typeof description === "string" ? description : title,
+            gifUrl,
+            thumbnailUrl,
+          })),
+        sponsors: result.sponsors
+          .filter((sponsor) =>
+            sponsor.sponsored === true && typeof sponsor.id === "string" &&
+            typeof sponsor.name === "string" && typeof sponsor.description === "string" &&
+            isHttpsUrl(sponsor.url)
+          )
+          .map(({ id, name, description, url }) => ({ id, name, description, url })),
+        nextOffset: result.nextOffset,
+        rankingVersion: typeof result.rankingVersion === "string" ? result.rankingVersion : null,
+      };
+    } catch (error) {
+      if (error instanceof HttpsError) throw error;
+      throw new HttpsError(
+        "unavailable",
+        "GIF search could not be reached. Please try again later."
+      );
+    }
+  });
+
 exports.uploadFile = functions.https.onCall(async (data, context) => {
   const user = await getUser(context.auth.uid);
 

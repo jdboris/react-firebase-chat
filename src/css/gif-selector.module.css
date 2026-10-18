@@ -1,0 +1,92 @@
+.picker {
+  width: 370px;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.picker input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 8px;
+  font: inherit;
+}
+
+.results {
+  overflow-y: auto;
+  height: min(350px, 45vh);
+  min-height: 0;
+  scrollbar-gutter: stable;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.grid button.gif {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: #eee;
+  cursor: pointer;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.gif img {
+  display: block;
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+}
+
+.skeleton {
+  height: 110px;
+  border-radius: 4px;
+  background: #eee;
+  animation: skeleton-pulse 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes skeleton-pulse {
+  to {
+    background: #ddd;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
+
+.loadingStatus {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.gif:focus-visible,
+.gif:hover {
+  outline: 2px solid #0084eb;
+  outline-offset: -2px;
+}
+
+.sponsor {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0;
+  padding: 8px;
+  border: 1px solid #ccc;
+}
+
+.picker footer {
+  padding-top: 8px;
+  font-size: 0.9em;
+}
