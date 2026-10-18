@@ -13,7 +13,6 @@ import { CustomError } from "../utils/errors";
 import { deleteMessage } from "../utils/messages";
 import {
   flashInTitle,
-  getImageSize,
   isImageUrl,
   stripHtml,
   timeout,
@@ -21,104 +20,82 @@ import {
 import { banUser } from "./chat-room-app";
 
 function Link({ href, isEmbedDisabled }) {
-  const [children, setChildren] = useState(href);
-  const [providerName, setProviderName] = useState("");
+  const [embed, setEmbed] = useState(null);
 
   useEffect(() => {
-    (async (url) => {
-      // 10 megabytes
-      const sizeLimit = 10 * 1000 * 1000;
+    let cancelled = false;
+    setEmbed(null);
 
-      if (
-        !isEmbedDisabled &&
-        isImageUrl(url) &&
-        (await getImageSize(url).catch(() => 0)) <= sizeLimit
-      ) {
-        setProviderName("image");
-        setChildren(
-          <a
-            href={url}
-            target="_blank"
-            rel="nofollow noreferrer noopener"
-            // NOTE: Must stop propagation so clicking a link won't @ the poster
-            onMouseUp={(e) => {
-              e.stopPropagation();
-            }}
-            style={{
-              padding: "0px",
-              display: "inline-flex",
-              verticalAlign: "bottom",
-            }}
-          >
-            <img src={url} alt="embedded" />
-          </a>
-        );
-
-        const validateImageEmbedUrl = httpsCallable(
-          getFunctions(),
-          "validateImageEmbedUrl"
-        );
-        try {
-          await validateImageEmbedUrl(url);
-        } catch (e) {
-          setChildren(
-            <a
-              href={url}
-              target="_blank"
-              rel="nofollow noreferrer noopener"
-              // NOTE: Must stop propagation so clicking a link won't @ the poster
-              onMouseUp={(e) => {
-                e.stopPropagation();
-              }}
-            >
-              {/* NOTE: MUST keep the <img> tag in the DOM and clear the 
-              src rather than deleting the tag, in order to stop the download. */}
-              <img
-                style={{ display: "none" }}
-                src={""}
-                alt="Embed failed."
-                loading="lazy"
-              />
-              {url}
-            </a>
+    (async () => {
+      try {
+        if (!isEmbedDisabled && isImageUrl(href)) {
+          const validateImageEmbedUrl = httpsCallable(
+            getFunctions(),
+            "validateImageEmbedUrl"
           );
+          // Validate before mounting the image so it cannot appear and then vanish.
+          await validateImageEmbedUrl(href);
+          if (!cancelled) {
+            setEmbed({ href, providerName: "image", isImage: true });
+          }
+        } else {
+          const getEmbed = httpsCallable(getFunctions(), "getEmbed");
+          const result = await getEmbed({ url: href });
+
+          if (!cancelled && result.data.html) {
+            setEmbed({
+              href,
+              providerName: result.data.providerName,
+              html: result.data.html,
+            });
+          }
         }
-      } else {
-        setChildren(
-          <a
-            href={url}
-            target="_blank"
-            rel="nofollow noreferrer noopener"
-            // NOTE: Must stop propagation so clicking a link won't @ the poster
-            onMouseUp={(e) => {
-              e.stopPropagation();
-            }}
-          >
-            {url}
-          </a>
-        );
-
-        const getEmbed = httpsCallable(getFunctions(), "getEmbed");
-        const result = await getEmbed({ url });
-
-        if (result.data.html) {
-          setProviderName(result.data.providerName);
-          setChildren(
-            <span dangerouslySetInnerHTML={{ __html: result.data.html }}></span>
-          );
+      } catch (error) {
+        if (!cancelled) {
+          console.warn("Unable to embed link", {
+            url: href,
+            code: error.code,
+            message: error.message,
+          });
         }
       }
-    })(href);
-  }, [href]);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [href, isEmbedDisabled]);
+
+  const currentEmbed =
+    embed?.href === href && (!embed.isImage || !isEmbedDisabled) ? embed : null;
 
   return (
     <span
       onMouseUp={(e) => {
         e.stopPropagation();
       }}
-      data-provider={providerName ? providerName : null}
+      data-provider={currentEmbed?.providerName || null}
     >
-      {children}
+      {currentEmbed?.html ? (
+        <span dangerouslySetInnerHTML={{ __html: currentEmbed.html }} />
+      ) : (
+        <a
+          href={href}
+          target="_blank"
+          rel="nofollow noreferrer noopener"
+          style={
+            currentEmbed?.isImage
+              ? {
+                  padding: "0px",
+                  display: "inline-flex",
+                  verticalAlign: "bottom",
+                }
+              : undefined
+          }
+        >
+          {currentEmbed?.isImage ? <img src={href} alt="embedded" /> : href}
+        </a>
+      )}
     </span>
   );
 }
@@ -373,7 +350,6 @@ export function ChatMessage(props) {
                     }
                     return (
                       <Link
-                        shouldComponentUpdate={false}
                         {...props}
                         isEmbedDisabled={isEmbedDisabled}
                       />
@@ -432,7 +408,7 @@ export function ChatMessage(props) {
                 {text}
               </ReactMarkdown>
             );
-          }, [text, isEmbedDisabled])}
+          }, [text, isEmbedDisabled, isNewUser])}
         </span>
 
         {messageContents.current &&
