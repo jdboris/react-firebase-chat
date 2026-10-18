@@ -1,5 +1,5 @@
 import { getFunctions, httpsCallable } from "firebase/functions";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import chatStyles from "../css/chat-room.module.css";
 import styles from "../css/gif-selector.module.css";
 
@@ -25,7 +25,7 @@ export function GifSelector({ onSelect, requestClose }) {
         const { data } = await search({ query, offset, rankingVersion });
         if (cancelled) return;
         setItems((previous) =>
-          offset === 0 ? data.items : [...previous, ...data.items]
+          offset === 0 ? data.items : [...previous, ...data.items],
         );
         setSponsors(data.sponsors);
         setNextOffset(data.nextOffset);
@@ -60,7 +60,11 @@ export function GifSelector({ onSelect, requestClose }) {
     >
       <header>
         GIFs
-        <button type="button" onClick={requestClose} aria-label="Close GIF picker">
+        <button
+          type="button"
+          onClick={requestClose}
+          aria-label="Close GIF picker"
+        >
           Close
         </button>
       </header>
@@ -93,9 +97,7 @@ export function GifSelector({ onSelect, requestClose }) {
               aria-label={`Select ${gif.title}`}
               onClick={() => onSelect(gif)}
               onMouseEnter={() => {
-                if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-                  setHoveredGifId(gif.id);
-                }
+                setHoveredGifId(gif.id);
               }}
               onMouseLeave={() => setHoveredGifId(null)}
             >
@@ -105,18 +107,21 @@ export function GifSelector({ onSelect, requestClose }) {
                 loading="lazy"
                 referrerPolicy="no-referrer"
                 onError={() => {
-                  setHoveredGifId((current) => current === gif.id ? null : current);
+                  setHoveredGifId((current) =>
+                    current === gif.id ? null : current,
+                  );
                 }}
               />
             </button>
           ))}
-          {loading && Array.from({ length: 6 }, (_, index) => (
-            <div
-              key={`skeleton-${index}`}
-              className={styles.skeleton}
-              aria-hidden="true"
-            />
-          ))}
+          {loading &&
+            Array.from({ length: 6 }, (_, index) => (
+              <div
+                key={`skeleton-${index}`}
+                className={styles.skeleton}
+                aria-hidden="true"
+              />
+            ))}
         </div>
         {sponsors.map((sponsor) => (
           <a
