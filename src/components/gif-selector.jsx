@@ -13,6 +13,7 @@ export function GifSelector({ onSelect, requestClose }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
+  const [hoveredGifId, setHoveredGifId] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -75,6 +76,7 @@ export function GifSelector({ onSelect, requestClose }) {
           setOffset(0);
           setRankingVersion(null);
           setItems([]);
+          setHoveredGifId(null);
           setSponsors([]);
           setNextOffset(null);
           setLoading(true);
@@ -90,12 +92,21 @@ export function GifSelector({ onSelect, requestClose }) {
               title={gif.title}
               aria-label={`Select ${gif.title}`}
               onClick={() => onSelect(gif)}
+              onMouseEnter={() => {
+                if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+                  setHoveredGifId(gif.id);
+                }
+              }}
+              onMouseLeave={() => setHoveredGifId(null)}
             >
               <img
-                src={gif.thumbnailUrl}
+                src={hoveredGifId === gif.id ? gif.gifUrl : gif.thumbnailUrl}
                 alt={gif.description || gif.title}
                 loading="lazy"
                 referrerPolicy="no-referrer"
+                onError={() => {
+                  setHoveredGifId((current) => current === gif.id ? null : current);
+                }}
               />
             </button>
           ))}
