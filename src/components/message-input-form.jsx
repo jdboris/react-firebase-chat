@@ -330,8 +330,8 @@ export const MessageInputForm = React.forwardRef(
             " " +
             (props.isEmojisOpen ? styles["outlined"] : "")
           }
-          onClick={(e) => {
-            props.setEmojisOpen(!props.isEmojisOpen);
+          onClick={() => {
+            props.setEmojisOpen((isOpen) => !isOpen);
           }}
         />
         <TextFormatIcon

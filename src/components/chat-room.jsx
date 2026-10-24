@@ -687,6 +687,18 @@ export function ChatRoom(props) {
         />
       )}
 
+      {isEmojisOpen && (
+        <EmojiSelector
+          isAnonymous={!user || user.email == null}
+          setErrors={setErrors}
+          onSelect={(emojiChar) => {
+            messageInput.current.focus();
+            insertIntoInput(emojiChar, messageInput.current);
+            setMessageValue(messageInput.current.value);
+          }}
+        />
+      )}
+
       <MessageInputForm
         user={user || {}}
         premium={premium}
@@ -891,40 +903,6 @@ export function ChatRoom(props) {
           setFilteredWordsOpen(false);
         }}
       />
-
-      {/* NOTE: Hide with class to avoid expensive re-rendering */}
-      <div
-        className={
-          styles["dialog"] + " " + (isEmojisOpen ? "" : styles["hidden"])
-        }
-      >
-        <header>
-          Emojis
-          <CloseIcon
-            onClick={() => {
-              setEmojisOpen(false);
-            }}
-          />
-        </header>
-        <div>
-          <EmojiSelector
-            isAnonymous={!user || user.email == null}
-            setErrors={setErrors}
-            onSelect={(emojiChar) => {
-              messageInput.current.focus();
-              insertIntoInput(emojiChar, messageInput.current);
-              setMessageValue(messageInput.current.value);
-            }}
-            setPremiumPromptOpen={setPremiumPromptOpen}
-            setPremiumOpen={setPremiumOpen}
-            messageValue={messageValue}
-            setMessageValue={setMessageValue}
-            messageInput={messageInput.current}
-            shouldComponentUpdate={false}
-            premium={premium}
-          />
-        </div>
-      </div>
 
       {user && premium && isGifsOpen && (
         <GifSelector
