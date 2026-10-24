@@ -335,6 +335,7 @@ export const MessageInputForm = React.forwardRef(
           }}
         />
         <TextFormatIcon
+          data-chat-part="format-button"
           data-chat-active={props.isFormatOpen || undefined}
           className={
             styles["pointer"] +
