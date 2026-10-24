@@ -1,3 +1,4 @@
+import { Close as CloseIcon } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import poweredByKlipyLogo from "../assets/powered-by-klipy-logo.svg";
 import chatStyles from "../css/chat-room.module.css";
@@ -71,10 +72,11 @@ export function GifSelector({ apiKey, onSelect, requestClose }) {
         GIFs
         <button
           type="button"
+          className={styles.closeButton}
           onClick={requestClose}
           aria-label="Close GIF picker"
         >
-          Close
+          <CloseIcon />
         </button>
       </header>
       <input
