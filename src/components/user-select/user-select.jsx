@@ -38,9 +38,9 @@ export function UserSelect({ users, style, value, onChange, onCancel }) {
       width: "max-content",
       minWidth: "100%",
       boxShadow: 0,
-      background: "white",
+      background: "var(--chat-surface, white)",
       marginTop: 0,
-      border: "1px solid #dedede",
+      border: "1px solid var(--chat-border, #dedede)",
       borderRadius: "0px",
     }),
     option: (
@@ -50,7 +50,15 @@ export function UserSelect({ users, style, value, onChange, onCancel }) {
       return {
         ...provided,
         // color: data.value === settings.liveChannelId ? "#ff7900" : "#9B4900",
-        color: "#0084eb",
+        color: "var(--chat-accent, #0084eb)",
+        backgroundColor:
+          isFocused || isSelected
+            ? `var(--chat-accent-soft, ${provided.backgroundColor})`
+            : provided.backgroundColor,
+        ":active": {
+          ...provided[":active"],
+          backgroundColor: `var(--chat-accent-soft, ${provided[":active"].backgroundColor})`,
+        },
         cursor: "pointer",
         paddingTop: "5px",
         paddingBottom: "5px",

@@ -20,7 +20,7 @@
 }
 
 .closeButton:focus-visible {
-  outline: 2px solid #0084eb;
+  outline: 2px solid var(--chat-accent, #0084eb);
   outline-offset: 2px;
 }
 
@@ -48,7 +48,7 @@
   padding: 0;
   margin: 0;
   border: 0;
-  background: #eee;
+  background: var(--chat-canvas, #eee);
   cursor: pointer;
   overflow: hidden;
   border-radius: 4px;
@@ -64,13 +64,13 @@
 .skeleton {
   height: 110px;
   border-radius: 4px;
-  background: #eee;
+  background: var(--chat-canvas, #eee);
   animation: skeleton-pulse 1.2s ease-in-out infinite alternate;
 }
 
 @keyframes skeleton-pulse {
   to {
-    background: #ddd;
+    background: var(--chat-border, #ddd);
   }
 }
 
@@ -92,7 +92,7 @@
 
 .gif:focus-visible,
 .gif:hover {
-  outline: 2px solid #0084eb;
+  outline: 2px solid var(--chat-accent, #0084eb);
   outline-offset: -2px;
 }
 
