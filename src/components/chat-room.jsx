@@ -912,7 +912,7 @@ export function ChatRoom(props) {
             setErrors={setErrors}
             onSelect={(emojiChar) => {
               messageInput.current.focus();
-              insertIntoInput(emojiChar + " ", messageInput.current);
+              insertIntoInput(emojiChar, messageInput.current);
               setMessageValue(messageInput.current.value);
             }}
             setPremiumPromptOpen={setPremiumPromptOpen}
