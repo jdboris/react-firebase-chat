@@ -54,6 +54,7 @@ export function StyleEditorDialog({
             message={{
               text: "Sample message text",
               uid: uid,
+              premium,
               createdAt: new Timestamp(1726757369, 337000000),
               username: username,
               fontSize,

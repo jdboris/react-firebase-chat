@@ -76,6 +76,7 @@ export function MessageList({
 
   return (
     <section
+      data-chat-part="messages"
       ref={messageList}
       className={
         styles["messages-section"] +
@@ -84,7 +85,7 @@ export function MessageList({
       }
     >
       <div>
-        <div className={styles["pagination-controls"]}>
+        <div data-chat-part="pagination" className={styles["pagination-controls"]}>
           {messages.length >= messageCount && (
             <button
               onClick={async () => {
@@ -129,7 +130,7 @@ export function MessageList({
             />
           ))}
 
-        <div className={styles["pagination-controls"]}>
+        <div data-chat-part="pagination" className={styles["pagination-controls"]}>
           {messages.length &&
             defaultMessages &&
             defaultMessages.length &&

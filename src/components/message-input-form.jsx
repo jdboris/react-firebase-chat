@@ -101,6 +101,12 @@ export const MessageInputForm = React.forwardRef(
 
     // Cap the font size for non-premium users
     const cappedFontSize = !props.premium && fontSize >= 15 ? 15 : fontSize;
+    const hasDefaultBackground =
+      !stylesEnabled ||
+      !props.premium ||
+      (msgBgColor?.toLowerCase() === "#ffffff" &&
+        Number(msgBgTransparency) === 1 &&
+        !msgBgImg);
 
     async function uploadFileWithHandlers(e, file) {
       if (loading || !file) return;
@@ -125,6 +131,7 @@ export const MessageInputForm = React.forwardRef(
 
     return (
       <form
+        data-chat-part="composer"
         className={styles["message-form"]}
         onSubmit={async (e) => {
           try {
@@ -157,17 +164,12 @@ export const MessageInputForm = React.forwardRef(
 
         <div
           className={styles["input-wrapper"]}
-          style={
-            stylesEnabled && props.premium
-              ? {
-                  backgroundColor: `rgba(${hexToRgb(
-                    msgBgColor
-                  )},${msgBgTransparency})`,
-                }
-              : {
-                  backgroundColor: `white`,
-                }
-          }
+          data-chat-part="input"
+          style={{
+            backgroundColor: hasDefaultBackground
+              ? "var(--chat-surface, white)"
+              : `rgba(${hexToRgb(msgBgColor)},${msgBgTransparency})`,
+          }}
         >
           <div
             className={styles["message-background-image"]}
@@ -278,7 +280,11 @@ export const MessageInputForm = React.forwardRef(
                 ? {
                     fontFamily: font.style,
                     fontSize: cappedFontSize,
-                    color: fontColor,
+                    color:
+                      hasDefaultBackground &&
+                      fontColor?.toLowerCase() === "#000000"
+                        ? "var(--chat-ink, #000000)"
+                        : fontColor,
                   }
                 : {}
             }
@@ -306,6 +312,7 @@ export const MessageInputForm = React.forwardRef(
         <button
           type="button"
           className={styles["gif-button"]}
+          data-chat-part="gif-button"
           title={props.premium ? "Search GIFs" : "Search GIFs (Premium)"}
           aria-label="Search GIFs"
           aria-haspopup="dialog"
@@ -316,6 +323,7 @@ export const MessageInputForm = React.forwardRef(
           <GifIcon />
         </button>
         <SmileIcon
+          data-chat-active={props.isEmojisOpen || undefined}
           className={
             styles["pointer"] +
             " " +
@@ -326,6 +334,7 @@ export const MessageInputForm = React.forwardRef(
           }}
         />
         <TextFormatIcon
+          data-chat-active={props.isFormatOpen || undefined}
           className={
             styles["pointer"] +
             " " +

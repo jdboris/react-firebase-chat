@@ -166,6 +166,12 @@ export function ChatMessage(props) {
 
   const stylesEnabled =
     "stylesEnabled" in currentUser ? currentUser.stylesEnabled : true;
+  // Stored default colors follow the theme; custom message palettes stay intact.
+  const hasDefaultBackground =
+    !premium ||
+    (bgColor?.toLowerCase() === "#ffffff" &&
+      Number(bgTransparency) === 1 &&
+      !backgroundImage);
 
   let mouseDownSpot = null;
 
@@ -199,6 +205,9 @@ export function ChatMessage(props) {
 
   return (
     <div
+      data-chat-part="message"
+      data-chat-direction={messageClass}
+      data-chat-mention={doesMentionCurrentUser || undefined}
       className={
         styles["message"] +
         " " +
@@ -226,12 +235,17 @@ export function ChatMessage(props) {
       style={{
         ...(stylesEnabled &&
           premium && {
-            backgroundColor: `rgba(${hexToRgb(bgColor)},${bgTransparency})`,
+            backgroundColor: hasDefaultBackground
+              ? "var(--chat-message-background, #fff)"
+              : `rgba(${hexToRgb(bgColor)},${bgTransparency})`,
           }),
         ...(isHidden && { display: "none" }),
       }}
     >
-      <div className={styles["mention-highlight"]}></div>
+      <div
+        data-chat-part="mention-highlight"
+        className={styles["mention-highlight"]}
+      ></div>
       <div
         className={styles["message-background-image"]}
         style={
@@ -246,20 +260,29 @@ export function ChatMessage(props) {
         }
       ></div>
       {photoUrl ? (
-        <img className={styles["avatar"]} src={photoUrl} alt="profile" />
+        <img
+          data-chat-part="avatar"
+          className={styles["avatar"]}
+          src={photoUrl}
+          alt="profile"
+        />
       ) : (
-        <PersonIcon className={styles["avatar"]} />
+        <PersonIcon data-chat-part="avatar" className={styles["avatar"]} />
       )}
       {isNewUser && currentUser && currentUser.isModerator && (
         <small className={styles["badge"]}>New</small>
       )}
       <div
+        data-chat-part="message-body"
         className={`${styles["message-body"]} ${
           expanded ? styles["expanded"] : ""
         }`}
       >
-        <span className={styles["message-details"]}>
-          <span className={styles["message-timestamp"]}>
+        <span
+          data-chat-part="message-details"
+          className={styles["message-details"]}
+        >
+          <span data-chat-part="timestamp" className={styles["message-timestamp"]}>
             {createdAt &&
               createdAtDate.toLocaleString(
                 "en-US",
@@ -330,12 +353,17 @@ export function ChatMessage(props) {
 
         <span
           ref={messageContents}
+          data-chat-part="contents"
           className={styles["message-contents"]}
           style={{
             ...(stylesEnabled
               ? {
                   fontSize: fontSize + "px",
-                  color: fontColor,
+                  color:
+                    hasDefaultBackground &&
+                    fontColor?.toLowerCase() === "#000000"
+                      ? "var(--chat-ink, #000000)"
+                      : fontColor,
                   fontFamily: font.style,
                 }
               : {}),
@@ -344,7 +372,18 @@ export function ChatMessage(props) {
         >
           <span
             className={styles["message-username"]}
-            style={stylesEnabled ? { color: nameColor } : {}}
+            data-chat-part="username"
+            style={
+              stylesEnabled
+                ? {
+                    color:
+                      hasDefaultBackground &&
+                      nameColor?.toLowerCase() === "#000000"
+                        ? "var(--chat-ink, #000000)"
+                        : nameColor,
+                  }
+                : {}
+            }
           >
             {username}:{" "}
           </span>
@@ -440,6 +479,7 @@ export function ChatMessage(props) {
           (expanded == false ? (
             <div
               className={styles["show-more"] + " " + styles["link"]}
+              data-chat-part="expand"
               onMouseUp={(e) => {
                 e.stopPropagation();
                 setExpanded(true);
@@ -450,6 +490,7 @@ export function ChatMessage(props) {
           ) : (
             <div
               className={styles["show-less"] + " " + styles["link"]}
+              data-chat-part="expand"
               onMouseUp={(e) => {
                 e.stopPropagation();
                 setExpanded(false);

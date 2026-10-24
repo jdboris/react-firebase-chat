@@ -356,6 +356,72 @@ blockquote {
   align-items: center;
 }
 
+.theme-picker {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.theme-picker > button {
+  display: flex;
+  margin: 0;
+  padding: 6px;
+  border: 0;
+  border-radius: 6px;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.theme-picker > button:focus-visible {
+  outline: 2px solid var(--chat-accent, #86a9ff);
+  outline-offset: 2px;
+}
+
+.theme-picker > fieldset {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 10;
+  width: 300px;
+  padding: 10px;
+  border: 1px solid var(--chat-border, #454545);
+  border-radius: 8px;
+  color: var(--chat-ink, #eee);
+  background: var(--chat-surface, #1d1d1d);
+  box-shadow: 0 8px 24px #0006;
+  font-size: 14px;
+  font-weight: normal;
+}
+
+.theme-picker legend {
+  float: left;
+  width: 100%;
+  margin-bottom: 8px;
+  color: var(--chat-muted, #aaa);
+  font-size: 12px;
+}
+
+.theme-picker label {
+  clear: both;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px;
+  cursor: pointer;
+}
+
+.theme-picker label:has(input:disabled) {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.theme-picker small {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--chat-muted, #aaa);
+}
+
 .chat-section > header > *,
 .chat-section > footer > * {
   vertical-align: middle;

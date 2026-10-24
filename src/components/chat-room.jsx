@@ -3,10 +3,10 @@ import {
   Close as CloseIcon,
   Gavel as GavelIcon,
   Menu as MenuIcon,
+  PaletteOutlined as PaletteIcon,
   VolumeOff as VolumeOffIcon,
   VolumeUp as VolumeUpIcon,
 } from "@mui/icons-material";
-import { getAuth, getIdTokenResult } from "firebase/auth";
 import {
   Timestamp,
   collection,
@@ -41,7 +41,6 @@ import { startPresence } from "../utils/presence";
 import {
   getSelectionText,
   insertIntoInput,
-  isGiftedPremium,
 } from "../utils/utils";
 import { BanlistDialog } from "./banlist-dialog";
 import { firestore } from "./chat-room-app";
@@ -66,14 +65,19 @@ import { UserStyleControls } from "./user-style-controls";
 const DELAY_MODE_USER_COUNT = 100;
 
 export function ChatRoom(props) {
-  const { messagesRef, conversationRef, user, isLoadingUser, headerLinks } =
-    props;
+  const {
+    messagesRef,
+    conversationRef,
+    user,
+    isLoadingUser,
+    headerLinks,
+    premium,
+  } = props;
 
   const [presence, setPresence] = useState(null);
   const [isLoadingPresence, setLoadingPresence] = useState(false);
   const [errors, setErrors] = useState([]);
   const [messageErrorFlash, setMessageErrorFlash] = useState(0);
-  const [premium, setPremium] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
   const [messageValue, setMessageValue] = useState("");
   const [onlineUsers, setOnlineUsers] = useState(null);
@@ -104,6 +108,7 @@ export function ChatRoom(props) {
   const [isFormatOpen, setFormatOpen] = useState(false);
   const [isStyleEditorOpen, setStyleEditorOpen] = useState(false);
   const [isProfileOpen, setProfileOpen] = useState(false);
+  const [isThemePickerOpen, setThemePickerOpen] = useState(false);
   const [selection, setSelection] = useState({ start: 0, end: 0 });
   const [isPopMuted, setPopMuted] = useState(
     localStorage.getItem("isPopMuted") === "true"
@@ -115,6 +120,18 @@ export function ChatRoom(props) {
   const [isDraggedOn, setIsDraggedOn] = useState(false);
 
   let messageInput = useRef();
+  const themePicker = useRef(null);
+
+  useEffect(() => {
+    if (!isThemePickerOpen) return;
+    const closeThemePicker = (event) => {
+      if (!themePicker.current?.contains(event.target)) {
+        setThemePickerOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", closeThemePicker);
+    return () => document.removeEventListener("pointerdown", closeThemePicker);
+  }, [isThemePickerOpen]);
 
   const sendMessage = async (
     e,
@@ -465,14 +482,6 @@ export function ChatRoom(props) {
         await presence.disconnect();
       }
 
-      if (user && username) {
-        const idTokenResult = await getIdTokenResult(getAuth().currentUser);
-        // NOTE: stripeRole custom claim is set by the "Run Payments with Stripe" extension configured in Firebase console
-        setPremium(
-          idTokenResult.claims.stripeRole === "premium" || isGiftedPremium(user)
-        );
-      }
-
       setPresence(startPresence(userId, username, setIsOnline));
 
       setLoadingPresence(false);
@@ -528,12 +537,18 @@ export function ChatRoom(props) {
 
   return (
     <section
+      data-chat-part="room"
       className={
         styles["chat-section"] +
         " " +
         (isDraggedOn ? styles["is-dragged-on"] : "")
       }
-      onClickCapture={closeMenus}
+      onClickCapture={(event) => {
+        // Let theme radios handle changes before rerendering the room.
+        if (!themePicker.current?.contains(event.target)) {
+          closeMenus();
+        }
+      }}
       onDragEnter={(e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -545,14 +560,85 @@ export function ChatRoom(props) {
           {props.header}
           {headerLinks}
         </span>
-        {props.dms && (
-          <CloseIcon
-            className={styles["pointer"]}
-            onClick={() => {
-              props.setDmMessagesRef(null);
-            }}
-          />
-        )}
+        <span>
+          {props.themes?.length > 0 && (
+            <div
+              ref={themePicker}
+              className={styles["theme-picker"]}
+              onClick={closeMenus}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  event.currentTarget.querySelector("button").focus();
+                  setThemePickerOpen(false);
+                  event.stopPropagation();
+                }
+              }}
+              onBlur={(event) => {
+                // Label clicks briefly clear focus before activating their radio.
+                if (
+                  event.relatedTarget &&
+                  !event.currentTarget.contains(event.relatedTarget)
+                ) {
+                  setThemePickerOpen(false);
+                }
+              }}
+            >
+              <button
+                type="button"
+                aria-label="Select chat theme"
+                aria-expanded={isThemePickerOpen}
+                title="Chat theme"
+                onClick={() => setThemePickerOpen((open) => !open)}
+              >
+                <PaletteIcon fontSize="small" />
+              </button>
+              {isThemePickerOpen && (
+                <fieldset>
+                  <legend>Chat theme</legend>
+                  {props.themes.map((theme) => {
+                    const locked = theme.id !== "default" && !premium;
+                    return (
+                      <label key={theme.id}>
+                        <input
+                          type="radio"
+                          name="chatTheme"
+                          value={theme.id}
+                          checked={props.chatTheme === theme.id}
+                          aria-disabled={locked}
+                          onClick={(event) => {
+                            if (locked) {
+                              event.preventDefault();
+                              setPremiumPromptOpen(true);
+                            }
+                          }}
+                          onChange={() => {
+                            if (locked) {
+                              setPremiumPromptOpen(true);
+                              return;
+                            }
+                            props.onThemeChange(theme.id);
+                            themePicker.current.querySelector("button").focus();
+                            setThemePickerOpen(false);
+                          }}
+                        />
+                        {theme.name}
+                        {theme.id !== "default" && <small>Premium</small>}
+                      </label>
+                    );
+                  })}
+                </fieldset>
+              )}
+            </div>
+          )}
+          {props.dms && (
+            <CloseIcon
+              className={styles["pointer"]}
+              onClick={() => {
+                props.setDmMessagesRef(null);
+              }}
+            />
+          )}
+        </span>
       </header>
 
       {useMemo(
@@ -631,7 +717,7 @@ export function ChatRoom(props) {
         setLoginOpen={setLoginOpen}
       />
 
-      <footer className={styles["chat-controls"]}>
+      <footer data-chat-part="controls" className={styles["chat-controls"]}>
         <div>
           <button
             className={styles["alt-button"]}
@@ -650,6 +736,7 @@ export function ChatRoom(props) {
         <div>
           <button
             className={styles["alt-button"] + " " + styles["user-count"]}
+            data-chat-part="user-count"
             onClick={() => {
               setUsersOpen(!isUsersOpen);
             }}

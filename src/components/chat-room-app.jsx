@@ -1,5 +1,11 @@
 import { getAnalytics } from "firebase/analytics";
-import { connectAuthEmulator, getAuth, signOut } from "firebase/auth";
+import {
+  connectAuthEmulator,
+  getAuth,
+  getIdTokenResult,
+  onIdTokenChanged,
+  signOut,
+} from "firebase/auth";
 import { initializeApp } from "firebase/app";
 import { connectDatabaseEmulator, getDatabase } from "firebase/database";
 import {
@@ -26,7 +32,7 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { useCollectionData, useDocument } from "react-firebase-hooks/firestore";
 import styles from "../css/chat-room.module.css";
 import { idConverter } from "../utils/firestore";
-import { setQueryParam } from "../utils/utils";
+import { isGiftedPremium, setQueryParam } from "../utils/utils";
 import { AlertDialog } from "./alert-dialog";
 import { ChatRoom } from "./chat-room";
 
@@ -132,8 +138,18 @@ function ChatRoomApp({
   headerLinks,
   klipyApiKey,
   style,
+  themes = [],
 }) {
   const [authUser, isLoadingAuth] = useAuthState(auth);
+  const [premiumStatus, setPremiumStatus] = useState(null);
+  const [premiumCheckTime, setPremiumCheckTime] = useState(Date.now);
+  const [chatTheme, setChatTheme] = useState(() => {
+    try {
+      return localStorage.getItem("chatTheme") || "default";
+    } catch {
+      return "default";
+    }
+  });
 
   const [callbacksTriggered] = useCollectionData(
     query(callbacksRef, orderBy("triggeredAt", "desc"), limit(1)).withConverter(
@@ -176,6 +192,70 @@ function ChatRoomApp({
           ...userSnapshot.data(),
         }
       : null;
+
+  const userId = user?.uid;
+  const giftedPremiumStart = user?.giftedPremiumStart?.toMillis();
+  const giftedPremiumEnd = user?.giftedPremiumEnd?.toMillis();
+  const premium = Boolean(
+    user &&
+      (isGiftedPremium(user) ||
+        (premiumStatus?.uid === userId && premiumStatus.enabled))
+  );
+  const activeTheme =
+    themes.find(
+      (theme) => theme.id === chatTheme && (theme.id === "default" || premium)
+    ) || themes.find((theme) => theme.id === "default");
+
+  useEffect(() => {
+    if (giftedPremiumStart == null || giftedPremiumEnd == null) return;
+    const now = Date.now();
+    const nextChange = [giftedPremiumStart, giftedPremiumEnd + 1].find(
+      (time) => time > now
+    );
+    if (nextChange == null) return;
+    // Recheck gift boundaries even while chat is idle; cap browser timer delays.
+    const timer = setTimeout(
+      () => setPremiumCheckTime(Date.now()),
+      Math.min(nextChange - now, 2 ** 31 - 1)
+    );
+    return () => clearTimeout(timer);
+  }, [giftedPremiumStart, giftedPremiumEnd, premiumCheckTime]);
+
+  useEffect(() => {
+    let version = 0;
+    const unsubscribe = onIdTokenChanged(auth, async (currentUser) => {
+      const currentVersion = ++version;
+      setPremiumStatus(null);
+      if (!currentUser || currentUser.uid !== userId) return;
+
+      try {
+        const result = await getIdTokenResult(currentUser);
+        if (currentVersion === version) {
+          setPremiumStatus({
+            uid: currentUser.uid,
+            enabled: result.claims.stripeRole === "premium",
+          });
+        }
+      } catch {
+        // A failed entitlement check must not unlock Premium features.
+      }
+    });
+    return () => {
+      version++;
+      unsubscribe();
+    };
+  }, [userId]);
+
+  const selectTheme = (id) => {
+    if (!themes.some((theme) => theme.id === id)) return;
+    if (id !== "default" && !premium) return;
+    setChatTheme(id);
+    try {
+      localStorage.setItem("chatTheme", id);
+    } catch {
+      // Theme selection still works when browser storage is unavailable.
+    }
+  };
 
   const [conversationRef, setConversationRef] = useState(null);
   const [dmMessagesRef, setDmMessagesRef] = useState(null);
@@ -251,12 +331,21 @@ function ChatRoomApp({
       : null;
 
   return (
-    <div className={className + " " + styles["chat-app"]} style={style}>
+    <div
+      className={[className, styles["chat-app"], activeTheme?.className]
+        .filter(Boolean)
+        .join(" ")}
+      style={style}
+    >
       {/* {user ? ( */}
       <>
         {dmMessagesRef ? (
           <ChatRoom
             user={user}
+            premium={premium}
+            themes={themes}
+            chatTheme={activeTheme?.id || "default"}
+            onThemeChange={selectTheme}
             klipyApiKey={klipyApiKey}
             isLoadingUser={isLoadingUser}
             setAlerts={setAlerts}
@@ -272,6 +361,10 @@ function ChatRoomApp({
         ) : (
           <ChatRoom
             user={user}
+            premium={premium}
+            themes={themes}
+            chatTheme={activeTheme?.id || "default"}
+            onThemeChange={selectTheme}
             klipyApiKey={klipyApiKey}
             isLoadingUser={isLoadingUser}
             setAlerts={setAlerts}
