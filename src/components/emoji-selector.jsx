@@ -1,11 +1,16 @@
 import emoji from "emoji-dictionary";
-import React, { useState } from "react";
+import React, {
+  memo,
+  useDeferredValue,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import styles from "../css/emoji-selector.module.css";
 import { CustomError } from "../utils/errors";
 
-export function EmojiSelector(props) {
-  const [searchValue, setSearchValue] = useState("");
-  const freeNames = [
+const freeNames = [
     "slightly_smiling_face",
     "neutral_face",
     "slightly_frowning_face",
@@ -15,7 +20,7 @@ export function EmojiSelector(props) {
     "rage",
     "laughing",
     "stuck_out_tongue_winking_eye",
-    "kssing_heart",
+    "kissing_heart",
     "open_mouth",
     "cry",
     "wink",
@@ -39,8 +44,8 @@ export function EmojiSelector(props) {
     // "100",
     // "peach",
     // "eggplant",
-  ];
-  const previewNames = [
+];
+const previewNames = [
     "fire",
     "100",
     "thinking",
@@ -50,15 +55,99 @@ export function EmojiSelector(props) {
     "ghost",
     "alien",
     "robot",
-  ];
+];
 
-  const freeCodes = freeNames.map((name) => {
-    return emoji.getUnicode(name);
-  });
+const freeEmojis = freeNames.map((name, id) => ({
+  id,
+  name,
+  char: emoji.getUnicode(name),
+}));
+const previewEmojis = previewNames.map((name, id) => ({
+  id,
+  name,
+  char: emoji.getUnicode(name),
+}));
+const premiumEmojis = emoji.unicode.map((char, id) => ({
+  id,
+  name: emoji.names[id],
+  char,
+}));
+const cellSize = 40;
+const viewportHeight = 150;
 
-  const previewCodes = previewNames.map((name) => {
-    return emoji.getUnicode(name);
-  });
+const EmojiGrid = memo(function EmojiGrid({
+  items,
+  isAnonymous,
+  setErrors,
+  onSelect,
+}) {
+  const gridRef = useRef(null);
+  const [columns, setColumns] = useState(1);
+  const [scrollRow, setScrollRow] = useState(0);
+
+  useLayoutEffect(() => {
+    const grid = gridRef.current;
+    const resize = () => {
+      setColumns(Math.max(1, Math.floor(grid.clientWidth / cellSize)));
+    };
+    resize();
+    const observer = new ResizeObserver(resize);
+    observer.observe(grid);
+    return () => observer.disconnect();
+  }, []);
+
+  const rowCount = Math.ceil(items.length / columns);
+  const visibleRows = Math.ceil(viewportHeight / cellSize);
+  // Keep one extra row on either side without mounting the entire catalog.
+  const firstRow = Math.max(0, Math.min(scrollRow, rowCount - visibleRows) - 1);
+  const endRow = Math.min(rowCount, firstRow + visibleRows + 3);
+
+  return (
+    <section
+      ref={gridRef}
+      className={styles["emoji-grid"]}
+      style={{ height: Math.min(viewportHeight, rowCount * cellSize) }}
+      onScroll={(event) => {
+        setScrollRow(Math.floor(event.currentTarget.scrollTop / cellSize));
+      }}
+    >
+      <div style={{ height: rowCount * cellSize }}>
+        {items.slice(firstRow * columns, endRow * columns).map((item, index) => (
+          <span
+            key={item.id}
+            title={item.name}
+            style={{
+              top: (firstRow + Math.floor(index / columns)) * cellSize,
+              left: `${((index % columns) / columns) * 100}%`,
+              width: `${100 / columns}%`,
+              height: cellSize,
+            }}
+            onClick={() => {
+              if (isAnonymous)
+                return setErrors([
+                  new CustomError("Create an account to do that."),
+                ]);
+              onSelect(item.char);
+            }}
+          >
+            {item.char}
+          </span>
+        ))}
+      </div>
+    </section>
+  );
+});
+
+export function EmojiSelector(props) {
+  const [searchValue, setSearchValue] = useState("");
+  const query = useDeferredValue(searchValue);
+  const items = useMemo(
+    () =>
+      (props.premium ? premiumEmojis : freeEmojis).filter((item) =>
+        item.name.includes(query)
+      ),
+    [props.premium, query]
+  );
 
   return (
     <div className={styles["emoji-selector"]}>
@@ -70,55 +159,29 @@ export function EmojiSelector(props) {
         autoFocus
         placeholder="smile, angry, laughing, etc..."
       />
-      <section>
-        {(props.premium ? emoji.unicode : freeCodes).reduce(
-          (accumulator, emojiChar, i) => {
-            if (
-              searchValue === "" ||
-              (props.premium ? emoji.names : freeNames)[i].includes(searchValue)
-            ) {
-              accumulator.push(
-                <span
-                  key={"emoji-" + i}
-                  title={(props.premium ? emoji.names : freeNames)[i]}
-                  onClick={() => {
-                    if (props.isAnonymous)
-                      return props.setErrors([
-                        new CustomError("Create an account to do that."),
-                      ]);
-                    props.onSelect(emojiChar);
-                  }}
-                >
-                  {emojiChar}
-                </span>
-              );
-            }
-
-            return accumulator;
-          },
-          []
-        )}
-      </section>
+      <EmojiGrid
+        key={`${props.premium}-${query}`}
+        items={items}
+        isAnonymous={props.isAnonymous}
+        setErrors={props.setErrors}
+        onSelect={props.onSelect}
+      />
       {!props.premium && (
         <>
           <section className={styles["preview"]}>
-            {previewCodes.reduce((accumulator, emojiChar, i) => {
-              if (searchValue === "" || previewNames[i].includes(searchValue)) {
-                accumulator.push(
-                  <span
-                    key={"emoji-preview-" + i}
-                    title={previewNames[i]}
-                    onClick={() => {
-                      props.setPremiumPromptOpen(true);
-                    }}
-                  >
-                    {emojiChar}
-                  </span>
-                );
-              }
-
-              return accumulator;
-            }, [])}
+            {previewEmojis
+              .filter((item) => item.name.includes(query))
+              .map((item) => (
+                <span
+                  key={item.id}
+                  title={item.name}
+                  onClick={() => {
+                    props.setPremiumPromptOpen(true);
+                  }}
+                >
+                  {item.char}
+                </span>
+              ))}
           </section>
           <footer>
             Want more emojis?{" "}

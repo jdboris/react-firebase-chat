@@ -14,6 +14,28 @@
     font-size: 1.3em;
   }
 
+  section.emoji-grid {
+    display: block;
+  }
+
+  section.emoji-grid > div {
+    position: relative;
+    cursor: initial;
+    padding: 0;
+    font-size: inherit;
+  }
+
+  .emoji-grid span {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 5px;
+    cursor: pointer;
+    font-size: 1.3em;
+  }
+
   input {
     width: 100%;
     padding: 5px;
