@@ -915,6 +915,12 @@ exports.getEmbed = functions.https.onCall(async (data, context) => {
     throw new HttpsError("unauthenticated", "Must be logged in.");
   }
 
+  // Use Twitter's existing provider schemes and oEmbed endpoint for X links.
+  const url = data.url.replace(
+    /^(https?:\/\/)(?:www\.)?x\.com(?=\/|$)/i,
+    "$1twitter.com"
+  );
+
   const snapshot = await db.collection("settings").get("oembed");
   let settings = {};
 
@@ -954,11 +960,11 @@ exports.getEmbed = functions.https.onCall(async (data, context) => {
             let pattern = new RegExp("^" + escaped, "gi");
 
             // ...if the provided URL matches the scheme
-            if (pattern.test(data.url)) {
+            if (pattern.test(url)) {
               // Fetch and return the HTML for the embed
               let endpoint = `${
                 provider.endpoints[0].url
-              }?url=${encodeURIComponent(data.url)}`;
+              }?url=${encodeURIComponent(url)}`;
 
               return fetch(endpoint)
                 .then((response) => {
