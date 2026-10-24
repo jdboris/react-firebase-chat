@@ -34,7 +34,7 @@ export const MessageInputForm = React.forwardRef(
       },
       ...props
     },
-    messageInput
+    messageInput,
   ) => {
     const [loading, setLoading] = useState(false);
     const [caretX, setCaretX] = useState(0);
@@ -58,7 +58,7 @@ export const MessageInputForm = React.forwardRef(
     function getMentionName(
       input,
       start = input.selectionStart,
-      end = input.selectionEnd
+      end = input.selectionEnd,
     ) {
       if (start != end) return null;
 
@@ -245,7 +245,7 @@ export const MessageInputForm = React.forwardRef(
                 e.preventDefault();
                 e.stopPropagation();
                 const result = props.toggleSelectionMarkup(
-                  MARKUP_SYMBOLS.ITALICS
+                  MARKUP_SYMBOLS.ITALICS,
                 );
 
                 props.setMessageValue(result.value);
@@ -271,7 +271,7 @@ export const MessageInputForm = React.forwardRef(
                     cancelable: true,
                     // BUGFIX: https://github.com/final-form/react-final-form/issues/878#issuecomment-745364350
                     bubbles: true,
-                  })
+                  }),
                 );
               }
             }}
@@ -296,7 +296,7 @@ export const MessageInputForm = React.forwardRef(
               value={mentionValue}
               onChange={(item) => {
                 props.setMessageValue(
-                  replaceMentionAtCaret(messageInput.current, item.label) + " "
+                  replaceMentionAtCaret(messageInput.current, item.label) + " ",
                 );
                 setMentionValue(null);
                 messageInput.current.focus();
@@ -323,6 +323,7 @@ export const MessageInputForm = React.forwardRef(
           <GifIcon />
         </button>
         <SmileIcon
+          data-chat-part="emoji-button"
           data-chat-active={props.isEmojisOpen || undefined}
           className={
             styles["pointer"] +
@@ -346,5 +347,5 @@ export const MessageInputForm = React.forwardRef(
         />
       </form>
     );
-  }
+  },
 );
