@@ -77,16 +77,19 @@
   outline-offset: -2px;
 }
 
-.sponsor {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin: 8px 0;
-  padding: 8px;
-  border: 1px solid #ccc;
-}
-
 .picker footer {
   padding-top: 8px;
   font-size: 0.9em;
+}
+
+.picker footer a {
+  display: flex;
+  justify-content: center;
+  height: 20px;
+}
+
+.poweredByLogo {
+  display: block;
+  max-width: 100%;
+  height: auto;
 }

@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown, { uriTransformer } from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import gfm from "remark-gfm";
+import klipyLogo from "../assets/klipy-logo.svg";
 import styles from "../css/chat-room.module.css";
 import "../css/oembed.css";
 import useAudio from "../hooks/use-audio";
@@ -36,7 +37,16 @@ function Link({ href, isEmbedDisabled }) {
           // Validate before mounting the image so it cannot appear and then vanish.
           await validateImageEmbedUrl(href);
           if (!cancelled) {
-            setEmbed({ href, providerName: "image", isImage: true });
+            const url = new URL(href);
+            setEmbed({
+              href,
+              providerName: "image",
+              isImage: true,
+              isKlipyGif:
+                (url.hostname === "klipy.com" ||
+                  url.hostname.endsWith(".klipy.com")) &&
+                url.pathname.toLowerCase().endsWith(".gif"),
+            });
           }
         } else {
           const getEmbed = httpsCallable(getFunctions(), "getEmbed");
@@ -89,11 +99,25 @@ function Link({ href, isEmbedDisabled }) {
                   padding: "0px",
                   display: "inline-flex",
                   verticalAlign: "bottom",
+                  position: "relative",
                 }
               : undefined
           }
         >
-          {currentEmbed?.isImage ? <img src={href} alt="embedded" /> : href}
+          {currentEmbed?.isImage ? (
+            <>
+              <img src={href} alt="embedded" />
+              {currentEmbed.isKlipyGif && (
+                <img
+                  className={styles["klipy-logo"]}
+                  src={klipyLogo}
+                  alt="Klipy"
+                  width={45}
+                  height={12}
+                />
+              )}
+            </>
+          ) : href}
         </a>
       )}
     </span>

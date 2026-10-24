@@ -116,10 +116,11 @@ export function ChatRoom(props) {
 
   let messageInput = useRef();
 
-  const sendMessage = async (e) => {
-    e.preventDefault();
-
-    const text = messageValue;
+  const sendMessage = async (
+    e,
+    { text = messageValue, preserveDraft = false } = {}
+  ) => {
+    e?.preventDefault();
 
     let isNewUser = false;
     // ------------------------------------------------------------------------------------------------
@@ -239,7 +240,7 @@ export function ChatRoom(props) {
       }
 
       if (text) {
-        setMessageValue("");
+        if (!preserveDraft) setMessageValue("");
 
         setTimestamps((timestamps) => {
           return [Date.now(), ...timestamps];
@@ -261,7 +262,7 @@ export function ChatRoom(props) {
         setSentMsgCount(sentMsgCount + 1);
       }
     } catch (error) {
-      setMessageValue(text);
+      if (!preserveDraft) setMessageValue(text);
       setMessageErrorFlash(messageErrorFlash + 1);
 
       // NOTE: Reset the CSS animation by "triggering reflow"
@@ -840,16 +841,17 @@ export function ChatRoom(props) {
 
       {user && premium && isGifsOpen && (
         <GifSelector
+          apiKey={props.klipyApiKey}
           requestClose={() => {
             setGifsOpen(false);
             messageInput.current.focus();
           }}
           onSelect={(gif) => {
-            const input = messageInput.current;
-            input.focus();
-            insertIntoInput(" " + gif.gifUrl + " ", input);
-            setMessageValue(input.value);
             setGifsOpen(false);
+            messageInput.current.focus();
+            sendMessage(null, { text: gif.gifUrl, preserveDraft: true }).catch(
+              (error) => setErrors([new CustomError(error.message, error)])
+            );
           }}
         />
       )}

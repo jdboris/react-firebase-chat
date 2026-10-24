@@ -130,6 +130,7 @@ function ChatRoomApp({
   callbackToTrigger,
   callbacks,
   headerLinks,
+  klipyApiKey,
   style,
 }) {
   const [authUser, isLoadingAuth] = useAuthState(auth);
@@ -256,6 +257,7 @@ function ChatRoomApp({
         {dmMessagesRef ? (
           <ChatRoom
             user={user}
+            klipyApiKey={klipyApiKey}
             isLoadingUser={isLoadingUser}
             setAlerts={setAlerts}
             conversationRef={conversationRef}
@@ -270,6 +272,7 @@ function ChatRoomApp({
         ) : (
           <ChatRoom
             user={user}
+            klipyApiKey={klipyApiKey}
             isLoadingUser={isLoadingUser}
             setAlerts={setAlerts}
             messagesRef={messagesRef}
