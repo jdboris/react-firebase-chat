@@ -10,26 +10,26 @@
   position: absolute;
 }
 .picker {
-  --epr-bg-color: #1f1f23;
-  --epr-text-color: #c8c8d0;
-  --epr-highlight-color: #bf94ff;
-  --epr-hover-bg-color: #2f2f35;
-  --epr-focus-bg-color: #3d3d44;
-  --epr-search-input-bg-color: #0e0e10;
-  --epr-search-input-bg-color-active: #0e0e10;
-  --epr-search-border-color: #3d3d44;
-  --epr-search-border-color-active: #bf94ff;
+  --epr-bg-color: var(--chat-surface, #000);
+  --epr-text-color: var(--chat-ink, #fff);
+  --epr-highlight-color: var(--chat-accent, #ff7900);
+  --epr-hover-bg-color: var(--chat-accent-soft, #ff790026);
+  --epr-focus-bg-color: var(--chat-accent-soft, #ff790040);
+  --epr-search-input-bg-color: var(--chat-canvas, #161616);
+  --epr-search-input-bg-color-active: var(--chat-canvas, #161616);
+  --epr-search-border-color: var(--chat-border, #343434);
+  --epr-search-border-color-active: var(--epr-highlight-color);
   --epr-search-input-height: 30px;
   --epr-search-input-border-radius: 6px;
-  --epr-search-input-text-color: #efeff1;
-  --epr-search-input-placeholder-color: #a8a8b3;
-  --epr-category-label-bg-color: #1f1f23f2;
-  --epr-category-label-text-color: #c8c8d0;
+  --epr-search-input-text-color: var(--chat-ink, #fff);
+  --epr-search-input-placeholder-color: var(--chat-muted, #ccc);
+  --epr-category-label-bg-color: var(--chat-surface, #000);
+  --epr-category-label-text-color: var(--epr-text-color);
   --epr-category-label-height: 26px;
-  --epr-category-icon-active-color: #bf94ff;
-  --epr-category-icon-inactive-color: #a8a8b3;
+  --epr-category-icon-active-color: var(--epr-highlight-color);
+  --epr-category-icon-inactive-color: var(--chat-muted, #ccc);
   --epr-category-navigation-button-size: 18px;
-  --epr-emoji-variation-picker-bg-color: #2f2f35;
+  --epr-emoji-variation-picker-bg-color: var(--chat-surface, #000);
   --epr-emoji-size: 24px;
   --epr-emoji-padding: 4px;
   --epr-horizontal-padding: 10px;
@@ -39,7 +39,7 @@
   min-width: 0;
   flex-shrink: 0;
   height: 230px;
-  border-top: 1px solid #2f2f35;
+  border-top: 1px solid var(--chat-border, #343434);
   background: var(--epr-bg-color);
 }
 /* Override the chat's global adjacent-button spacing. */
@@ -50,7 +50,7 @@
   padding: 8px 10px 4px;
 }
 .picker [data-epr-part="category-tab"][aria-selected="true"] {
-  box-shadow: 0 9px 0 -7px #bf94ff;
+  box-shadow: 0 9px 0 -7px var(--epr-highlight-color);
 }
 .picker [data-epr-part="search"] > * {
   padding: 4px 10px;
