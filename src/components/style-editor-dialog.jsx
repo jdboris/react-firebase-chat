@@ -144,7 +144,7 @@ export function StyleEditorDialog({
                     return;
                   }
                   const file = e.target.files[0];
-                  const url = await uploadFile(file);
+                  const url = await uploadFile(file, "style");
 
                   if (!url) {
                     throw new CustomError("Error uploading file.");

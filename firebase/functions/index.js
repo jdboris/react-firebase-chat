@@ -3,6 +3,7 @@ const admin = require("firebase-admin");
 
 const { initializeApp } = require("firebase-admin/app");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
+const { getDownloadURL } = require("firebase-admin/storage");
 const { HttpsError } = require("firebase-functions/v2/https");
 
 // const { Logging } = require("@google-cloud/logging");
@@ -1023,6 +1024,10 @@ exports.validateImageEmbedUrl = functions.https.onCall(async (url, context) => {
 });
 
 exports.uploadFile = functions.https.onCall(async (data, context) => {
+  if (!context.auth?.uid) {
+    throw new HttpsError("unauthenticated", "Must be logged in.");
+  }
+
   const user = await getUser(context.auth.uid);
 
   if (context.auth.token.email == null) {
@@ -1036,14 +1041,22 @@ exports.uploadFile = functions.https.onCall(async (data, context) => {
     throw new HttpsError("permission-denied", "You are banned.");
   }
 
-  if (!context.auth.uid) {
-    throw new HttpsError("unauthenticated", "Must be logged in.");
-  }
-
   const { fromBuffer: fileTypeFromBuffer } = require("file-type");
 
   const premium =
     context.auth.token.stripeRole === "premium" || isGiftedPremium(user);
+
+  const { purpose = "chat" } = data;
+  if (!["chat", "avatar", "style"].includes(purpose)) {
+    throw new HttpsError("invalid-argument", "Invalid upload purpose.");
+  }
+
+  if (purpose === "style" && !premium) {
+    throw new HttpsError(
+      "permission-denied",
+      "Premium is required for style images."
+    );
+  }
 
   const megabyteSize = 1024 * 1024;
   // 10 Megabytes
@@ -1052,7 +1065,6 @@ exports.uploadFile = functions.https.onCall(async (data, context) => {
   const sizeLimit = 4 * megabyteSize;
   const allowedTypes = ["image/jpeg", "image/jpeg", "image/png", "image/gif"];
 
-  const { extension } = data;
   const base64FileString = data.base64FileString.split(";base64,")[1];
   // NOTE: Must cut off the metadata that browsers put at the beginning
   //       https://stackoverflow.com/questions/67671971/error-loading-preview-on-firebase-storage-with-images-uploaded-from-firebase-ad
@@ -1079,17 +1091,44 @@ exports.uploadFile = functions.https.onCall(async (data, context) => {
     throw new HttpsError("invalid-argument", "Filetype not supported.");
   }
 
-  // NOTE: https://github.com/firebase/firebase-functions/issues/264#issuecomment-565200194
-  const clientId = functions.config().imgur.client_id;
-  // const fetch = require("node-fetch");
+  if (purpose !== "chat") {
+    const { randomUUID } = require("node:crypto");
+    const file = admin
+      .storage()
+      .bucket()
+      .file(`users/${context.auth.uid}/${purpose}`);
+    let token;
 
-  const response = await fetch("https://api.imgur.com/3/image", {
+    try {
+      const [metadata] = await file.getMetadata();
+      // Messages retain these URLs, so keep the token valid when replacing an image.
+      token = metadata.metadata?.firebaseStorageDownloadTokens?.split(",")[0];
+    } catch (error) {
+      if (error.code !== 404) throw error;
+    }
+
+    await file.save(fileBuffer, {
+      resumable: false,
+      metadata: {
+        contentType: type.mime,
+        cacheControl: "public, max-age=0, must-revalidate",
+        metadata: { firebaseStorageDownloadTokens: token || randomUUID() },
+      },
+    });
+
+    return { url: `${await getDownloadURL(file)}&v=${randomUUID()}` };
+  }
+
+  const formData = new FormData();
+  formData.append(
+    "files[]",
+    new Blob([fileBuffer], { type: type.mime }),
+    `image.${type.ext}`
+  );
+
+  const response = await fetch("https://uguu.se/upload", {
     method: "POST",
-    headers: {
-      Authorization: `Client-ID ${clientId}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ type: "base64", image: base64FileString }),
+    body: formData,
     redirect: "follow",
   });
 
@@ -1097,21 +1136,14 @@ exports.uploadFile = functions.https.onCall(async (data, context) => {
     throw new HttpsError("unknown", "File upload failed.");
   }
 
-  const imgurData = await response.json();
+  const uploadData = await response.json();
+  const url = uploadData?.files?.[0]?.url;
 
-  return { url: imgurData.data.link };
+  if (!uploadData?.success || typeof url !== "string" || !url) {
+    throw new HttpsError("unknown", "File upload failed.");
+  }
 
-  // // const options = { resumable: false, metadata: { contentType: "image/jpg" } };
-  // const options = { resumable: false, public: true };
-  // //options may not be necessary
-
-  // const crypto = require("crypto");
-  // const uuid = crypto.randomBytes(16).toString("hex");
-  // const bucket = admin.storage().bucket();
-  // const file = bucket.file(`${context.auth.uid}/${uuid}.${extension}`);
-  // const imageByteArray = new Uint8Array(fileBuffer);
-  // await file.save(imageByteArray, options);
-  // return { url: await file.publicUrl() };
+  return { url };
 });
 
 exports.giftPremium = functions.https.onRequest(async (request, response) => {

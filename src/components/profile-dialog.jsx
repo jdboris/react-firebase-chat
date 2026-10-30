@@ -57,7 +57,7 @@ export function ProfileDialog(props) {
 
                 timeout(5000, async () => {
                   const file = e.target.files[0];
-                  const url = await uploadFile(file);
+                  const url = await uploadFile(file, "avatar");
                   if (!url) {
                     throw new CustomError("Error uploading file.");
                   }

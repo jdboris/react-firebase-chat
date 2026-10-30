@@ -1,6 +1,6 @@
 import { getFunctions, httpsCallable } from "firebase/functions";
 
-export function uploadFile(file) {
+export function uploadFile(file, purpose = "chat") {
   return new Promise((resolve, reject) => {
     const uploadFileFunction = httpsCallable(getFunctions(), "uploadFile");
 
@@ -13,6 +13,7 @@ export function uploadFile(file) {
         uploadFileFunction({
           base64FileString: reader.result,
           extension: file.name.split(".").pop(),
+          purpose,
         })
           .then((result) => {
             resolve(result.data.url);
