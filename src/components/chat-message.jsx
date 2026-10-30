@@ -53,10 +53,17 @@ function Link({ href, isEmbedDisabled }) {
           const result = await getEmbed({ url: href });
 
           if (!cancelled && result.data.html) {
+            const template = document.createElement("template");
+            template.innerHTML = result.data.html;
+            template.content.querySelectorAll("a[href]").forEach((link) => {
+              link.target = "_blank";
+              link.relList.add("nofollow", "noreferrer", "noopener");
+            });
+
             setEmbed({
               href,
               providerName: result.data.providerName,
-              html: result.data.html,
+              html: template.innerHTML,
             });
           }
         }
