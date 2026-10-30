@@ -3,7 +3,7 @@ import { Timestamp, doc, updateDoc } from "firebase/firestore";
 import { default as React, useState } from "react";
 import styles from "../css/chat-room.module.css";
 import { CustomError } from "../utils/errors";
-import { uploadFile } from "../utils/storage";
+import { clearStyleImage, uploadFile } from "../utils/storage";
 import { timeout } from "../utils/utils";
 import { ChatMessage } from "./chat-message";
 import { usersRef } from "./chat-room-app";
@@ -166,14 +166,24 @@ export function StyleEditorDialog({
         </label>
         {msgBgImg && (
           <label
-            onClick={async (e) => {
+            onClick={async () => {
               if (!premium) return setPremiumPromptOpen(true);
-              await updateDoc(doc(usersRef, uid), {
-                msgBgImg: "",
-              });
+              if (loading) return;
+              setLoading(true);
+              try {
+                await clearStyleImage();
+              } catch (error) {
+                setErrors([new CustomError(error.message, error)]);
+              } finally {
+                setLoading(false);
+              }
             }}
             className={
-              styles["button"] + " " + (!premium ? styles["disabled"] : "")
+              styles["button"] +
+              " " +
+              (!premium ? styles["disabled"] : "") +
+              " " +
+              (loading ? styles["loading"] : "")
             }
           >
             Clear Image

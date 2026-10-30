@@ -1,5 +1,9 @@
 import { getFunctions, httpsCallable } from "firebase/functions";
 
+export function clearStyleImage() {
+  return httpsCallable(getFunctions(), "clearStyleImage")();
+}
+
 export function uploadFile(file, purpose = "chat") {
   return new Promise((resolve, reject) => {
     const uploadFileFunction = httpsCallable(getFunctions(), "uploadFile");

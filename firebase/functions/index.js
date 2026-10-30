@@ -1146,6 +1146,29 @@ exports.uploadFile = functions.https.onCall(async (data, context) => {
   return { url };
 });
 
+exports.clearStyleImage = functions.https.onCall(async (data, context) => {
+  if (!context.auth?.uid) {
+    throw new HttpsError("unauthenticated", "Must be logged in.");
+  }
+
+  const user = await getUser(context.auth.uid);
+  if (context.auth.token.email == null) {
+    throw new HttpsError("permission-denied", "Create an account to do that.");
+  }
+  if (user.isBanned) {
+    throw new HttpsError("permission-denied", "You are banned.");
+  }
+
+  await admin
+    .storage()
+    .bucket()
+    .file(`users/${context.auth.uid}/style`)
+    .delete({ ignoreNotFound: true });
+
+  await db.collection("users").doc(context.auth.uid).update({ msgBgImg: "" });
+  return { success: true };
+});
+
 exports.giftPremium = functions.https.onRequest(async (request, response) => {
   const stripe = require("stripe")(functions.config().keys.webhooks);
   const endpointSecret = functions.config().keys.signing;
